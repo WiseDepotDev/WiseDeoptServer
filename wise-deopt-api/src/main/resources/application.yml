@@ -1,0 +1,35 @@
+server:
+    port: 8080
+
+spring:
+    application:
+        name: wise-deopt-server
+    output:
+        ansi:
+            enabled: ALWAYS
+    datasource:
+        url: jdbc:mysql://10.0.0.22:3306/wise_deopt?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+        username: ${WISE_DEOPT_DB_USERNAME:root}
+        password: ${WISE_DEOPT_DB_PASSWORD:password}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        database-platform: org.hibernate.dialect.MySQLDialect
+        hibernate:
+            ddl-auto: none
+        show-sql: false
+    data:
+        redis:
+            host: ${WISE_DEOPT_REDIS_HOST:10.0.0.22}
+            port: ${WISE_DEOPT_REDIS_PORT:6379}
+            password: ${WISE_DEOPT_REDIS_PASSWORD:}
+
+wise:
+    minio:
+        endpoint: ${WISE_DEOPT_MINIO_ENDPOINT:http://10.0.0.22:9000}
+        access-key: ${WISE_DEOPT_MINIO_ACCESS_KEY:minioadmin}
+        secret-key: ${WISE_DEOPT_MINIO_SECRET_KEY:minioadmin}
+        secure: false
+
+logging:
+    pattern:
+        console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"

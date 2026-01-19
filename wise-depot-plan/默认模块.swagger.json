@@ -1,0 +1,5936 @@
+{
+  "info": {
+    "title": "默认模块",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "用户服务"
+    },
+    {
+      "name": "认证服务"
+    },
+    {
+      "name": "文件管理服务"
+    },
+    {
+      "name": "库存服务"
+    },
+    {
+      "name": "标签服务"
+    },
+    {
+      "name": "出入库服务"
+    },
+    {
+      "name": "巡检服务"
+    },
+    {
+      "name": "设备控制器"
+    },
+    {
+      "name": "RFID数据上报控制器"
+    },
+    {
+      "name": "巡检控制器"
+    },
+    {
+      "name": "告警控制器"
+    },
+    {
+      "name": "微服务内部接口"
+    },
+    {
+      "name": "公共接口"
+    }
+  ],
+  "paths": {
+    "/user/verify-password": {
+      "post": {
+        "summary": "验证用户密码",
+        "deprecated": true,
+        "description": "",
+        "tags": [
+          "用户服务",
+          "微服务内部接口"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/VerifyPasswordDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Result"
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/user": {
+      "post": {
+        "summary": "创建用户",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "用户服务"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "访问令牌",
+            "required": true,
+            "type": "string",
+            "x-example": "Bearer <Token>"
+          },
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateUserDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "schema": {
+              "$ref": "#/definitions/Result"
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/user/current": {
+      "get": {
+        "summary": "获取当前用户信息",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "用户服务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityResult",
+              "description": "当前用户信息"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "用户登录",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "认证服务",
+          "公共接口"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UserLoginDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/UserLoginVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/auth/login-nfc": {
+      "post": {
+        "summary": "用户工牌登录",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "认证服务",
+          "公共接口"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UserNfcLoginDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/UserNfcLoginVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/auth/nfc-pin": {
+      "post": {
+        "summary": "工牌登录PIN验证",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "认证服务",
+          "公共接口"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/NfcPinDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/UserLoginVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/auth/refresh-token": {
+      "post": {
+        "summary": "刷新令牌",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "认证服务",
+          "公共接口"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/RefreshTokenDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/RefreshTokenVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/file/upload": {
+      "post": {
+        "summary": "上传文件",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "文件管理服务"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "访问令牌",
+            "required": true,
+            "type": "string",
+            "x-example": "Bearer <Token>"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "required": true,
+            "format": "binary",
+            "type": "string",
+            "description": "文件"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 200,
+                "message": "文件上传成功!",
+                "requestId": "1966B97A390-D8D94F56-0000",
+                "data": {
+                  "fileId": 1,
+                  "url": "https://minio.example.com/xxx"
+                }
+              }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/FileUploadVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/product": {
+      "post": {
+        "summary": "创建产品",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "库存服务"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "访问令牌",
+            "required": true,
+            "type": "string",
+            "x-example": "Bearer <Token>"
+          },
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateProductDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/CreateProductVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "get": {
+        "summary": "获取产品列表",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "库存服务"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "访问令牌",
+            "required": true,
+            "type": "string",
+            "x-example": "Bearer <Token>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "title": "总记录数"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/CreateProductVO"
+                      },
+                      "title": "数据列表"
+                    }
+                  },
+                  "required": [
+                    "total",
+                    "rows"
+                  ]
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/product/{product_id}": {
+      "get": {
+        "summary": "获取产品详情",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "库存服务"
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "description": "产品id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/ProductDetailVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/product/inventory/{product_id}": {
+      "get": {
+        "summary": "获取产品库存信息",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "库存服务"
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "description": "产品id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "type": "string",
+            "x-example": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "title": "响应数据",
+                  "$ref": "#/definitions/ProductInventoryVO"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/tag": {
+      "post": {
+        "summary": "创建产品标签",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "标签服务"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateProductTagDTO",
+              "description": "创建产品标签参数"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "tagId": 0,
+                  "productId": 0,
+                  "barcode": "",
+                  "nfcUid": "",
+                  "rfid": "",
+                  "status": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultProductTagVO",
+              "description": "创建的产品标签信息"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "put": {
+        "summary": "更新产品标签",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "标签服务"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateProductTagDTO",
+              "description": "更新产品标签参数"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "tagId": 0,
+                  "productId": 0,
+                  "barcode": "",
+                  "nfcUid": "",
+                  "rfid": "",
+                  "status": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultProductTagVO",
+              "description": "更新后的产品标签信息"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "get": {
+        "summary": "获取产品标签列表",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "标签服务"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "type": "integer",
+            "x-example": 1
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "type": "integer",
+            "x-example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "total": 0,
+                  "rows": [
+                    {
+                      "tagId": 0,
+                      "productId": 0,
+                      "barcode": "",
+                      "nfcUid": "",
+                      "rfid": "",
+                      "status": "",
+                      "createTime": "",
+                      "createBy": 0,
+                      "updateTime": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultPageVOProductTagVO",
+              "description": "产品标签分页列表"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/tag/{tagId}": {
+      "get": {
+        "summary": "获取产品标签详情",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "标签服务"
+        ],
+        "parameters": [
+          {
+            "name": "tagId",
+            "in": "path",
+            "description": "标签ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "tagId": 0,
+                  "productId": 0,
+                  "barcode": "",
+                  "nfcUid": "",
+                  "rfid": "",
+                  "status": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultProductTagVO",
+              "description": "产品标签详情"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/stock-order": {
+      "post": {
+        "summary": "创建出入库单",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "出入库服务"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateStockOrderDTO",
+              "description": "创建出入库单参数"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "orderId": 0,
+                  "orderNo": "",
+                  "type": 0,
+                  "totalItems": 0,
+                  "status": 0,
+                  "remark": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": "",
+                  "updateBy": 0,
+                  "submitTime": "",
+                  "submitBy": 0,
+                  "items": [
+                    {
+                      "itemId": 0,
+                      "orderId": 0,
+                      "tagId": 0,
+                      "productId": 0,
+                      "createTime": "",
+                      "createBy": 0,
+                      "productName": "",
+                      "tagBarcode": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultStockOrderVO",
+              "description": "创建的出入库单信息"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "put": {
+        "summary": "更新出入库单",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "出入库服务"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateStockOrderDTO",
+              "description": "更新出入库单参数"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "orderId": 0,
+                  "orderNo": "",
+                  "type": 0,
+                  "totalItems": 0,
+                  "status": 0,
+                  "remark": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": "",
+                  "updateBy": 0,
+                  "submitTime": "",
+                  "submitBy": 0,
+                  "items": [
+                    {
+                      "itemId": 0,
+                      "orderId": 0,
+                      "tagId": 0,
+                      "productId": 0,
+                      "createTime": "",
+                      "createBy": 0,
+                      "productName": "",
+                      "tagBarcode": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultStockOrderVO",
+              "description": "更新后的出入库单信息"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "get": {
+        "summary": "获取出入库单列表",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "出入库服务"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "type": "integer",
+            "x-example": 1
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "type": "integer",
+            "x-example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "total": 0,
+                  "rows": [
+                    {
+                      "orderId": 0,
+                      "orderNo": "",
+                      "type": 0,
+                      "totalItems": 0,
+                      "status": 0,
+                      "remark": "",
+                      "createTime": "",
+                      "createBy": 0,
+                      "updateTime": "",
+                      "updateBy": 0,
+                      "submitTime": "",
+                      "submitBy": 0,
+                      "items": [
+                        {
+                          "itemId": 0,
+                          "orderId": 0,
+                          "tagId": 0,
+                          "productId": 0,
+                          "createTime": "",
+                          "createBy": 0,
+                          "productName": "",
+                          "tagBarcode": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultPageVOStockOrderVO",
+              "description": "出入库单分页列表"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/stock-order/{orderId}/submit": {
+      "post": {
+        "summary": "提交出入库单",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "出入库服务"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "description": "出入库单ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "orderId": 0,
+                  "orderNo": "",
+                  "type": 0,
+                  "totalItems": 0,
+                  "status": 0,
+                  "remark": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": "",
+                  "updateBy": 0,
+                  "submitTime": "",
+                  "submitBy": 0,
+                  "items": [
+                    {
+                      "itemId": 0,
+                      "orderId": 0,
+                      "tagId": 0,
+                      "productId": 0,
+                      "createTime": "",
+                      "createBy": 0,
+                      "productName": "",
+                      "tagBarcode": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultStockOrderVO",
+              "description": "提交后的出入库单信息"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/stock-order/{orderId}": {
+      "get": {
+        "summary": "获取出入库单详情",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "出入库服务"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "description": "出入库单ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "orderId": 0,
+                  "orderNo": "",
+                  "type": 0,
+                  "totalItems": 0,
+                  "status": 0,
+                  "remark": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": "",
+                  "updateBy": 0,
+                  "submitTime": "",
+                  "submitBy": 0,
+                  "items": [
+                    {
+                      "itemId": 0,
+                      "orderId": 0,
+                      "tagId": 0,
+                      "productId": 0,
+                      "createTime": "",
+                      "createBy": 0,
+                      "productName": "",
+                      "tagBarcode": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultStockOrderVO",
+              "description": "出入库单详情"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection-task": {
+      "post": {
+        "summary": "创建巡检任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检服务"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "detail_id": {
+                  "type": "string",
+                  "title": "明细id",
+                  "description": "自增"
+                },
+                "task_id": {
+                  "type": "string",
+                  "title": "对应巡检任务id",
+                  "description": "绑定inspection_task表task_id字段"
+                },
+                "task_type": {
+                  "type": "string",
+                  "title": "任务类型",
+                  "description": "0：定时任务 1：手动任务"
+                },
+                "device_id": {
+                  "type": "string",
+                  "title": "执行巡检设备id",
+                  "description": "设置时需要确定device.device_core表中有对应device_id记录且设备类型为巡检小车"
+                },
+                "status": {
+                  "type": "string",
+                  "title": "任务状态",
+                  "description": "0：待执行 1：执行中 2：已完成 3：异常终止"
+                }
+              },
+              "required": [
+                "detail_id",
+                "task_id",
+                "task_type",
+                "device_id",
+                "status"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "start_time": {
+                      "type": "string",
+                      "title": "任务开始时间"
+                    },
+                    "end_time": {
+                      "type": "string",
+                      "title": "任务结束时间"
+                    },
+                    "create_time": {
+                      "type": "string",
+                      "title": "创建时间"
+                    },
+                    "update_time": {
+                      "type": "string",
+                      "title": "更新时间"
+                    }
+                  },
+                  "title": "响应数据",
+                  "required": [
+                    "start_time",
+                    "end_time",
+                    "create_time",
+                    "update_time"
+                  ]
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection-plan": {
+      "post": {
+        "summary": "更新巡检任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检服务"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "plan_id": {
+                  "type": "string",
+                  "title": "计划id",
+                  "description": "1"
+                },
+                "plan_name": {
+                  "type": "string",
+                  "title": "示例计划01"
+                },
+                "device_id": {
+                  "type": "string",
+                  "title": "执行巡检设备id",
+                  "description": "设置时需要确定device.device_core表中有对应device_id记录且设备类型为巡检小车"
+                },
+                "cron_expression": {
+                  "type": "string",
+                  "title": "定时表达式"
+                },
+                "status": {
+                  "type": "string",
+                  "title": "状态",
+                  "description": "0：禁用 1：启用"
+                },
+                "last_execute_time": {
+                  "type": "string",
+                  "title": "最近执行时间",
+                  "description": "2025/10/20 14:23:41"
+                },
+                "nett_execute_time": {
+                  "type": "string",
+                  "title": "下次执行时间",
+                  "description": "2025/10/20 14:23:41"
+                }
+              },
+              "required": [
+                "plan_id",
+                "plan_name",
+                "device_id",
+                "cron_expression",
+                "status",
+                "last_execute_time",
+                "nett_execute_time"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "create_time": {
+                      "type": "string",
+                      "title": "创建时间"
+                    },
+                    "create_by": {
+                      "type": "string",
+                      "title": "创建者id",
+                      "description": "设置时需要确定user.user_core表中有对应user_id记录"
+                    },
+                    "update_time": {
+                      "type": "string",
+                      "title": "更新时间"
+                    },
+                    "update_by": {
+                      "type": "string",
+                      "title": "更新者id",
+                      "description": "设置时需要确定user.user_core表中有对应user_id记录"
+                    }
+                  },
+                  "title": "响应数据",
+                  "required": [
+                    "create_time",
+                    "create_by",
+                    "update_time",
+                    "update_by"
+                  ]
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection-detail": {
+      "post": {
+        "summary": "巡检结果",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检服务"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "detail_id": {
+                  "type": "string",
+                  "title": "明细id",
+                  "description": "自增"
+                }
+              },
+              "required": [
+                "detail_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "绑定inspection_task表task_id字段",
+                      "title": "对应巡检任务id"
+                    },
+                    "tag_id": {
+                      "type": "string",
+                      "title": "扫描到的RFID标签id",
+                      "description": "设置时需要确定tag.product_tag表中有对应tag_id记录"
+                    },
+                    "rfid": {
+                      "type": "string",
+                      "title": "扫描到的原始RFID"
+                    },
+                    "scan_time": {
+                      "type": "string",
+                      "title": "扫描时间"
+                    },
+                    "matched": {
+                      "type": "string",
+                      "title": "是否匹配系统库存",
+                      "description": "0：不匹配 1：匹配"
+                    },
+                    "remark": {
+                      "type": "string",
+                      "title": "备注"
+                    }
+                  },
+                  "title": "响应",
+                  "required": [
+                    "task_id",
+                    "tag_id",
+                    "rfid",
+                    "scan_time",
+                    "matched",
+                    "remark"
+                  ]
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection-result-summary": {
+      "post": {
+        "summary": "巡逻结果总汇",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检服务"
+        ],
+        "parameters": [
+          {
+            "required": true,
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result_id": {
+                  "type": "string",
+                  "title": "结果id",
+                  "description": "自增"
+                },
+                "task_id": {
+                  "type": "string",
+                  "title": "对应巡检任务id",
+                  "description": "绑定inspection_task表task_id字段"
+                }
+              },
+              "required": [
+                "result_id",
+                "task_id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "description": "状态码",
+                  "title": "状态码"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "消息",
+                  "title": "响应消息"
+                },
+                "requestId": {
+                  "type": "string",
+                  "description": "请求ID",
+                  "title": "请求id"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "total_expected": {
+                      "type": "string",
+                      "title": "应扫描总数"
+                    },
+                    "total_scanned": {
+                      "type": "string",
+                      "title": "实际扫描数量"
+                    },
+                    "matched_count": {
+                      "type": "string",
+                      "title": "匹配成功数量"
+                    },
+                    "missing_count": {
+                      "type": "string",
+                      "title": "缺失数量"
+                    },
+                    "extra_count": {
+                      "type": "string",
+                      "title": "多余标签数量"
+                    },
+                    "compare_time": {
+                      "type": "string",
+                      "title": "比对完成时间"
+                    },
+                    "create_time": {
+                      "type": "string",
+                      "title": "创建时间"
+                    }
+                  },
+                  "title": "响应",
+                  "required": [
+                    "total_expected",
+                    "total_scanned",
+                    "matched_count",
+                    "missing_count",
+                    "extra_count",
+                    "compare_time",
+                    "create_time"
+                  ]
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          },
+          "403": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device": {
+      "post": {
+        "summary": "创建设备（通用接口）",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateDeviceCoreDTO",
+              "description": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "deviceId": 0,
+                  "name": "",
+                  "deviceCode": "",
+                  "type": 0,
+                  "ipAddress": "",
+                  "status": 0,
+                  "lastHeartbeat": "",
+                  "remark": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": "",
+                  "updateBy": 0
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultDeviceCore"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "put": {
+        "summary": "更新设备核心信息",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateDeviceCoreDTO",
+              "description": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "deviceId": 0,
+                  "name": "",
+                  "deviceCode": "",
+                  "type": 0,
+                  "ipAddress": "",
+                  "status": 0,
+                  "lastHeartbeat": "",
+                  "remark": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "updateTime": "",
+                  "updateBy": 0
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultDeviceCore"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "get": {
+        "summary": "获取所有设备信息",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "deviceId": 0,
+                    "name": "",
+                    "deviceCode": "",
+                    "type": 0,
+                    "typeDesc": "",
+                    "ipAddress": "",
+                    "status": 0,
+                    "statusDesc": "",
+                    "lastHeartbeat": "",
+                    "remark": "",
+                    "createTime": "",
+                    "updateTime": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListDeviceCoreVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device/{deviceId}": {
+      "delete": {
+        "summary": "删除设备",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "get": {
+        "summary": "根据设备ID获取设备信息",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "deviceId": 0,
+                  "name": "",
+                  "deviceCode": "",
+                  "type": 0,
+                  "typeDesc": "",
+                  "ipAddress": "",
+                  "status": 0,
+                  "statusDesc": "",
+                  "lastHeartbeat": "",
+                  "remark": "",
+                  "createTime": "",
+                  "updateTime": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultDeviceCoreVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device/type/{type}": {
+      "get": {
+        "summary": "根据设备类型获取设备信息",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "deviceId": 0,
+                    "name": "",
+                    "deviceCode": "",
+                    "type": 0,
+                    "typeDesc": "",
+                    "ipAddress": "",
+                    "status": 0,
+                    "statusDesc": "",
+                    "lastHeartbeat": "",
+                    "remark": "",
+                    "createTime": "",
+                    "updateTime": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListDeviceCoreVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device/status/{status}": {
+      "get": {
+        "summary": "根据设备状态获取设备信息",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "deviceId": 0,
+                    "name": "",
+                    "deviceCode": "",
+                    "type": 0,
+                    "typeDesc": "",
+                    "ipAddress": "",
+                    "status": 0,
+                    "statusDesc": "",
+                    "lastHeartbeat": "",
+                    "remark": "",
+                    "createTime": "",
+                    "updateTime": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListDeviceCoreVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device/heartbeat/{deviceId}": {
+      "post": {
+        "summary": "记录设备心跳（巡检小车使用）",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "remark",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "get": {
+        "summary": "获取设备心跳记录",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "logId": 0,
+                    "deviceId": 0,
+                    "heartbeatTime": "",
+                    "remark": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListDeviceHeartbeatLog"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device/heartbeat/rfid/{deviceId}": {
+      "post": {
+        "summary": "RFID读写器心跳上报接口",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "remark",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device/heartbeat/camera/{deviceId}": {
+      "post": {
+        "summary": "摄像头心跳上报接口",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "remark",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/device/heartbeat/{deviceId}/range": {
+      "get": {
+        "summary": "根据时间范围获取设备心跳记录",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "设备控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "logId": 0,
+                    "deviceId": 0,
+                    "heartbeatTime": "",
+                    "remark": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListDeviceHeartbeatLog"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/rfid/report": {
+      "post": {
+        "summary": "RFID数据上报接口",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "RFID数据上报控制器"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/RfidReportDTO",
+              "description": "RFID数据上报DTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "处理结果"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/plan": {
+      "post": {
+        "summary": "创建巡检计划",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateInspectionPlanDTO",
+              "description": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "planId": 0,
+                  "planName": "",
+                  "deviceId": 0,
+                  "deviceName": "",
+                  "cronExpression": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "lastExecuteTime": "",
+                  "nextExecuteTime": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "createByName": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionPlanVO"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "put": {
+        "summary": "更新巡检计划",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateInspectionPlanDTO",
+              "description": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "planId": 0,
+                  "planName": "",
+                  "deviceId": 0,
+                  "deviceName": "",
+                  "cronExpression": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "lastExecuteTime": "",
+                  "nextExecuteTime": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "createByName": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionPlanVO"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/plan/{planId}": {
+      "delete": {
+        "summary": "删除巡检计划",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "get": {
+        "summary": "根据ID获取巡检计划",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "planId": 0,
+                  "planName": "",
+                  "deviceId": 0,
+                  "deviceName": "",
+                  "cronExpression": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "lastExecuteTime": "",
+                  "nextExecuteTime": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "createByName": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionPlanVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/plans": {
+      "get": {
+        "summary": "获取所有巡检计划",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "planId": 0,
+                    "planName": "",
+                    "deviceId": 0,
+                    "deviceName": "",
+                    "cronExpression": "",
+                    "status": 0,
+                    "statusDescription": "",
+                    "lastExecuteTime": "",
+                    "nextExecuteTime": "",
+                    "createTime": "",
+                    "createBy": 0,
+                    "createByName": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListInspectionPlanVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/plan/{planId}/status": {
+      "put": {
+        "summary": "更新巡检计划状态",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "planId": 0,
+                  "planName": "",
+                  "deviceId": 0,
+                  "deviceName": "",
+                  "cronExpression": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "lastExecuteTime": "",
+                  "nextExecuteTime": "",
+                  "createTime": "",
+                  "createBy": 0,
+                  "createByName": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionPlanVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/tasks": {
+      "get": {
+        "summary": "分页查询巡检任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "taskType",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "deviceId",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer",
+            "x-example": 1
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer",
+            "x-example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "total": 0,
+                  "rows": [
+                    {
+                      "taskId": 0,
+                      "planId": 0,
+                      "planName": "",
+                      "taskType": 0,
+                      "taskTypeDescription": "",
+                      "deviceId": 0,
+                      "deviceName": "",
+                      "status": 0,
+                      "statusDescription": "",
+                      "startTime": "",
+                      "endTime": "",
+                      "createTime": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultPageVOInspectionTaskVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/task/device/{deviceId}": {
+      "get": {
+        "summary": "巡检设备查询自己的巡检任务（待执行）",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "taskId": 0,
+                    "planId": 0,
+                    "planName": "",
+                    "taskType": 0,
+                    "taskTypeDescription": "",
+                    "deviceId": 0,
+                    "deviceName": "",
+                    "status": 0,
+                    "statusDescription": "",
+                    "startTime": "",
+                    "endTime": "",
+                    "createTime": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListInspectionTaskVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/task/device/{deviceId}/history": {
+      "get": {
+        "summary": "查询设备历史巡检任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer",
+            "x-example": 1
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer",
+            "x-example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "total": 0,
+                  "rows": [
+                    {
+                      "taskId": 0,
+                      "planId": 0,
+                      "planName": "",
+                      "taskType": 0,
+                      "taskTypeDescription": "",
+                      "deviceId": 0,
+                      "deviceName": "",
+                      "status": 0,
+                      "statusDescription": "",
+                      "startTime": "",
+                      "endTime": "",
+                      "createTime": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultPageVOInspectionTaskVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/task/manual": {
+      "post": {
+        "summary": "创建手动巡检任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "taskId": 0,
+                  "planId": 0,
+                  "planName": "",
+                  "taskType": 0,
+                  "taskTypeDescription": "",
+                  "deviceId": 0,
+                  "deviceName": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "startTime": "",
+                  "endTime": "",
+                  "createTime": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionTaskVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/task/start/{taskId}": {
+      "post": {
+        "summary": "巡检设备开始执行任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "taskId": 0,
+                  "planId": 0,
+                  "planName": "",
+                  "taskType": 0,
+                  "taskTypeDescription": "",
+                  "deviceId": 0,
+                  "deviceName": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "startTime": "",
+                  "endTime": "",
+                  "createTime": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionTaskVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/task/complete/{taskId}": {
+      "post": {
+        "summary": "巡检设备完成任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "taskId": 0,
+                  "planId": 0,
+                  "planName": "",
+                  "taskType": 0,
+                  "taskTypeDescription": "",
+                  "deviceId": 0,
+                  "deviceName": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "startTime": "",
+                  "endTime": "",
+                  "createTime": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionTaskVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/result/process/{taskId}": {
+      "post": {
+        "summary": "处理巡检结果",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/detail/report": {
+      "post": {
+        "summary": "上报巡检明细",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/InspectionDetailDTO",
+                "description": "巡检明细DTO"
+              },
+              "description": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/result/{taskId}": {
+      "get": {
+        "summary": "获取巡检结果汇总",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "resultId": 0,
+                  "taskId": 0,
+                  "totalExpected": 0,
+                  "totalScanned": 0,
+                  "matchedCount": 0,
+                  "missingCount": 0,
+                  "extraCount": 0,
+                  "compareTime": "",
+                  "createTime": "",
+                  "updateTime": "",
+                  "missingProducts": "",
+                  "extraProducts": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultInspectionResultSummary"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/detail/{taskId}": {
+      "get": {
+        "summary": "分页查询巡检明细",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer",
+            "x-example": 1
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "integer",
+            "x-example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "total": 0,
+                  "rows": [
+                    {
+                      "detailId": 0,
+                      "taskId": 0,
+                      "tagId": 0,
+                      "rfid": "",
+                      "scanTime": "",
+                      "matched": 0,
+                      "remark": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultPageVOInspectionDetail"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/statistics": {
+      "get": {
+        "summary": "统计巡检数据",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "": {}
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultMapObject"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/export/{taskId}": {
+      "get": {
+        "summary": "导出巡检结果",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultString"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/missing/{taskId}": {
+      "get": {
+        "summary": "获取巡检任务中缺失的货品列表",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": [
+                  {
+                    "productId": 0,
+                    "productName": "",
+                    "rfid": "",
+                    "scanTime": "",
+                    "remark": ""
+                  }
+                ]
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/DataResultListMissingProductVO"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/inspection/missing/{taskId}/record": {
+      "post": {
+        "summary": "手动补录缺失的货品",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "巡检控制器"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/RecordMissingProductDTO",
+              "description": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/Result",
+              "description": "统一返回结果"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/alert": {
+      "get": {
+        "summary": "获取告警事件列表",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "告警控制器"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "type": "integer",
+            "x-example": 1
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "type": "integer",
+            "x-example": 10
+          },
+          {
+            "name": "sourceModule",
+            "in": "query",
+            "description": "来源模块",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "description": "告警等级",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "告警状态",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "description": "是否活跃",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "total": 0,
+                  "rows": [
+                    {
+                      "eventId": 0,
+                      "sourceModule": "",
+                      "level": 0,
+                      "levelDescription": "",
+                      "title": "",
+                      "message": "",
+                      "status": 0,
+                      "statusDescription": "",
+                      "isActive": false,
+                      "createTime": "",
+                      "resolvedTime": "",
+                      "resolvedBy": 0,
+                      "extendedData": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultPageVOAlertEventVO",
+              "description": "告警事件分页列表"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/alert/{eventId}": {
+      "get": {
+        "summary": "获取告警事件详情",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "告警控制器"
+        ],
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "告警事件ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "eventId": 0,
+                  "sourceModule": "",
+                  "level": 0,
+                  "levelDescription": "",
+                  "title": "",
+                  "message": "",
+                  "status": 0,
+                  "statusDescription": "",
+                  "isActive": false,
+                  "createTime": "",
+                  "resolvedTime": "",
+                  "resolvedBy": 0,
+                  "extendedData": ""
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultAlertEventVO",
+              "description": "告警事件详情"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/alert/{eventId}/status": {
+      "put": {
+        "summary": "更新告警状态",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "告警控制器"
+        ],
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "告警事件ID",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateAlertStatusDTO",
+              "description": "更新告警状态DTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": ""
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityResult",
+              "description": "处理结果"
+            }
+          }
+        },
+        "security": [],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/alert/{eventId}/logs": {
+      "get": {
+        "summary": "获取告警处理日志列表",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "告警控制器"
+        ],
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "告警事件ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "examples": {
+              "application/json": {
+                "code": 0,
+                "message": "",
+                "requestId": "",
+                "data": {
+                  "total": 0,
+                  "rows": [
+                    {
+                      "logId": 0,
+                      "eventId": 0,
+                      "handlerId": 0,
+                      "handlerName": "",
+                      "goalStatus": 0,
+                      "goalStatusDescription": "",
+                      "remark": "",
+                      "handleTime": ""
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityDataResultPageVOAlertHandleLogVO",
+              "description": "告警处理日志列表"
+            }
+          }
+        },
+        "security": [],
+        "produces": [
+          "application/json"
+        ]
+      }
+    }
+  },
+  "security": [],
+  "swagger": "2.0",
+  "definitions": {
+    "DataResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码",
+          "title": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息",
+          "title": "响应消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "请求id"
+        },
+        "data": {
+          "type": "object",
+          "properties": {},
+          "title": "响应数据"
+        }
+      },
+      "title": "数据响应",
+      "required": [
+        "data"
+      ]
+    },
+    "ErrorResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码",
+          "title": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息",
+          "title": "响应消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "请求id"
+        },
+        "errorCode": {
+          "type": "string",
+          "title": "错误码"
+        }
+      },
+      "title": "异常响应",
+      "required": [
+        "errorCode"
+      ]
+    },
+    "PageVO": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "title": "总记录数"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {}
+          },
+          "title": "数据列表"
+        }
+      },
+      "required": [
+        "total",
+        "rows"
+      ],
+      "title": "分页数据返回对象"
+    },
+    "UserLoginDTO": {
+      "type": "object",
+      "properties": {
+        "loginType": {
+          "type": "integer",
+          "title": "登录类型",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "username": {
+          "type": "string",
+          "title": "用户名",
+          "description": "loginType为0时不能为空"
+        },
+        "email": {
+          "type": "string",
+          "title": "邮箱",
+          "description": "loginType为1时不能为空",
+          "format": "email"
+        },
+        "password": {
+          "type": "string",
+          "title": "密码"
+        }
+      },
+      "required": [
+        "loginType",
+        "username",
+        "email",
+        "password"
+      ]
+    },
+    "UserNfcLoginDTO": {
+      "type": "object",
+      "properties": {
+        "cardUuid": {
+          "type": "string",
+          "title": "工牌UUID"
+        }
+      },
+      "required": [
+        "cardUuid"
+      ]
+    },
+    "NfcPinDTO": {
+      "type": "object",
+      "properties": {
+        "verificationId": {
+          "type": "string",
+          "title": "二步验证id"
+        },
+        "pin": {
+          "type": "string",
+          "title": "PIN码"
+        }
+      },
+      "required": [
+        "verificationId",
+        "pin"
+      ]
+    },
+    "RefreshTokenDTO": {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
+          "type": "string",
+          "title": "访问令牌"
+        }
+      },
+      "required": [
+        "refreshToken"
+      ]
+    },
+    "UserLoginVO": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "title": "访问令牌"
+        },
+        "accessTokenExpiredAt": {
+          "type": "integer",
+          "title": "访问令牌过期时间戳"
+        },
+        "refreshToken": {
+          "type": "string",
+          "title": "刷新令牌"
+        }
+      },
+      "required": [
+        "accessToken",
+        "accessTokenExpiredAt",
+        "refreshToken"
+      ]
+    },
+    "UserNfcLoginVO": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "用户名"
+        },
+        "nickname": {
+          "type": "string",
+          "title": "昵称"
+        },
+        "avatarFileUrl": {
+          "type": "string",
+          "title": "头像文件链接",
+          "description": "链接有效期30分钟"
+        },
+        "verificationId": {
+          "type": "string",
+          "title": "二步验证id",
+          "description": "有效期5分钟或此id验证失败次数达5次"
+        }
+      },
+      "required": [
+        "username",
+        "nickname",
+        "avatarFileUrl",
+        "verificationId"
+      ]
+    },
+    "RefreshTokenVO": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "title": "访问令牌"
+        },
+        "accessTokenExpiredAt": {
+          "type": "integer",
+          "title": "访问令牌过期时间戳"
+        }
+      },
+      "required": [
+        "accessToken",
+        "accessTokenExpiredAt"
+      ]
+    },
+    "FileUploadVO": {
+      "type": "object",
+      "properties": {
+        "fileId": {
+          "type": "integer",
+          "title": "文件id"
+        },
+        "url": {
+          "type": "string",
+          "title": "临时访问链接",
+          "description": "有效期1小时"
+        }
+      },
+      "required": [
+        "fileId",
+        "url"
+      ]
+    },
+    "VerifyPasswordDTO": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "integer",
+          "title": "用户id"
+        },
+        "password": {
+          "type": "string",
+          "title": "密码"
+        }
+      },
+      "required": [
+        "userId",
+        "password"
+      ]
+    },
+    "CreateUserDTO": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "用户名"
+        },
+        "userType": {
+          "type": "integer",
+          "title": "用户类型"
+        },
+        "ownerDeviceId": {
+          "type": "integer",
+          "title": "所属设备id",
+          "description": "用户类型为1时必填"
+        },
+        "nickname": {
+          "type": "string",
+          "title": "昵称",
+          "description": "用户类型为0时必填"
+        },
+        "email": {
+          "type": "string",
+          "title": "邮箱",
+          "description": "用户类型为0时必填"
+        },
+        "avatarFileId": {
+          "type": "integer",
+          "title": "头像文件id",
+          "x-nullable": true
+        },
+        "password": {
+          "type": "string",
+          "title": "密码",
+          "description": "用户类型为0时必填"
+        }
+      },
+      "required": [
+        "username",
+        "userType",
+        "ownerDeviceId",
+        "nickname",
+        "email",
+        "password",
+        "avatarFileId"
+      ]
+    },
+    "CreateProductDTO": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "产品名称"
+        },
+        "unit": {
+          "type": "string",
+          "title": "单位",
+          "description": "默认：个"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "CreateProductVO": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "integer",
+          "title": "产品id"
+        },
+        "name": {
+          "type": "string",
+          "title": "产品名称"
+        },
+        "unit": {
+          "type": "string",
+          "title": "单位"
+        },
+        "createTime": {
+          "type": "string",
+          "title": "创建时间"
+        }
+      },
+      "required": [
+        "productId",
+        "name",
+        "unit",
+        "createTime"
+      ]
+    },
+    "ProductDetailVO": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "integer",
+          "title": "产品id"
+        },
+        "name": {
+          "type": "string",
+          "title": "产品名称"
+        },
+        "unit": {
+          "type": "string",
+          "title": "产品单位"
+        },
+        "createTime": {
+          "type": "string",
+          "title": "创建时间"
+        },
+        "updateTime": {
+          "type": "string",
+          "title": "更新时间"
+        }
+      },
+      "required": [
+        "productId",
+        "name",
+        "unit",
+        "createTime",
+        "updateTime"
+      ]
+    },
+    "ProductInventoryVO": {
+      "type": "object",
+      "properties": {
+        "inventoryId": {
+          "type": "integer",
+          "title": "库存id"
+        },
+        "productId": {
+          "type": "integer",
+          "title": "产品id"
+        },
+        "productName": {
+          "type": "string",
+          "title": "产品名称"
+        },
+        "quantity": {
+          "type": "integer",
+          "title": "库存总量"
+        },
+        "lockedQuantity": {
+          "type": "integer",
+          "title": "锁定库存数量"
+        },
+        "availableQuantity": {
+          "type": "integer",
+          "title": "可用库存数量"
+        },
+        "updateTime": {
+          "type": "string",
+          "title": "最后库存变动时间"
+        }
+      },
+      "required": [
+        "inventoryId",
+        "productId",
+        "productName",
+        "quantity",
+        "lockedQuantity",
+        "availableQuantity",
+        "updateTime"
+      ]
+    },
+    "ProductTagVO": {
+      "type": "object",
+      "properties": {
+        "tagId": {
+          "type": "integer",
+          "description": "标签ID",
+          "format": "int64"
+        },
+        "productId": {
+          "type": "integer",
+          "description": "产品ID",
+          "format": "int64"
+        },
+        "barcode": {
+          "type": "string",
+          "description": "条形码"
+        },
+        "nfcUid": {
+          "type": "string",
+          "description": "NFC标识"
+        },
+        "rfid": {
+          "type": "string",
+          "description": "RFID标识"
+        },
+        "status": {
+          "type": "string",
+          "description": "标签状态",
+          "enum": [
+            "NOT_INBOUND",
+            "INBOUND",
+            "OUTBOUND"
+          ]
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        },
+        "createBy": {
+          "type": "integer",
+          "description": "创建者ID",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间"
+        }
+      }
+    },
+    "StockOrderItemVO": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "integer",
+          "description": "明细id",
+          "format": "int64"
+        },
+        "orderId": {
+          "type": "integer",
+          "description": "出入库单id",
+          "format": "int64"
+        },
+        "tagId": {
+          "type": "integer",
+          "description": "标签id",
+          "format": "int64"
+        },
+        "productId": {
+          "type": "integer",
+          "description": "产品id",
+          "format": "int64"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        },
+        "createBy": {
+          "type": "integer",
+          "description": "创建者id",
+          "format": "int64"
+        },
+        "productName": {
+          "type": "string",
+          "description": "产品名称"
+        },
+        "tagBarcode": {
+          "type": "string",
+          "description": "标签条形码"
+        }
+      }
+    },
+    "DeviceCore": {
+      "type": "object",
+      "properties": {
+        "deviceId": {
+          "type": "integer",
+          "description": "设备id",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string",
+          "description": "设备名称",
+          "default": "未命名设备"
+        },
+        "deviceCode": {
+          "type": "string",
+          "description": "设备唯一编号"
+        },
+        "type": {
+          "type": "integer",
+          "description": "设备类型：0：RFID读写器 1：摄像头 2：巡检小车"
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "设备ip地址"
+        },
+        "status": {
+          "type": "integer",
+          "description": "设备状态：0：离线 1：在线 2：故障",
+          "default": 0
+        },
+        "lastHeartbeat": {
+          "type": "string",
+          "description": "上次心跳时间"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        },
+        "createBy": {
+          "type": "integer",
+          "description": "创建者id",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间"
+        },
+        "updateBy": {
+          "type": "integer",
+          "description": "更新者id",
+          "format": "int64"
+        }
+      }
+    },
+    "InspectionPlanVO": {
+      "type": "object",
+      "properties": {
+        "planId": {
+          "type": "integer",
+          "description": "计划id",
+          "format": "int64"
+        },
+        "planName": {
+          "type": "string",
+          "description": "计划名称"
+        },
+        "deviceId": {
+          "type": "integer",
+          "description": "执行巡检设备id",
+          "format": "int64"
+        },
+        "deviceName": {
+          "type": "string",
+          "description": "执行巡检设备名称"
+        },
+        "cronExpression": {
+          "type": "string",
+          "description": "定时表达式"
+        },
+        "status": {
+          "type": "integer",
+          "description": "状态：0：禁用 1：启用"
+        },
+        "statusDescription": {
+          "type": "string",
+          "description": "状态描述"
+        },
+        "lastExecuteTime": {
+          "type": "string",
+          "description": "最近执行时间"
+        },
+        "nextExecuteTime": {
+          "type": "string",
+          "description": "下次执行时间"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        },
+        "createBy": {
+          "type": "integer",
+          "description": "创建者id",
+          "format": "int64"
+        },
+        "createByName": {
+          "type": "string",
+          "description": "创建者名称"
+        }
+      }
+    },
+    "AlertEventVO": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "integer",
+          "description": "告警id",
+          "format": "int64"
+        },
+        "sourceModule": {
+          "type": "string",
+          "description": "来源模块"
+        },
+        "level": {
+          "type": "integer",
+          "description": "告警等级：1：提示 2：一般 3：严重 4：紧急"
+        },
+        "levelDescription": {
+          "type": "string",
+          "description": "告警等级描述"
+        },
+        "title": {
+          "type": "string",
+          "description": "告警标题"
+        },
+        "message": {
+          "type": "string",
+          "description": "告警内容"
+        },
+        "status": {
+          "type": "integer",
+          "description": "告警状态：0：未处理 1：处理中 2：已处理 3：已忽略"
+        },
+        "statusDescription": {
+          "type": "string",
+          "description": "告警状态描述"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "是否仍处于活跃状态"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "产生时间"
+        },
+        "resolvedTime": {
+          "type": "string",
+          "description": "解除时间"
+        },
+        "resolvedBy": {
+          "type": "integer",
+          "description": "解除者id",
+          "format": "int64"
+        },
+        "extendedData": {
+          "type": "string",
+          "description": "扩展信息"
+        }
+      }
+    },
+    "ResponseEntityDataResultProductTagVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/ProductTagVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "StockOrderVO": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "integer",
+          "description": "出入库单id",
+          "format": "int64"
+        },
+        "orderNo": {
+          "type": "string",
+          "description": "出入库单号"
+        },
+        "type": {
+          "type": "integer",
+          "description": "单据类型：0：入库 1：出库"
+        },
+        "totalItems": {
+          "type": "integer",
+          "description": "明细数"
+        },
+        "status": {
+          "type": "integer",
+          "description": "单据状态：0：草稿 1：已提交"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        },
+        "createBy": {
+          "type": "integer",
+          "description": "创建者id",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间"
+        },
+        "updateBy": {
+          "type": "integer",
+          "description": "更新者id",
+          "format": "int64"
+        },
+        "submitTime": {
+          "type": "string",
+          "description": "提交时间"
+        },
+        "submitBy": {
+          "type": "integer",
+          "description": "提交者id",
+          "format": "int64"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StockOrderItemVO",
+            "description": "出入库明细视图对象"
+          },
+          "description": "明细列表"
+        }
+      }
+    },
+    "DataResultDeviceCore": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/DeviceCore",
+          "description": "响应数据"
+        }
+      }
+    },
+    "RfidReportDTO": {
+      "type": "object",
+      "properties": {
+        "rfidTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "RFID标签数组"
+        }
+      }
+    },
+    "DataResultInspectionPlanVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/InspectionPlanVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "PageVOAlertEventVO": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "总数据数",
+          "format": "int64"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AlertEventVO",
+            "description": "告警事件VO"
+          },
+          "description": "数据列表"
+        }
+      }
+    },
+    "Result": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码",
+          "title": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息",
+          "title": "响应消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "请求id"
+        }
+      },
+      "title": "返回响应"
+    },
+    "CreateProductTagDTO": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "integer",
+          "description": "产品ID",
+          "format": "int64"
+        },
+        "barcode": {
+          "type": "string",
+          "description": "条形码"
+        },
+        "nfcUid": {
+          "type": "string",
+          "description": "NFC标识"
+        },
+        "rfid": {
+          "type": "string",
+          "description": "RFID标识"
+        }
+      }
+    },
+    "ResponseEntityDataResultStockOrderVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/StockOrderVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "CreateDeviceCoreDTO": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "设备名称"
+        },
+        "deviceCode": {
+          "type": "string",
+          "description": "设备唯一编号"
+        },
+        "type": {
+          "type": "integer",
+          "description": "设备类型：0：RFID读写器 1：摄像头 2：巡检小车"
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "设备ip地址"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        },
+        "rfidLocation": {
+          "type": "string",
+          "description": "RFID读写器特有字段：安装位置"
+        },
+        "rfidReadRange": {
+          "type": "integer",
+          "description": "RFID读写器特有字段：读取距离"
+        },
+        "cameraStreamUrl": {
+          "type": "string",
+          "description": "摄像头特有字段：视频流URL"
+        },
+        "cameraLocation": {
+          "type": "string",
+          "description": "摄像头和RFID读写器特有字段：安装位置"
+        }
+      }
+    },
+    "CreateInspectionPlanDTO": {
+      "type": "object",
+      "properties": {
+        "planName": {
+          "type": "string",
+          "description": "计划名称"
+        },
+        "deviceId": {
+          "type": "integer",
+          "description": "执行巡检设备id",
+          "format": "int64"
+        },
+        "cronExpression": {
+          "type": "string",
+          "description": "定时表达式"
+        }
+      }
+    },
+    "ResponseEntityDataResultPageVOAlertEventVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/PageVOAlertEventVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "UpdateProductTagDTO": {
+      "type": "object",
+      "properties": {
+        "tagId": {
+          "type": "integer",
+          "description": "标签ID",
+          "format": "int64"
+        },
+        "productId": {
+          "type": "integer",
+          "description": "产品ID",
+          "format": "int64"
+        },
+        "barcode": {
+          "type": "string",
+          "description": "条形码"
+        },
+        "nfcUid": {
+          "type": "string",
+          "description": "NFC标识"
+        },
+        "rfid": {
+          "type": "string",
+          "description": "RFID标识"
+        },
+        "status": {
+          "type": "string",
+          "description": "标签状态",
+          "enum": [
+            "NOT_INBOUND",
+            "INBOUND",
+            "OUTBOUND"
+          ]
+        }
+      }
+    },
+    "StockOrderItemDTO": {
+      "type": "object",
+      "properties": {
+        "tagId": {
+          "type": "integer",
+          "description": "标签id",
+          "format": "int64"
+        },
+        "productId": {
+          "type": "integer",
+          "description": "产品id",
+          "format": "int64"
+        }
+      }
+    },
+    "UpdateDeviceCoreDTO": {
+      "type": "object",
+      "properties": {
+        "deviceId": {
+          "type": "integer",
+          "description": "设备id",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string",
+          "description": "设备名称"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        },
+        "status": {
+          "type": "integer",
+          "description": "设备状态：0：离线 1：在线 2：故障"
+        }
+      }
+    },
+    "UpdateInspectionPlanDTO": {
+      "type": "object",
+      "properties": {
+        "planId": {
+          "type": "integer",
+          "description": "计划id",
+          "format": "int64"
+        },
+        "planName": {
+          "type": "string",
+          "description": "计划名称"
+        },
+        "deviceId": {
+          "type": "integer",
+          "description": "执行巡检设备id",
+          "format": "int64"
+        },
+        "cronExpression": {
+          "type": "string",
+          "description": "定时表达式"
+        },
+        "status": {
+          "type": "integer",
+          "description": "状态：0：禁用 1：启用"
+        }
+      }
+    },
+    "ResponseEntityDataResultAlertEventVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/AlertEventVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "PageVOProductTagVO": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "总数据数",
+          "format": "int64"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductTagVO",
+            "description": "产品标签 VO"
+          },
+          "description": "数据列表"
+        }
+      }
+    },
+    "CreateStockOrderDTO": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "integer",
+          "description": "单据类型：0：入库 1：出库"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StockOrderItemDTO",
+            "description": "出入库明细参数"
+          },
+          "description": "明细列表"
+        }
+      }
+    },
+    "ResponseEntityResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        }
+      }
+    },
+    "ResponseEntityDataResultPageVOProductTagVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/PageVOProductTagVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "UpdateStockOrderDTO": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "integer",
+          "description": "出入库单id",
+          "format": "int64"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StockOrderItemDTO",
+            "description": "出入库明细参数"
+          },
+          "description": "明细列表"
+        }
+      }
+    },
+    "DeviceCoreVO": {
+      "type": "object",
+      "properties": {
+        "deviceId": {
+          "type": "integer",
+          "description": "设备id",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string",
+          "description": "设备名称"
+        },
+        "deviceCode": {
+          "type": "string",
+          "description": "设备唯一编号"
+        },
+        "type": {
+          "type": "integer",
+          "description": "设备类型：0：RFID读写器 1：摄像头 2：巡检小车"
+        },
+        "typeDesc": {
+          "type": "string",
+          "description": "设备类型描述"
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "设备ip地址"
+        },
+        "status": {
+          "type": "integer",
+          "description": "设备状态：0：离线 1：在线 2：故障"
+        },
+        "statusDesc": {
+          "type": "string",
+          "description": "设备状态描述"
+        },
+        "lastHeartbeat": {
+          "type": "string",
+          "description": "上次心跳时间"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间"
+        }
+      }
+    },
+    "DataResultListInspectionPlanVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InspectionPlanVO",
+            "description": "巡检计划VO"
+          },
+          "description": "响应数据"
+        }
+      }
+    },
+    "UpdateAlertStatusDTO": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "description": "目标状态"
+        },
+        "remark": {
+          "type": "string",
+          "description": "处理备注"
+        }
+      }
+    },
+    "PageVOStockOrderVO": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "总数据数",
+          "format": "int64"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StockOrderVO",
+            "description": "出入库单视图对象"
+          },
+          "description": "数据列表"
+        }
+      }
+    },
+    "DataResultDeviceCoreVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/DeviceCoreVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "InspectionTaskVO": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "integer",
+          "description": "任务id",
+          "format": "int64"
+        },
+        "planId": {
+          "type": "integer",
+          "description": "对应巡检计划id",
+          "format": "int64"
+        },
+        "planName": {
+          "type": "string",
+          "description": "巡检计划名称"
+        },
+        "taskType": {
+          "type": "integer",
+          "description": "任务类型：0：定时任务 1：手动任务"
+        },
+        "taskTypeDescription": {
+          "type": "string",
+          "description": "任务类型描述"
+        },
+        "deviceId": {
+          "type": "integer",
+          "description": "执行巡检设备id",
+          "format": "int64"
+        },
+        "deviceName": {
+          "type": "string",
+          "description": "执行巡检设备名称"
+        },
+        "status": {
+          "type": "integer",
+          "description": "任务状态：0：待执行 1：执行中 2：已完成 3：异常终止"
+        },
+        "statusDescription": {
+          "type": "string",
+          "description": "任务状态描述"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "任务开始时间"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "任务结束时间"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        }
+      }
+    },
+    "AlertHandleLogVO": {
+      "type": "object",
+      "properties": {
+        "logId": {
+          "type": "integer",
+          "description": "日志id",
+          "format": "int64"
+        },
+        "eventId": {
+          "type": "integer",
+          "description": "关联告警id",
+          "format": "int64"
+        },
+        "handlerId": {
+          "type": "integer",
+          "description": "操作人id",
+          "format": "int64"
+        },
+        "handlerName": {
+          "type": "string",
+          "description": "操作人名称"
+        },
+        "goalStatus": {
+          "type": "integer",
+          "description": "目标状态：0：未处理 1：处理中 2：已处理 3：已忽略"
+        },
+        "goalStatusDescription": {
+          "type": "string",
+          "description": "目标状态描述"
+        },
+        "remark": {
+          "type": "string",
+          "description": "操作备注"
+        },
+        "handleTime": {
+          "type": "string",
+          "description": "操作时间"
+        }
+      }
+    },
+    "ResponseEntityDataResultPageVOStockOrderVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/PageVOStockOrderVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "DataResultListDeviceCoreVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeviceCoreVO",
+            "description": "设备核心信息VO"
+          },
+          "description": "响应数据"
+        }
+      }
+    },
+    "PageVOInspectionTaskVO": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "总数据数",
+          "format": "int64"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InspectionTaskVO",
+            "description": "巡检任务VO"
+          },
+          "description": "数据列表"
+        }
+      }
+    },
+    "PageVOAlertHandleLogVO": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "总数据数",
+          "format": "int64"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AlertHandleLogVO",
+            "description": "告警处理日志VO"
+          },
+          "description": "数据列表"
+        }
+      }
+    },
+    "DeviceHeartbeatLog": {
+      "type": "object",
+      "properties": {
+        "logId": {
+          "type": "integer",
+          "description": "日志id",
+          "format": "int64"
+        },
+        "deviceId": {
+          "type": "integer",
+          "description": "设备id",
+          "format": "int64"
+        },
+        "heartbeatTime": {
+          "type": "string",
+          "description": "心跳时间"
+        },
+        "remark": {
+          "type": "string",
+          "description": "附加信息"
+        }
+      }
+    },
+    "DataResultPageVOInspectionTaskVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/PageVOInspectionTaskVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "ResponseEntityDataResultPageVOAlertHandleLogVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/PageVOAlertHandleLogVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "DataResultListDeviceHeartbeatLog": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeviceHeartbeatLog",
+            "description": "设备心跳记录实体类"
+          },
+          "description": "响应数据"
+        }
+      }
+    },
+    "DataResultListInspectionTaskVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InspectionTaskVO",
+            "description": "巡检任务VO"
+          },
+          "description": "响应数据"
+        }
+      }
+    },
+    "DataResultInspectionTaskVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/InspectionTaskVO",
+          "description": "响应数据"
+        }
+      }
+    },
+    "InspectionDetailDTO": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "integer",
+          "description": "对应巡检任务id",
+          "format": "int64"
+        },
+        "tagId": {
+          "type": "integer",
+          "description": "扫描到的RFID标签id",
+          "format": "int64"
+        },
+        "rfid": {
+          "type": "string",
+          "description": "扫描到的原始RFID"
+        },
+        "matched": {
+          "type": "integer",
+          "description": "是否匹配系统库存：0：不匹配 1：匹配"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        }
+      }
+    },
+    "InspectionResultSummary": {
+      "type": "object",
+      "properties": {
+        "resultId": {
+          "type": "integer",
+          "description": "结果id",
+          "format": "int64"
+        },
+        "taskId": {
+          "type": "integer",
+          "description": "对应巡检任务id",
+          "format": "int64"
+        },
+        "totalExpected": {
+          "type": "integer",
+          "description": "应扫描总数"
+        },
+        "totalScanned": {
+          "type": "integer",
+          "description": "实际扫描数量"
+        },
+        "matchedCount": {
+          "type": "integer",
+          "description": "匹配成功数量"
+        },
+        "missingCount": {
+          "type": "integer",
+          "description": "缺失数量"
+        },
+        "extraCount": {
+          "type": "integer",
+          "description": "多余标签数量"
+        },
+        "compareTime": {
+          "type": "string",
+          "description": "比对完成时间"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间"
+        },
+        "missingProducts": {
+          "type": "string",
+          "description": "缺失货品详情（JSON格式存储）"
+        },
+        "extraProducts": {
+          "type": "string",
+          "description": "多余货品详情（JSON格式存储）"
+        }
+      }
+    },
+    "DataResultInspectionResultSummary": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/InspectionResultSummary",
+          "description": "响应数据"
+        }
+      }
+    },
+    "InspectionDetail": {
+      "type": "object",
+      "properties": {
+        "detailId": {
+          "type": "integer",
+          "description": "明细id",
+          "format": "int64"
+        },
+        "taskId": {
+          "type": "integer",
+          "description": "对应巡检任务id",
+          "format": "int64"
+        },
+        "tagId": {
+          "type": "integer",
+          "description": "扫描到的RFID标签id",
+          "format": "int64"
+        },
+        "rfid": {
+          "type": "string",
+          "description": "扫描到的原始RFID"
+        },
+        "scanTime": {
+          "type": "string",
+          "description": "扫描时间"
+        },
+        "matched": {
+          "type": "integer",
+          "description": "是否匹配系统库存：0：不匹配 1：匹配",
+          "default": 0
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        }
+      }
+    },
+    "PageVOInspectionDetail": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "总数据数",
+          "format": "int64"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InspectionDetail",
+            "description": "巡检明细实体类"
+          },
+          "description": "数据列表"
+        }
+      }
+    },
+    "DataResultPageVOInspectionDetail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/PageVOInspectionDetail",
+          "description": "响应数据"
+        }
+      }
+    },
+    "key": {
+      "type": "object",
+      "properties": {}
+    },
+    "MapObject": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/key"
+        }
+      }
+    },
+    "DataResultMapObject": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "$ref": "#/definitions/MapObject",
+          "description": "响应数据"
+        }
+      }
+    },
+    "DataResultString": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "type": "string",
+          "description": "响应数据"
+        }
+      }
+    },
+    "MissingProductVO": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "integer",
+          "description": "产品ID",
+          "format": "int64"
+        },
+        "productName": {
+          "type": "string",
+          "description": "产品名称"
+        },
+        "rfid": {
+          "type": "string",
+          "description": "RFID标签"
+        },
+        "scanTime": {
+          "type": "string",
+          "description": "扫描时间"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        }
+      }
+    },
+    "DataResultListMissingProductVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MissingProductVO",
+            "description": "缺失货品信息 VO"
+          },
+          "description": "响应数据"
+        }
+      }
+    },
+    "RecordMissingProductDTO": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "integer",
+          "description": "产品ID",
+          "format": "int64"
+        },
+        "rfid": {
+          "type": "string",
+          "description": "RFID标签"
+        },
+        "scanTime": {
+          "type": "string",
+          "description": "扫描时间"
+        },
+        "remark": {
+          "type": "string",
+          "description": "备注"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {},
+  "x-components": {
+    "responses": {
+      "未检测到用户IP地址": {
+        "description": "",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            },
+            "examples": {
+              "示例": {
+                "summary": "示例",
+                "value": {
+                  "code": 403,
+                  "message": "拒绝访问! 未检测到用户IP地址!",
+                  "requestId": "1966B97A390-D8D94F56-0000",
+                  "errorCode": "AUTH-REQUEST-1001"
+                }
+              }
+            }
+          }
+        }
+      },
+      "未知异常": {
+        "description": "",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/definitions/ErrorResult"
+            },
+            "examples": {
+              "示例": {
+                "summary": "示例",
+                "value": {
+                  "code": 500,
+                  "message": "服务端出现未知异常! 请稍后再试或联系管理员!",
+                  "requestId": "1966B97A390-D8D94F56-0000",
+                  "errorCode": "SYS-REQUEST-1001"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
