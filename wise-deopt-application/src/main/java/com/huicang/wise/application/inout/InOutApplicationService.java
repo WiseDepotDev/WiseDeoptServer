@@ -4,10 +4,13 @@ import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.infrastructure.repository.inout.StockOrderJpaEntity;
 import com.huicang.wise.infrastructure.repository.inout.StockOrderRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 /**
  * 类功能描述：出入库应用服务
@@ -60,6 +63,25 @@ public class InOutApplicationService {
         return toStockOrderDTO(entity);
     }
 
+    public StockOrderPageDTO listStockOrders(Integer page, Integer size) {
+        int pageIndex = page == null || page < 1 ? 0 : page - 1;
+        int pageSize = size == null || size < 1 ? 10 : size;
+        Page<StockOrderJpaEntity> result = stockOrderRepository.findAll(PageRequest.of(pageIndex, pageSize));
+        StockOrderPageDTO dto = new StockOrderPageDTO();
+        dto.setTotal(result.getTotalElements());
+        dto.setRows(result.getContent().stream().map(this::toStockOrderDTO).collect(Collectors.toList()));
+        return dto;
+    }
+
+    @Transactional
+    public StockOrderDTO submitStockOrder(Long orderId) throws BusinessException {
+        StockOrderJpaEntity entity = stockOrderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "出入库单不存在"));
+        entity.setOrderStatus("SUBMITTED");
+        StockOrderJpaEntity saved = stockOrderRepository.save(entity);
+        return toStockOrderDTO(saved);
+    }
+
     private StockOrderDTO toStockOrderDTO(StockOrderJpaEntity entity) {
         StockOrderDTO dto = new StockOrderDTO();
         dto.setOrderId(entity.getOrderId());
@@ -70,4 +92,3 @@ public class InOutApplicationService {
         return dto;
     }
 }
-
