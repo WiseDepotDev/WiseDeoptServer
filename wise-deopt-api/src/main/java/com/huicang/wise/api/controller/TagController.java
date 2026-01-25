@@ -6,6 +6,8 @@ import com.huicang.wise.application.tag.ProductTagPageDTO;
 import com.huicang.wise.application.tag.ProductTagUpdateRequest;
 import com.huicang.wise.application.tag.TagApplicationService;
 import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.protocol.ApiPacketType;
+import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -33,6 +35,7 @@ public class TagController {
             value = "创建产品标签",
             notes = "创建产品标签。成功返回200；参数错误返回400；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.TAG_CREATE)
     @PostMapping
     public ApiResponse<ProductTagDTO> createTag(
             @ApiParam(value = "标签创建请求", required = true)
@@ -44,6 +47,7 @@ public class TagController {
             value = "更新产品标签",
             notes = "更新产品标签。成功返回200；标签不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.TAG_UPDATE)
     @PutMapping
     public ApiResponse<ProductTagDTO> updateTag(
             @ApiParam(value = "标签更新请求", required = true)
@@ -55,6 +59,7 @@ public class TagController {
             value = "获取产品标签详情",
             notes = "获取产品标签详情。成功返回200；标签不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.TAG_DETAIL)
     @GetMapping("/{tagId}")
     public ApiResponse<ProductTagDTO> getTag(
             @ApiParam(value = "标签ID", required = true)
@@ -66,6 +71,7 @@ public class TagController {
             value = "获取产品标签列表",
             notes = "获取产品标签分页列表。成功返回200；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.TAG_LIST)
     @GetMapping
     public ApiResponse<ProductTagPageDTO> listTags(
             @ApiParam(value = "页码", required = false)

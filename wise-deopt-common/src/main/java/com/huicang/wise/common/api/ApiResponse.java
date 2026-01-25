@@ -115,5 +115,14 @@ public class ApiResponse<T> implements Serializable {
     public void setData(T data) {
         this.data = data;
     }
+
+    /**
+     * 判断是否成功
+     *
+     * @return true表示成功
+     */
+    public boolean isSuccess() {
+        return ErrorCode.SUCCESS.getCode().equals(this.code);
+    }
 }
 

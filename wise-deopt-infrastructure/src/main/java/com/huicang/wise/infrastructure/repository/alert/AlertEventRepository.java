@@ -23,4 +23,6 @@ public interface AlertEventRepository extends JpaRepository<AlertEventJpaEntity,
     List<AlertEventJpaEntity> findByAlertLevel(String alertLevel);
 
     long countByAlertTimeBetween(LocalDateTime startTime, LocalDateTime endTime);
+
+    List<AlertEventJpaEntity> findTop5ByStatusOrderByAlertTimeDesc(Integer status);
 }

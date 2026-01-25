@@ -6,8 +6,6 @@ import com.huicang.wise.infrastructure.repository.inventory.InventoryJpaEntity;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryRepository;
 import com.huicang.wise.infrastructure.repository.inventory.ProductJpaEntity;
 import com.huicang.wise.infrastructure.repository.inventory.ProductRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,16 +93,6 @@ public class InventoryApplicationService {
         ProductJpaEntity entity = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "产品不存在"));
         return toProductDTO(entity);
-    }
-
-    public ProductPageDTO listProducts(Integer page, Integer size) {
-        int pageIndex = page == null || page < 1 ? 0 : page - 1;
-        int pageSize = size == null || size < 1 ? 10 : size;
-        Page<ProductJpaEntity> result = productRepository.findAll(PageRequest.of(pageIndex, pageSize));
-        ProductPageDTO dto = new ProductPageDTO();
-        dto.setTotal(result.getTotalElements());
-        dto.setRows(result.getContent().stream().map(this::toProductDTO).collect(Collectors.toList()));
-        return dto;
     }
 
     /**

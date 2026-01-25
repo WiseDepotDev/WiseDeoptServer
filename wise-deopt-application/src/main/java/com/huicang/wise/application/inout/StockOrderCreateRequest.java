@@ -24,6 +24,8 @@ public class StockOrderCreateRequest {
      */
     private String orderStatus;
 
+    private java.util.List<StockOrderItemDTO> items;
+
     /**
      * 方法功能描述：获取出入库单号
      *
@@ -79,6 +81,14 @@ public class StockOrderCreateRequest {
      */
     public void setOrderStatus(String orderStatus) {
         this.orderStatus = orderStatus;
+    }
+
+    public java.util.List<StockOrderItemDTO> getItems() {
+        return items;
+    }
+
+    public void setItems(java.util.List<StockOrderItemDTO> items) {
+        this.items = items;
     }
 }
 

@@ -8,6 +8,8 @@ import com.huicang.wise.application.inventory.ProductCreateRequest;
 import com.huicang.wise.application.inventory.ProductDTO;
 import com.huicang.wise.application.inventory.ProductUpdateRequest;
 import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.protocol.ApiPacketType;
+import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -50,6 +52,7 @@ public class InventoryController {
             value = "创建产品",
             notes = "创建产品信息。成功返回200；参数错误返回400；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.PRODUCT_CREATE)
     @PostMapping("/products")
     public ApiResponse<ProductDTO> createProduct(
             @ApiParam(value = "产品创建请求", required = true)
@@ -68,6 +71,7 @@ public class InventoryController {
             value = "更新产品",
             notes = "更新产品信息。成功返回200；产品不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.PRODUCT_UPDATE)
     @PutMapping("/products/{productId}")
     public ApiResponse<ProductDTO> updateProduct(
             @ApiParam(value = "产品主键ID", required = true)
@@ -87,6 +91,7 @@ public class InventoryController {
             value = "查询产品详情",
             notes = "查询产品详情信息。成功返回200；产品不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.PRODUCT_DETAIL)
     @GetMapping("/products/{productId}")
     public ApiResponse<ProductDTO> getProduct(
             @ApiParam(value = "产品主键ID", required = true)
@@ -104,6 +109,7 @@ public class InventoryController {
             value = "创建库存明细",
             notes = "创建库存明细。成功返回200；参数错误返回400；产品不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.INVENTORY_CREATE)
     @PostMapping
     public ApiResponse<InventoryDTO> createInventory(
             @ApiParam(value = "库存创建请求", required = true)
@@ -122,6 +128,7 @@ public class InventoryController {
             value = "更新库存明细",
             notes = "更新库存明细。成功返回200；库存不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.INVENTORY_UPDATE)
     @PutMapping("/{inventoryId}")
     public ApiResponse<InventoryDTO> updateInventory(
             @ApiParam(value = "库存明细ID", required = true)
@@ -141,6 +148,7 @@ public class InventoryController {
             value = "按产品查询库存",
             notes = "根据产品ID查询库存列表。成功返回200；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.INVENTORY_LIST)
     @GetMapping
     public ApiResponse<List<InventoryDTO>> listInventoryByProduct(
             @ApiParam(value = "产品主键ID", required = true)

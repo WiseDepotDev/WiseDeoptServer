@@ -5,6 +5,8 @@ import com.huicang.wise.application.oss.MinioFileDTO;
 import com.huicang.wise.application.oss.OssApplicationService;
 import com.huicang.wise.application.oss.PresignedUrlResponse;
 import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.protocol.ApiPacketType;
+import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -43,6 +45,7 @@ public class OssController {
             value = "创建文件记录",
             notes = "创建MinIO文件记录。成功返回200；参数错误返回400；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.OSS_FILE_CREATE)
     @PostMapping("/files")
     public ApiResponse<MinioFileDTO> createFileRecord(
             @ApiParam(value = "文件记录创建请求", required = true)
@@ -62,6 +65,7 @@ public class OssController {
             value = "生成预签名下载链接",
             notes = "生成预签名下载链接。成功返回200；参数错误返回400；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.OSS_PRESIGNED_URL)
     @GetMapping("/presigned-url")
     public ApiResponse<PresignedUrlResponse> generatePresignedUrl(
             @ApiParam(value = "Bucket名称", required = true)

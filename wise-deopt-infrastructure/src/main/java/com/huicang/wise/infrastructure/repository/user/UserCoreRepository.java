@@ -1,8 +1,8 @@
 package com.huicang.wise.infrastructure.repository.user;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * 类功能描述：用户核心信息JPA仓储
@@ -20,5 +20,13 @@ public interface UserCoreRepository extends JpaRepository<UserCoreJpaEntity, Lon
      * @return 用户实体
      */
     Optional<UserCoreJpaEntity> findByUsername(String username);
+
+    /**
+     * 方法功能描述：根据NFC ID查询用户
+     *
+     * @param nfcId NFC ID
+     * @return 用户实体
+     */
+    Optional<UserCoreJpaEntity> findByNfcId(String nfcId);
 }
 

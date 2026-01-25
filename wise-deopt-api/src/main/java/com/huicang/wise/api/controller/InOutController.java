@@ -5,6 +5,8 @@ import com.huicang.wise.application.inout.StockOrderCreateRequest;
 import com.huicang.wise.application.inout.StockOrderDTO;
 import com.huicang.wise.application.inout.StockOrderPageDTO;
 import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.protocol.ApiPacketType;
+import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -44,6 +46,7 @@ public class InOutController {
             value = "创建出入库单",
             notes = "创建出入库单。成功返回200；参数错误返回400；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.STOCK_ORDER_CREATE)
     @PostMapping
     public ApiResponse<StockOrderDTO> createStockOrder(
             @ApiParam(value = "出入库单创建请求", required = true)
@@ -55,6 +58,7 @@ public class InOutController {
             value = "获取出入库单列表",
             notes = "获取出入库单分页列表。成功返回200；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.STOCK_ORDER_LIST)
     @GetMapping
     public ApiResponse<StockOrderPageDTO> listStockOrders(
             @ApiParam(value = "页码", required = false)
@@ -68,6 +72,7 @@ public class InOutController {
             value = "提交出入库单",
             notes = "提交出入库单。成功返回200；出入库单不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.STOCK_ORDER_SUBMIT)
     @PostMapping("/{orderId}/submit")
     public ApiResponse<StockOrderDTO> submitStockOrder(
             @ApiParam(value = "出入库单ID", required = true)
@@ -85,6 +90,7 @@ public class InOutController {
             value = "查询出入库单详情",
             notes = "查询出入库单详情。成功返回200；出入库单不存在返回404；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.STOCK_ORDER_DETAIL)
     @GetMapping("/{orderId}")
     public ApiResponse<StockOrderDTO> getStockOrder(
             @ApiParam(value = "出入库单ID", required = true)

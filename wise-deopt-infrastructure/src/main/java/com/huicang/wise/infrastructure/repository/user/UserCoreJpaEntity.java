@@ -1,11 +1,11 @@
 package com.huicang.wise.infrastructure.repository.user;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
 
 /**
  * 类功能描述：用户核心信息JPA实体
@@ -40,6 +40,18 @@ public class UserCoreJpaEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "nfc_id")
+    private String nfcId;
+
+    @Column(name = "pin_hash")
+    private String pinHash;
+
+    @Column(name = "login_fail_count")
+    private Integer loginFailCount;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
     public Long getUserId() {
         return userId;
     }
@@ -70,6 +82,38 @@ public class UserCoreJpaEntity {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getNfcId() {
+        return nfcId;
+    }
+
+    public void setNfcId(String nfcId) {
+        this.nfcId = nfcId;
+    }
+
+    public String getPinHash() {
+        return pinHash;
+    }
+
+    public void setPinHash(String pinHash) {
+        this.pinHash = pinHash;
+    }
+
+    public Integer getLoginFailCount() {
+        return loginFailCount;
+    }
+
+    public void setLoginFailCount(Integer loginFailCount) {
+        this.loginFailCount = loginFailCount;
+    }
+
+    public LocalDateTime getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public void setLockedUntil(LocalDateTime lockedUntil) {
+        this.lockedUntil = lockedUntil;
     }
 
     public Boolean getEnabled() {

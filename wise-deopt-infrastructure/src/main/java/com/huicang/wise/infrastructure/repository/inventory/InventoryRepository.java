@@ -20,4 +20,6 @@ public interface InventoryRepository extends JpaRepository<InventoryJpaEntity, L
      * @return 库存明细列表
      */
     List<InventoryJpaEntity> findByProductId(Long productId);
+
+    java.util.Optional<InventoryJpaEntity> findByProductIdAndLocationCode(Long productId, String locationCode);
 }

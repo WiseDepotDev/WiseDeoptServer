@@ -36,6 +36,8 @@ public class StockOrderDTO {
      */
     private LocalDateTime createdAt;
 
+    private java.util.List<StockOrderItemDTO> items;
+
     /**
      * 方法功能描述：获取出入库单ID
      *
@@ -129,6 +131,14 @@ public class StockOrderDTO {
      */
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public java.util.List<StockOrderItemDTO> getItems() {
+        return items;
+    }
+
+    public void setItems(java.util.List<StockOrderItemDTO> items) {
+        this.items = items;
     }
 }
 

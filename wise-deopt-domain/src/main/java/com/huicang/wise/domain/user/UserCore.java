@@ -46,6 +46,14 @@ public class UserCore {
      */
     private LocalDateTime updatedAt;
 
+    private String nfcId;
+
+    private String pinHash;
+
+    private Integer loginFailCount;
+
+    private LocalDateTime lockedUntil;
+
     /**
      * 方法功能描述：获取用户主键ID
      *
@@ -120,6 +128,38 @@ public class UserCore {
      */
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getNfcId() {
+        return nfcId;
+    }
+
+    public void setNfcId(String nfcId) {
+        this.nfcId = nfcId;
+    }
+
+    public String getPinHash() {
+        return pinHash;
+    }
+
+    public void setPinHash(String pinHash) {
+        this.pinHash = pinHash;
+    }
+
+    public Integer getLoginFailCount() {
+        return loginFailCount;
+    }
+
+    public void setLoginFailCount(Integer loginFailCount) {
+        this.loginFailCount = loginFailCount;
+    }
+
+    public LocalDateTime getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public void setLockedUntil(LocalDateTime lockedUntil) {
+        this.lockedUntil = lockedUntil;
     }
 
     /**

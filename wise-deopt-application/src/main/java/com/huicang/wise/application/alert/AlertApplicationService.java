@@ -120,6 +120,37 @@ public class AlertApplicationService {
     }
 
     @Transactional
+    public void acknowledgeAlert(Long eventId) throws BusinessException {
+        AlertEventJpaEntity entity = alertEventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "告警不存在"));
+        
+        // 如果已经是处理状态，则无需重复ACK
+        if (entity.getStatus() != null && entity.getStatus() != 0) {
+            return;
+        }
+
+        entity.setStatus(1); // 1: Acknowledged
+        // ACK usually means someone is looking at it, but it's not necessarily resolved. 
+        // However, based on existing logic, non-zero status sets isActive=false. 
+        // We might want to keep it active or follow existing logic. 
+        // Let's assume ACK means "handled" in the sense of "checked".
+        // If we want to keep it active, we should change the logic in updateAlertStatus or here.
+        // For now, let's follow updateAlertStatus logic style:
+        entity.setIsActive(true); // ACK implies it is still an issue, just known.
+        
+        alertEventRepository.save(entity);
+
+        AlertHandleLogJpaEntity log = new AlertHandleLogJpaEntity();
+        log.setLogId(System.currentTimeMillis());
+        log.setEventId(eventId);
+        log.setGoalStatus(1);
+        log.setGoalStatusDescription("已确认");
+        log.setRemark("快速确认");
+        log.setHandleTime(LocalDateTime.now());
+        alertHandleLogRepository.save(log);
+    }
+
+    @Transactional
     public void updateAlertStatus(Long eventId, UpdateAlertStatusRequest request) throws BusinessException {
         if (request == null || request.getStatus() == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "告警状态不能为空");

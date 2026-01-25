@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
  * @modified xingchentye 2026-01-19 统一转换异常为API响应
  */
 @RestControllerAdvice
+@lombok.extern.slf4j.Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -31,6 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Void> handleBusinessException(BusinessException ex) {
+        log.warn("业务异常: code={}, message={}", ex.getErrorCode().getCode(), ex.getMessage());
         return ApiResponse.failure(ex.getErrorCode(), ex.getMessage());
     }
 
@@ -43,23 +45,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        log.warn("参数校验异常: {}", ex.getMessage());
         return ApiResponse.failure(ErrorCode.PARAM_ERROR, "请求参数校验失败");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        log.warn("请求体解析失败: {}", ex.getMessage());
         return ApiResponse.failure(ErrorCode.REQUEST_BODY_INVALID, ErrorCode.REQUEST_BODY_INVALID.getMessage());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public ApiResponse<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
+        log.warn("不支持的请求方法: {}", ex.getMessage());
         return ApiResponse.failure(ErrorCode.REQUEST_METHOD_NOT_ALLOWED, ErrorCode.REQUEST_METHOD_NOT_ALLOWED.getMessage());
     }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ApiResponse<Void> handleResponseStatusException(ResponseStatusException ex) {
+        log.warn("HTTP响应状态异常: status={}, message={}", ex.getStatusCode(), ex.getMessage());
         if (HttpStatus.NOT_FOUND.equals(ex.getStatusCode())) {
             return ApiResponse.failure(ErrorCode.REQUEST_NOT_FOUND, ErrorCode.REQUEST_NOT_FOUND.getMessage());
         }
@@ -78,6 +84,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleException(Exception ex) {
+        log.error("系统未知异常", ex);
         return ApiResponse.failure(ErrorCode.SYSTEM_ERROR, "系统异常，请联系管理员");
     }
 }

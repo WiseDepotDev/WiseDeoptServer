@@ -1,5 +1,10 @@
 server:
     port: 8080
+    servlet:
+        encoding:
+            charset: UTF-8
+            force: true
+            enabled: true
 
 spring:
     application:
@@ -15,7 +20,7 @@ spring:
     jpa:
         database-platform: org.hibernate.dialect.MySQLDialect
         hibernate:
-            ddl-auto: none
+            ddl-auto: update
         show-sql: false
     data:
         redis:

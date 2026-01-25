@@ -18,6 +18,8 @@ import com.huicang.wise.application.alert.AlertEventPageDTO;
 import com.huicang.wise.application.alert.AlertHandleLogPageDTO;
 import com.huicang.wise.application.alert.UpdateAlertStatusRequest;
 import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.protocol.ApiPacketType;
+import com.huicang.wise.common.protocol.PacketType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -51,6 +53,7 @@ public class AlertController {
             value = "创建告警",
             notes = "创建告警事件。成功返回200；参数错误返回400；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.ALERT_CREATE)
     @PostMapping
     public ApiResponse<AlertDTO> createAlert(
             @ApiParam(value = "告警创建请求", required = true)
@@ -68,6 +71,7 @@ public class AlertController {
             value = "按级别查询告警",
             notes = "按告警级别查询告警列表。成功返回200；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.ALERT_LIST_BY_LEVEL)
     @GetMapping(params = "alertLevel")
     public ApiResponse<List<AlertDTO>> listAlertsByLevel(
             @ApiParam(value = "告警级别", required = true)
@@ -79,6 +83,7 @@ public class AlertController {
             value = "获取告警事件列表",
             notes = "获取告警事件分页列表。成功返回200；服务器异常返回500。"
     )
+    @ApiPacketType(PacketType.ALERT_LIST)
     @GetMapping
     public ApiResponse<AlertEventPageDTO> listAlertEvents(
             @ApiParam(value = "页码", required = false)
@@ -112,6 +117,19 @@ public class AlertController {
             @ApiParam(value = "告警事件ID", required = true)
             @PathVariable("eventId") Long eventId) {
         return ApiResponse.success(alertApplicationService.getAlert(eventId));
+    }
+
+    @ApiOperation(
+            value = "确认告警",
+            notes = "快速确认告警。成功返回200；告警不存在返回404；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.ALERT_ACK)
+    @PostMapping("/{eventId}/ack")
+    public ApiResponse<Void> acknowledgeAlert(
+            @ApiParam(value = "告警事件ID", required = true)
+            @PathVariable("eventId") Long eventId) {
+        alertApplicationService.acknowledgeAlert(eventId);
+        return ApiResponse.success();
     }
 
     @ApiOperation(
