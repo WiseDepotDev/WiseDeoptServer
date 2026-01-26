@@ -85,6 +85,10 @@ public enum PacketType {
     TAG_UPDATE("0x1902", "更新标签"),
     TAG_DETAIL("0x1903", "获取标签详情"),
     TAG_LIST("0x1904", "获取标签列表"),
+    TAG_BATCH_BIND("0x1905", "批量绑定标签"),
+
+    // Report (0x2000 - 0x20FF)
+    REPORT_LEDGER("0x2001", "库存台账"),
 
     // Common/System
     SYSTEM_ERROR("0x9999", "系统错误"),

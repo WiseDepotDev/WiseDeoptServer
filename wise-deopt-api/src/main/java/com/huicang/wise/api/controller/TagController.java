@@ -1,5 +1,6 @@
 package com.huicang.wise.api.controller;
 
+import com.huicang.wise.application.tag.ProductTagBatchBindRequest;
 import com.huicang.wise.application.tag.ProductTagCreateRequest;
 import com.huicang.wise.application.tag.ProductTagDTO;
 import com.huicang.wise.application.tag.ProductTagPageDTO;
@@ -41,6 +42,18 @@ public class TagController {
             @ApiParam(value = "标签创建请求", required = true)
             @RequestBody ProductTagCreateRequest request) {
         return ApiResponse.success(tagApplicationService.createTag(request));
+    }
+
+    @ApiOperation(
+            value = "批量绑定标签",
+            notes = "批量绑定标签到指定产品。成功返回200；参数错误返回400；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.TAG_BATCH_BIND)
+    @PostMapping("/batch-bind")
+    public ApiResponse<List<ProductTagDTO>> batchBindTags(
+            @ApiParam(value = "批量绑定请求", required = true)
+            @RequestBody ProductTagBatchBindRequest request) {
+        return ApiResponse.success(tagApplicationService.batchBindTags(request));
     }
 
     @ApiOperation(

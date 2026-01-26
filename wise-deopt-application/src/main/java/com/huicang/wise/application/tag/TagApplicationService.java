@@ -87,6 +87,41 @@ public class TagApplicationService {
         return dto;
     }
 
+    @Transactional
+    public List<ProductTagDTO> batchBindTags(ProductTagBatchBindRequest request) throws BusinessException {
+        if (request.getTags() == null || request.getTags().isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "标签列表不能为空");
+        }
+
+        Long commonProductId = request.getProductId();
+        if (commonProductId != null) {
+            if (productRepository.findById(commonProductId).isEmpty()) {
+                throw new BusinessException(ErrorCode.NOT_FOUND, "目标产品不存在: " + commonProductId);
+            }
+        } else {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "必须指定目标产品ID");
+        }
+
+        List<ProductTagJpaEntity> entities = new java.util.ArrayList<>();
+        long baseId = System.currentTimeMillis();
+        int index = 0;
+
+        for (ProductTagBatchBindRequest.TagBindInfo tagInfo : request.getTags()) {
+            ProductTagJpaEntity entity = new ProductTagJpaEntity();
+            entity.setTagId(baseId + (index++));
+            entity.setProductId(commonProductId);
+            entity.setBarcode(tagInfo.getBarcode());
+            entity.setNfcUid(tagInfo.getNfcUid());
+            entity.setRfid(tagInfo.getRfid());
+            entity.setStatus(DEFAULT_STATUS);
+            entity.setCreatedAt(LocalDateTime.now());
+            entities.add(entity);
+        }
+
+        List<ProductTagJpaEntity> savedEntities = productTagRepository.saveAll(entities);
+        return savedEntities.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     private ProductTagDTO toDTO(ProductTagJpaEntity entity) {
         ProductTagDTO dto = new ProductTagDTO();
         dto.setTagId(entity.getTagId());

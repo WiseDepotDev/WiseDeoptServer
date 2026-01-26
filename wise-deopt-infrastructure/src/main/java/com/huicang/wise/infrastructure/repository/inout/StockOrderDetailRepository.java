@@ -15,4 +15,6 @@ import java.util.List;
 public interface StockOrderDetailRepository extends JpaRepository<StockOrderDetailJpaEntity, Long> {
 
     List<StockOrderDetailJpaEntity> findByOrderId(Long orderId);
+
+    List<StockOrderDetailJpaEntity> findByProductId(Long productId);
 }
