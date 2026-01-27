@@ -50,6 +50,7 @@ public enum PacketType {
     INVENTORY_UPDATE("0x1307", "更新库存记录"),
     INVENTORY_DIFF_LIST("0x1308", "获取差异列表"),
     INVENTORY_DIFF_REVIEW("0x1309", "复核差异"),
+    INVENTORY_SEARCH("0x130A", "搜索库存"),
 
     // InOut (0x1400 - 0x14FF)
     STOCK_IN("0x1401", "入库单"),

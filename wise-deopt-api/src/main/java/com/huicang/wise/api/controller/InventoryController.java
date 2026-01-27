@@ -155,5 +155,71 @@ public class InventoryController {
             @RequestParam("productId") Long productId) {
         return ApiResponse.success(inventoryApplicationService.listInventoryByProduct(productId));
     }
+
+    /**
+     * 方法功能描述：搜索库存
+     *
+     * @param keyword 搜索关键字
+     * @param type    搜索类型（PRODUCT/LOCATION）
+     * @return 搜索结果
+     */
+    @ApiOperation(
+            value = "搜索库存",
+            notes = "搜索产品或按库位搜索库存。type=PRODUCT返回产品列表，type=LOCATION返回库存列表。"
+    )
+    @ApiPacketType(PacketType.INVENTORY_SEARCH)
+    @GetMapping("/search")
+    public ApiResponse<Object> search(
+            @ApiParam(value = "搜索关键字", required = true)
+            @RequestParam("keyword") String keyword,
+            @ApiParam(value = "搜索类型(PRODUCT/LOCATION)", required = true)
+            @RequestParam("type") String type) {
+        if ("PRODUCT".equalsIgnoreCase(type)) {
+            return ApiResponse.success(inventoryApplicationService.searchProducts(keyword));
+        } else if ("LOCATION".equalsIgnoreCase(type)) {
+            return ApiResponse.success(inventoryApplicationService.searchInventoryByLocation(keyword));
+        }
+        return ApiResponse.success(List.of());
+    }
+
+    /**
+     * 方法功能描述：获取差异列表
+     *
+     * @param status 状态过滤(0-待处理, 1-已处理)
+     * @return 差异列表
+     */
+    @ApiOperation(
+            value = "获取差异列表",
+            notes = "获取库存差异列表。支持按状态过滤。成功返回200；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.INVENTORY_DIFF_LIST)
+    @GetMapping("/diffs")
+    public ApiResponse<List<com.huicang.wise.application.inventory.InventoryDifferenceDTO>> listDifferences(
+            @ApiParam(value = "状态(0-待处理, 1-已处理)", required = false)
+            @RequestParam(value = "status", required = false) Integer status) {
+        return ApiResponse.success(inventoryReviewApplicationService.listDifferences(status));
+    }
+
+    /**
+     * 方法功能描述：复核差异
+     *
+     * @param diffId  差异ID
+     * @param request 复核请求
+     * @return 无
+     */
+    @ApiOperation(
+            value = "复核差异",
+            notes = "复核并处理库存差异。action=CORRECT修正库存，action=CONFIRM仅标记已处理。成功返回200；差异不存在返回404；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.INVENTORY_DIFF_REVIEW)
+    @PostMapping("/diffs/{diffId}/review")
+    public ApiResponse<Void> reviewDifference(
+            @ApiParam(value = "差异ID", required = true)
+            @PathVariable("diffId") Long diffId,
+            @ApiParam(value = "复核请求", required = true)
+            @RequestBody com.huicang.wise.application.inventory.ReviewDifferenceRequest request) {
+        inventoryReviewApplicationService.reviewDifference(diffId, request);
+        return ApiResponse.success(null);
+    }
 }
 

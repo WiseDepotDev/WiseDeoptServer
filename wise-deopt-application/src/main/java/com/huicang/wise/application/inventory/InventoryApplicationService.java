@@ -155,6 +155,28 @@ public class InventoryApplicationService {
         return entities.stream().map(this::toInventoryDTO).collect(Collectors.toList());
     }
 
+    /**
+     * 方法功能描述：搜索产品
+     *
+     * @param keyword 搜索关键字
+     * @return 产品列表
+     */
+    public List<ProductDTO> searchProducts(String keyword) {
+        List<ProductJpaEntity> entities = productRepository.findByProductNameContaining(keyword);
+        return entities.stream().map(this::toProductDTO).collect(Collectors.toList());
+    }
+
+    /**
+     * 方法功能描述：按库位搜索库存
+     *
+     * @param keyword 库位关键字
+     * @return 库存列表
+     */
+    public List<InventoryDTO> searchInventoryByLocation(String keyword) {
+        List<InventoryJpaEntity> entities = inventoryRepository.findByLocationCodeContaining(keyword);
+        return entities.stream().map(this::toInventoryDTO).collect(Collectors.toList());
+    }
+
     private ProductDTO toProductDTO(ProductJpaEntity entity) {
         ProductDTO dto = new ProductDTO();
         dto.setProductId(entity.getProductId());
