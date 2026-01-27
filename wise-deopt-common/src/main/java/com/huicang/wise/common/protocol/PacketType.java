@@ -93,7 +93,8 @@ public enum PacketType {
 
     // Common/System
     SYSTEM_ERROR("0x9999", "系统错误"),
-    UNKNOWN("0x0000", "未知类型");
+    UNKNOWN("0x0000", "未知类型"),
+    RFID_DATA_UPLOAD("0x0601", "RFID数据上报");
 
     private final String code;
     private final String description;

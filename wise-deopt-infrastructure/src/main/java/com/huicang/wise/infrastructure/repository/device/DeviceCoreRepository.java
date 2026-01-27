@@ -9,5 +9,7 @@ public interface DeviceCoreRepository extends JpaRepository<DeviceCoreJpaEntity,
     List<DeviceCoreJpaEntity> findByType(Integer type);
 
     List<DeviceCoreJpaEntity> findByStatus(Integer status);
+
+    long countByStatus(Integer status);
 }
 

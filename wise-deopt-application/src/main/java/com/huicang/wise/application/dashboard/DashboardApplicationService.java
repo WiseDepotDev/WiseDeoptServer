@@ -4,6 +4,7 @@ import com.huicang.wise.application.alert.AlertEventSummaryDTO;
 import com.huicang.wise.application.task.TaskDTO;
 import com.huicang.wise.infrastructure.repository.alert.AlertEventJpaEntity;
 import com.huicang.wise.infrastructure.repository.alert.AlertEventRepository;
+import com.huicang.wise.infrastructure.repository.device.DeviceCoreRepository;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryJpaEntity;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryRepository;
 import com.huicang.wise.infrastructure.repository.task.TaskJpaEntity;
@@ -22,20 +23,22 @@ public class DashboardApplicationService {
 
     private static final String DASHBOARD_KPI_KEY = "dashboard:kpi";
     private static final String INSPECTION_PROGRESS_KEY = "inspection:progress";
-    private static final String DEVICE_ONLINE_COUNT_KEY = "device:online:count";
 
     private final InventoryRepository inventoryRepository;
     private final AlertEventRepository alertEventRepository;
     private final TaskRepository taskRepository;
+    private final DeviceCoreRepository deviceCoreRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
     public DashboardApplicationService(InventoryRepository inventoryRepository,
                                        AlertEventRepository alertEventRepository,
                                        TaskRepository taskRepository,
+                                       DeviceCoreRepository deviceCoreRepository,
                                        StringRedisTemplate stringRedisTemplate) {
         this.inventoryRepository = inventoryRepository;
         this.alertEventRepository = alertEventRepository;
         this.taskRepository = taskRepository;
+        this.deviceCoreRepository = deviceCoreRepository;
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
@@ -53,7 +56,7 @@ public class DashboardApplicationService {
             long inventoryTotal = calculateInventoryTotal();
             long todayAlertCount = calculateTodayAlertCount();
             int inspectionProgress = readInteger(INSPECTION_PROGRESS_KEY);
-            int deviceOnlineCount = readInteger(DEVICE_ONLINE_COUNT_KEY);
+            int deviceOnlineCount = (int) deviceCoreRepository.countByStatus(1); // 假设1为在线
 
             dto.setInventoryTotal(inventoryTotal);
             dto.setTodayAlertCount(todayAlertCount);
@@ -61,7 +64,7 @@ public class DashboardApplicationService {
             dto.setDeviceOnlineCount(deviceOnlineCount);
 
             String cacheValue = inventoryTotal + "|" + todayAlertCount + "|" + inspectionProgress + "|" + deviceOnlineCount;
-            stringRedisTemplate.opsForValue().set(DASHBOARD_KPI_KEY, cacheValue, Duration.ofMinutes(5));
+            stringRedisTemplate.opsForValue().set(DASHBOARD_KPI_KEY, cacheValue, Duration.ofMinutes(1)); // 缓存1分钟
         }
 
         // 2. 获取未处理告警（实时）
