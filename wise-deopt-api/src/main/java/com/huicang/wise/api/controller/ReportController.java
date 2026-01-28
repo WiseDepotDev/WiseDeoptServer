@@ -1,6 +1,7 @@
 package com.huicang.wise.api.controller;
 
 import com.huicang.wise.application.report.InventoryLedgerDTO;
+import com.huicang.wise.application.report.ReconciliationReportDTO;
 import com.huicang.wise.application.report.ReportApplicationService;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.protocol.ApiPacketType;
@@ -42,5 +43,17 @@ public class ReportController {
             @ApiParam(value = "产品ID", required = true)
             @RequestParam("productId") Long productId) {
         return ApiResponse.success(reportApplicationService.getInventoryLedger(productId));
+    }
+
+    @ApiOperation(
+            value = "获取对账报表（差异分析）",
+            notes = "获取库存差异对账报表。成功返回200；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.REPORT_RECONCILIATION)
+    @GetMapping("/reconciliation")
+    public ApiResponse<List<ReconciliationReportDTO>> getReconciliationReport(
+            @ApiParam(value = "状态过滤：0-待处理 1-已处理", required = false)
+            @RequestParam(value = "status", required = false) Integer status) {
+        return ApiResponse.success(reportApplicationService.getReconciliationReport(status));
     }
 }

@@ -32,6 +32,9 @@ public class InspectionPlanVO {
     @ApiModelProperty("定时表达式")
     private String cronExpression;
 
+    @ApiModelProperty("巡检路线数据")
+    private String routeData;
+
     @ApiModelProperty("状态：0-禁用 1-启用")
     private Integer status;
 

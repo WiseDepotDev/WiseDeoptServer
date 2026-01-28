@@ -33,6 +33,12 @@ public class InspectionPlanJpaEntity {
     private String cronExpression;
 
     /**
+     * 巡检路线数据（JSON或描述）
+     */
+    @Column(name = "route_data")
+    private String routeData;
+
+    /**
      * 状态：0-禁用，1-启用
      */
     @Column(name = "status")

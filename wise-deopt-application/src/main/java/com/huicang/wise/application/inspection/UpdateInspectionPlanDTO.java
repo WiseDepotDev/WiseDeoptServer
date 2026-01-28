@@ -27,6 +27,9 @@ public class UpdateInspectionPlanDTO {
     @ApiModelProperty(value = "定时表达式")
     private String cronExpression;
 
+    @ApiModelProperty(value = "巡检路线数据")
+    private String routeData;
+
     @ApiModelProperty(value = "状态：0-禁用 1-启用")
     private Integer status;
 }

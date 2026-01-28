@@ -67,6 +67,7 @@ public class InspectionApplicationService {
         entity.setPlanName(request.getPlanName());
         entity.setDeviceId(request.getDeviceId());
         entity.setCronExpression(request.getCronExpression());
+        entity.setRouteData(request.getRouteData());
         entity.setStatus(1); // 默认启用
         entity.setCreateTime(LocalDateTime.now());
         
@@ -86,6 +87,7 @@ public class InspectionApplicationService {
             entity.setDeviceId(request.getDeviceId());
         }
         if (request.getCronExpression() != null) entity.setCronExpression(request.getCronExpression());
+        if (request.getRouteData() != null) entity.setRouteData(request.getRouteData());
         if (request.getStatus() != null) entity.setStatus(request.getStatus());
 
         return toPlanVO(inspectionPlanRepository.save(entity));

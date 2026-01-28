@@ -90,6 +90,7 @@ public enum PacketType {
 
     // Report (0x2000 - 0x20FF)
     REPORT_LEDGER("0x2001", "库存台账"),
+    REPORT_RECONCILIATION("0x2002", "对账报表"),
 
     // Common/System
     SYSTEM_ERROR("0x9999", "系统错误"),
