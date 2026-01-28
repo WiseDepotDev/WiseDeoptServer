@@ -155,4 +155,16 @@ public class InspectionController {
     public ApiResponse<InspectionResultSummaryVO> getResultSummary(@PathVariable Long taskId) {
         return ApiResponse.success(inspectionApplicationService.getResultSummary(taskId));
     }
+
+    @GetMapping("/statistics")
+    @ApiOperation("获取巡检统计信息（看板KPI）")
+    public ApiResponse<InspectionStatisticsVO> getStatistics() {
+        return ApiResponse.success(inspectionApplicationService.getStatistics());
+    }
+
+    @GetMapping("/result/{taskId}/missing")
+    @ApiOperation("获取巡检缺失项明细")
+    public ApiResponse<List<InspectionMissingItemVO>> getMissingItems(@PathVariable Long taskId) {
+        return ApiResponse.success(inspectionApplicationService.getMissingItems(taskId));
+    }
 }

@@ -7,16 +7,16 @@ import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.infrastructure.repository.device.DeviceCoreJpaEntity;
 import com.huicang.wise.infrastructure.repository.device.DeviceCoreRepository;
 import com.huicang.wise.infrastructure.repository.inspection.*;
+import com.huicang.wise.infrastructure.repository.inventory.ProductRepository;
 import com.huicang.wise.infrastructure.repository.tag.ProductTagJpaEntity;
 import com.huicang.wise.infrastructure.repository.tag.ProductTagRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  * @author B1
  * @version 1.0
  * @since 2024-04-20
+ * @modified 2026-01-28 实现缺失项计算和统计
  */
 @Service
 public class InspectionApplicationService {
@@ -35,7 +36,9 @@ public class InspectionApplicationService {
     private final InspectionResultRepository inspectionResultRepository;
     private final DeviceCoreRepository deviceCoreRepository;
     private final ProductTagRepository productTagRepository;
+    private final ProductRepository productRepository;
     private final AlertApplicationService alertApplicationService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     public InspectionApplicationService(InspectionPlanRepository inspectionPlanRepository,
                                         InspectionTaskRepository inspectionTaskRepository,
@@ -43,6 +46,7 @@ public class InspectionApplicationService {
                                         InspectionResultRepository inspectionResultRepository,
                                         DeviceCoreRepository deviceCoreRepository,
                                         ProductTagRepository productTagRepository,
+                                        ProductRepository productRepository,
                                         AlertApplicationService alertApplicationService) {
         this.inspectionPlanRepository = inspectionPlanRepository;
         this.inspectionTaskRepository = inspectionTaskRepository;
@@ -50,6 +54,7 @@ public class InspectionApplicationService {
         this.inspectionResultRepository = inspectionResultRepository;
         this.deviceCoreRepository = deviceCoreRepository;
         this.productTagRepository = productTagRepository;
+        this.productRepository = productRepository;
         this.alertApplicationService = alertApplicationService;
     }
 
@@ -232,43 +237,157 @@ public class InspectionApplicationService {
              throw new BusinessException(ErrorCode.PARAM_ERROR, "任务未完成，无法生成结果");
         }
 
-        // 统计逻辑
-        List<InspectionDetailJpaEntity> details = inspectionDetailRepository.findByTaskId(taskId);
+        // 1. 获取所有预期在库的标签 (假设状态"1"为在库)
+        List<ProductTagJpaEntity> expectedTags = productTagRepository.findByStatus("1");
+        Map<String, ProductTagJpaEntity> expectedMap = expectedTags.stream()
+                .collect(Collectors.toMap(ProductTagJpaEntity::getRfid, t -> t, (k1, k2) -> k1));
         
-        int totalScanned = details.size();
-        int matchedCount = (int) details.stream().filter(d -> d.getMatched() == 1).count();
-        // 简单假设：缺失 = 0 (需结合库存快照才能准确计算缺失，这里暂不实现复杂逻辑)
-        // 多余 = 未匹配
-        int extraCount = totalScanned - matchedCount; 
+        // 2. 获取本次巡检扫描到的明细
+        List<InspectionDetailJpaEntity> scannedDetails = inspectionDetailRepository.findByTaskId(taskId);
+        Set<String> scannedRfids = scannedDetails.stream()
+                .map(InspectionDetailJpaEntity::getRfid)
+                .collect(Collectors.toSet());
 
+        // 3. 计算匹配、缺失、多余
+        int totalExpected = expectedTags.size();
+        int totalScanned = scannedDetails.size();
+        
+        List<String> matchedRfids = new ArrayList<>();
+        List<String> missingRfids = new ArrayList<>();
+        List<String> extraRfids = new ArrayList<>();
+
+        for (String rfid : expectedMap.keySet()) {
+            if (scannedRfids.contains(rfid)) {
+                matchedRfids.add(rfid);
+            } else {
+                missingRfids.add(rfid);
+            }
+        }
+
+        for (String rfid : scannedRfids) {
+            if (!expectedMap.containsKey(rfid)) {
+                extraRfids.add(rfid);
+            }
+        }
+
+        int matchedCount = matchedRfids.size();
+        int missingCount = missingRfids.size();
+        int extraCount = extraRfids.size();
+
+        // 4. 生成结果实体
         InspectionResultJpaEntity result = new InspectionResultJpaEntity();
         result.setResultId(System.currentTimeMillis());
         result.setTaskId(taskId);
-        result.setTotalExpected(0); // 暂无法计算预期
+        result.setTotalExpected(totalExpected);
         result.setTotalScanned(totalScanned);
         result.setMatchedCount(matchedCount);
-        result.setMissingCount(0);
+        result.setMissingCount(missingCount);
         result.setExtraCount(extraCount);
         result.setCompareTime(LocalDateTime.now());
         result.setCreateTime(LocalDateTime.now());
+
+        // 5. 序列化详情数据
+        try {
+            // 构造缺失项详情列表
+            List<Map<String, Object>> missingList = new ArrayList<>();
+            for (String rfid : missingRfids) {
+                ProductTagJpaEntity tag = expectedMap.get(rfid);
+                Map<String, Object> item = new HashMap<>();
+                item.put("rfid", rfid);
+                item.put("productId", tag.getProductId());
+                // 查询产品名称
+                productRepository.findById(tag.getProductId()).ifPresent(p -> item.put("productName", p.getName()));
+                missingList.add(item);
+            }
+            result.setMissingProducts(objectMapper.writeValueAsString(missingList));
+
+            // 构造多余项详情列表
+            List<Map<String, Object>> extraList = new ArrayList<>();
+            for (String rfid : extraRfids) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("rfid", rfid);
+                extraList.add(item);
+            }
+            result.setExtraProducts(objectMapper.writeValueAsString(extraList));
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.setMissingProducts("[]");
+            result.setExtraProducts("[]");
+        }
         
         inspectionResultRepository.save(result);
 
-        // 触发告警
-        if (extraCount > 0) {
+        // 6. 触发告警
+        if (missingCount > 0 || extraCount > 0) {
             try {
                 AlertCreateRequest alertRequest = new AlertCreateRequest();
                 alertRequest.setAlertType("INSPECTION_EXCEPTION");
                 alertRequest.setAlertLevel(2);
-                alertRequest.setDescription(String.format("巡检任务 %d 发现 %d 个多余/未知标签", taskId, extraCount));
+                alertRequest.setDescription(String.format("巡检任务 %d 异常：缺失 %d，多余 %d", taskId, missingCount, extraCount));
                 alertApplicationService.createAlert(alertRequest);
             } catch (Exception e) {
-                // 忽略告警创建失败，不影响结果保存
                 e.printStackTrace();
             }
         }
     }
     
+    public InspectionStatisticsVO getStatistics() {
+        InspectionStatisticsVO vo = new InspectionStatisticsVO();
+        
+        // 简单统计，实际应基于数据库查询
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        List<InspectionTaskJpaEntity> allTasks = inspectionTaskRepository.findAll();
+        
+        long todayTaskCount = allTasks.stream()
+                .filter(t -> t.getCreateTime().isAfter(todayStart))
+                .count();
+        long todayCompletedCount = allTasks.stream()
+                .filter(t -> t.getCreateTime().isAfter(todayStart) && t.getStatus() == 2)
+                .count();
+                
+        // 查找最近一个完成的任务的结果
+        Optional<InspectionResultJpaEntity> lastResult = inspectionResultRepository.findAll().stream()
+                .sorted(Comparator.comparing(InspectionResultJpaEntity::getCreateTime).reversed())
+                .findFirst();
+                
+        vo.setTodayTaskCount((int) todayTaskCount);
+        vo.setTodayCompletedCount((int) todayCompletedCount);
+        vo.setAbnormalTaskCount(0); // 暂不统计
+        
+        if (lastResult.isPresent()) {
+            vo.setLastMissingCount(lastResult.get().getMissingCount());
+            vo.setLastExtraCount(lastResult.get().getExtraCount());
+        } else {
+            vo.setLastMissingCount(0);
+            vo.setLastExtraCount(0);
+        }
+        
+        return vo;
+    }
+    
+    public List<InspectionMissingItemVO> getMissingItems(Long taskId) {
+        Optional<InspectionResultJpaEntity> resultOpt = inspectionResultRepository.findByTaskId(taskId);
+        if (resultOpt.isEmpty()) return Collections.emptyList();
+        
+        String json = resultOpt.get().getMissingProducts();
+        if (json == null || json.isEmpty()) return Collections.emptyList();
+        
+        try {
+            List<Map<String, Object>> list = objectMapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>(){});
+            return list.stream().map(m -> {
+                InspectionMissingItemVO vo = new InspectionMissingItemVO();
+                vo.setRfid((String) m.get("rfid"));
+                if (m.get("productId") != null) vo.setProductId(((Number) m.get("productId")).longValue());
+                vo.setProductName((String) m.get("productName"));
+                return vo;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
     public InspectionResultSummaryVO getResultSummary(Long taskId) {
         return inspectionResultRepository.findByTaskId(taskId)
                 .map(this::toResultVO)

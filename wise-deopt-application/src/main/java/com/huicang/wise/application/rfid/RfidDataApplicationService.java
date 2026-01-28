@@ -68,8 +68,11 @@ public class RfidDataApplicationService {
         }
         DeviceCoreJpaEntity device = deviceOpt.get();
 
+        // RFID去重
+        List<String> distinctRfids = request.getRfidTags().stream().distinct().toList();
+
         // 遍历RFID标签进行处理
-        for (String rfid : request.getRfidTags()) {
+        for (String rfid : distinctRfids) {
             processSingleTag(device, rfid);
         }
     }
