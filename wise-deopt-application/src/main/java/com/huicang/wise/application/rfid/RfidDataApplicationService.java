@@ -104,10 +104,10 @@ public class RfidDataApplicationService {
             return false;
         }
 
-        // 检查是否有处于"执行中"(status=1)的订单
+        // 检查是否有处于"执行中"(status!=SUBMITTED)的订单
         for (StockOrderDetailJpaEntity detail : details) {
             Optional<StockOrderJpaEntity> orderOpt = stockOrderRepository.findById(detail.getOrderId());
-            if (orderOpt.isPresent() && Integer.valueOf(1).equals(orderOpt.get().getStatus())) {
+            if (orderOpt.isPresent() && !"SUBMITTED".equals(orderOpt.get().getOrderStatus())) {
                 return true;
             }
         }
@@ -118,7 +118,7 @@ public class RfidDataApplicationService {
         try {
             AlertCreateRequest alertRequest = new AlertCreateRequest();
             alertRequest.setAlertType("UNAUTHORIZED_MOVEMENT"); // 违规移动
-            alertRequest.setAlertLevel(2); // 严重
+            alertRequest.setAlertLevel("HIGH"); // 严重
             alertRequest.setDescription(String.format("检测到违规移动！设备：%s(%s)，RFID：%s，产品ID：%d",
                     device.getName(), device.getDeviceCode(), rfid, tag.getProductId()));
             

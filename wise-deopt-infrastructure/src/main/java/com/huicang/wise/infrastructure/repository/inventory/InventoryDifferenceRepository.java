@@ -16,5 +16,7 @@ public interface InventoryDifferenceRepository extends JpaRepository<InventoryDi
 
     List<InventoryDifferenceJpaEntity> findByStatus(Integer status);
 
+    List<InventoryDifferenceJpaEntity> findTop5ByStatusOrderByCreatedAtDesc(Integer status);
+
     List<InventoryDifferenceJpaEntity> findByTaskId(Long taskId);
 }

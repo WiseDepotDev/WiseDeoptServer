@@ -7,6 +7,10 @@ import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.infrastructure.repository.device.DeviceCoreJpaEntity;
 import com.huicang.wise.infrastructure.repository.device.DeviceCoreRepository;
 import com.huicang.wise.infrastructure.repository.inspection.*;
+import com.huicang.wise.infrastructure.repository.inventory.InventoryDifferenceJpaEntity;
+import com.huicang.wise.infrastructure.repository.inventory.InventoryDifferenceRepository;
+import com.huicang.wise.infrastructure.repository.inventory.InventoryJpaEntity;
+import com.huicang.wise.infrastructure.repository.inventory.InventoryRepository;
 import com.huicang.wise.infrastructure.repository.inventory.ProductRepository;
 import com.huicang.wise.infrastructure.repository.tag.ProductTagJpaEntity;
 import com.huicang.wise.infrastructure.repository.tag.ProductTagRepository;
@@ -37,6 +41,8 @@ public class InspectionApplicationService {
     private final DeviceCoreRepository deviceCoreRepository;
     private final ProductTagRepository productTagRepository;
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
+    private final InventoryDifferenceRepository inventoryDifferenceRepository;
     private final AlertApplicationService alertApplicationService;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
@@ -47,6 +53,8 @@ public class InspectionApplicationService {
                                         DeviceCoreRepository deviceCoreRepository,
                                         ProductTagRepository productTagRepository,
                                         ProductRepository productRepository,
+                                        InventoryRepository inventoryRepository,
+                                        InventoryDifferenceRepository inventoryDifferenceRepository,
                                         AlertApplicationService alertApplicationService) {
         this.inspectionPlanRepository = inspectionPlanRepository;
         this.inspectionTaskRepository = inspectionTaskRepository;
@@ -55,6 +63,8 @@ public class InspectionApplicationService {
         this.deviceCoreRepository = deviceCoreRepository;
         this.productTagRepository = productTagRepository;
         this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.inventoryDifferenceRepository = inventoryDifferenceRepository;
         this.alertApplicationService = alertApplicationService;
     }
 
@@ -192,7 +202,7 @@ public class InspectionApplicationService {
         InspectionTaskJpaEntity saved = inspectionTaskRepository.save(task);
         
         // 触发结果处理（可以是异步的，这里简化为同步调用或者留给process接口）
-        // processResult(taskId); 
+        processResult(taskId); 
         
         return toTaskVO(saved);
     }
@@ -296,7 +306,7 @@ public class InspectionApplicationService {
                 item.put("rfid", rfid);
                 item.put("productId", tag.getProductId());
                 // 查询产品名称
-                productRepository.findById(tag.getProductId()).ifPresent(p -> item.put("productName", p.getName()));
+                productRepository.findById(tag.getProductId()).ifPresent(p -> item.put("productName", p.getProductName()));
                 missingList.add(item);
             }
             result.setMissingProducts(objectMapper.writeValueAsString(missingList));
@@ -318,12 +328,87 @@ public class InspectionApplicationService {
         
         inspectionResultRepository.save(result);
 
+        // 5.5 生成库存差异记录
+        Map<Long, List<String>> missingByProduct = new HashMap<>();
+        for (String rfid : missingRfids) {
+            ProductTagJpaEntity tag = expectedMap.get(rfid);
+            if (tag != null) {
+                missingByProduct.computeIfAbsent(tag.getProductId(), k -> new ArrayList<>()).add(rfid);
+            }
+        }
+        
+        for (Map.Entry<Long, List<String>> entry : missingByProduct.entrySet()) {
+             Long productId = entry.getKey();
+             int count = entry.getValue().size();
+             
+             InventoryDifferenceJpaEntity diff = new InventoryDifferenceJpaEntity();
+             diff.setDiffId(System.nanoTime() + productId); 
+             diff.setTaskId(taskId);
+             diff.setProductId(productId);
+             productRepository.findById(productId).ifPresent(p -> diff.setProductName(p.getProductName()));
+             
+             List<InventoryJpaEntity> inventories = inventoryRepository.findByProductId(productId);
+             if (!inventories.isEmpty()) {
+                 InventoryJpaEntity inv = inventories.get(0);
+                 diff.setLocationCode(inv.getLocationCode());
+                 diff.setExpectedQuantity(inv.getQuantity());
+                 diff.setActualQuantity(Math.max(0, inv.getQuantity() - count));
+             } else {
+                 diff.setLocationCode("UNKNOWN");
+                 diff.setExpectedQuantity(count);
+                 diff.setActualQuantity(0);
+             }
+             
+             diff.setDiffType("MISSING");
+             diff.setStatus(0);
+             diff.setCreatedAt(LocalDateTime.now());
+             diff.setUpdatedAt(LocalDateTime.now());
+             inventoryDifferenceRepository.save(diff);
+        }
+
+        Map<Long, List<String>> extraByProduct = new HashMap<>();
+        for (String rfid : extraRfids) {
+            ProductTagJpaEntity tag = productTagRepository.findByRfid(rfid);
+            if (tag != null) {
+                extraByProduct.computeIfAbsent(tag.getProductId(), k -> new ArrayList<>()).add(rfid);
+            }
+        }
+        
+        for (Map.Entry<Long, List<String>> entry : extraByProduct.entrySet()) {
+             Long productId = entry.getKey();
+             int count = entry.getValue().size();
+             
+             InventoryDifferenceJpaEntity diff = new InventoryDifferenceJpaEntity();
+             diff.setDiffId(System.nanoTime() + productId + 10000); 
+             diff.setTaskId(taskId);
+             diff.setProductId(productId);
+             productRepository.findById(productId).ifPresent(p -> diff.setProductName(p.getProductName()));
+             
+             List<InventoryJpaEntity> inventories = inventoryRepository.findByProductId(productId);
+             if (!inventories.isEmpty()) {
+                 InventoryJpaEntity inv = inventories.get(0);
+                 diff.setLocationCode(inv.getLocationCode());
+                 diff.setExpectedQuantity(inv.getQuantity());
+                 diff.setActualQuantity(inv.getQuantity() + count);
+             } else {
+                 diff.setLocationCode("UNKNOWN");
+                 diff.setExpectedQuantity(0);
+                 diff.setActualQuantity(count);
+             }
+             
+             diff.setDiffType("SURPLUS");
+             diff.setStatus(0);
+             diff.setCreatedAt(LocalDateTime.now());
+             diff.setUpdatedAt(LocalDateTime.now());
+             inventoryDifferenceRepository.save(diff);
+        }
+
         // 6. 触发告警
         if (missingCount > 0 || extraCount > 0) {
             try {
                 AlertCreateRequest alertRequest = new AlertCreateRequest();
                 alertRequest.setAlertType("INSPECTION_EXCEPTION");
-                alertRequest.setAlertLevel(2);
+                alertRequest.setAlertLevel("HIGH");
                 alertRequest.setDescription(String.format("巡检任务 %d 异常：缺失 %d，多余 %d", taskId, missingCount, extraCount));
                 alertApplicationService.createAlert(alertRequest);
             } catch (Exception e) {

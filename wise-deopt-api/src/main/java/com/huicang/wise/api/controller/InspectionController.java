@@ -1,13 +1,14 @@
 package com.huicang.wise.api.controller;
 
 import com.huicang.wise.application.inspection.*;
-import com.huicang.wise.common.response.ApiResponse;
-import com.huicang.wise.common.response.PageVO;
+import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.api.PageVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -88,10 +89,10 @@ public class InspectionController {
         int total = list.size();
         int fromIndex = (page - 1) * size;
         if (fromIndex >= total) {
-            return ApiResponse.success(new PageVO<>(total, List.of()));
+            return ApiResponse.success(new PageVO<>(page, size, total, Collections.<InspectionTaskVO>emptyList()));
         }
         int toIndex = Math.min(fromIndex + size, total);
-        return ApiResponse.success(new PageVO<>(total, list.subList(fromIndex, toIndex)));
+        return ApiResponse.success(new PageVO<>(page, size, total, list.subList(fromIndex, toIndex)));
     }
 
     @GetMapping("/task/device/{deviceId}")
@@ -110,10 +111,10 @@ public class InspectionController {
         int total = list.size();
         int fromIndex = (page - 1) * size;
         if (fromIndex >= total) {
-            return ApiResponse.success(new PageVO<>(total, List.of()));
+            return ApiResponse.success(new PageVO<>(page, size, total, Collections.<InspectionTaskVO>emptyList()));
         }
         int toIndex = Math.min(fromIndex + size, total);
-        return ApiResponse.success(new PageVO<>(total, list.subList(fromIndex, toIndex)));
+        return ApiResponse.success(new PageVO<>(page, size, total, list.subList(fromIndex, toIndex)));
     }
 
     @PostMapping("/task/manual")

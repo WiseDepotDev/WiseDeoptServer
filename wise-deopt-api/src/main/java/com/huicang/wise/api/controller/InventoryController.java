@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.huicang.wise.application.inventory.InventoryReviewApplicationService;
+
 import java.util.List;
 
 /**
@@ -37,9 +39,12 @@ import java.util.List;
 public class InventoryController {
 
     private final InventoryApplicationService inventoryApplicationService;
+    private final InventoryReviewApplicationService inventoryReviewApplicationService;
 
-    public InventoryController(InventoryApplicationService inventoryApplicationService) {
+    public InventoryController(InventoryApplicationService inventoryApplicationService,
+                               InventoryReviewApplicationService inventoryReviewApplicationService) {
         this.inventoryApplicationService = inventoryApplicationService;
+        this.inventoryReviewApplicationService = inventoryReviewApplicationService;
     }
 
     /**

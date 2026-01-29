@@ -40,5 +40,10 @@
             <artifactId>minio</artifactId>
             <version>8.5.10</version>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

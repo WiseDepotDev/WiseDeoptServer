@@ -1,10 +1,13 @@
 package com.huicang.wise.application.dashboard;
 
 import com.huicang.wise.application.alert.AlertEventSummaryDTO;
+import com.huicang.wise.application.inventory.InventoryDifferenceDTO;
 import com.huicang.wise.application.task.TaskDTO;
 import com.huicang.wise.infrastructure.repository.alert.AlertEventJpaEntity;
 import com.huicang.wise.infrastructure.repository.alert.AlertEventRepository;
 import com.huicang.wise.infrastructure.repository.device.DeviceCoreRepository;
+import com.huicang.wise.infrastructure.repository.inventory.InventoryDifferenceJpaEntity;
+import com.huicang.wise.infrastructure.repository.inventory.InventoryDifferenceRepository;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryJpaEntity;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryRepository;
 import com.huicang.wise.infrastructure.repository.task.TaskJpaEntity;
@@ -123,6 +126,22 @@ public class DashboardApplicationService {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private InventoryDifferenceDTO toInventoryDifferenceDTO(InventoryDifferenceJpaEntity entity) {
+        InventoryDifferenceDTO dto = new InventoryDifferenceDTO();
+        dto.setDiffId(entity.getDiffId());
+        dto.setTaskId(entity.getTaskId());
+        dto.setProductId(entity.getProductId());
+        dto.setProductName(entity.getProductName());
+        dto.setLocationCode(entity.getLocationCode());
+        dto.setExpectedQuantity(entity.getExpectedQuantity());
+        dto.setActualQuantity(entity.getActualQuantity());
+        dto.setDiffType(entity.getDiffType());
+        dto.setStatus(entity.getStatus());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        return dto;
     }
 
     private AlertEventSummaryDTO toAlertDTO(AlertEventJpaEntity entity) {

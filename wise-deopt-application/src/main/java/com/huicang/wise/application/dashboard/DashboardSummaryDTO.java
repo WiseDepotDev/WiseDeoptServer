@@ -2,6 +2,7 @@ package com.huicang.wise.application.dashboard;
 
 import com.huicang.wise.application.alert.AlertEventSummaryDTO;
 import com.huicang.wise.application.task.TaskDTO;
+import com.huicang.wise.application.inventory.InventoryDifferenceDTO;
 import java.util.List;
 
 public class DashboardSummaryDTO {
@@ -15,6 +16,8 @@ public class DashboardSummaryDTO {
     private Integer deviceOnlineCount;
 
     private List<AlertEventSummaryDTO> unprocessedAlerts;
+    
+    private List<InventoryDifferenceDTO> recentDifferences;
 
     private TaskDTO currentTask;
 
@@ -56,6 +59,14 @@ public class DashboardSummaryDTO {
 
     public void setUnprocessedAlerts(List<AlertEventSummaryDTO> unprocessedAlerts) {
         this.unprocessedAlerts = unprocessedAlerts;
+    }
+
+    public List<InventoryDifferenceDTO> getRecentDifferences() {
+        return recentDifferences;
+    }
+
+    public void setRecentDifferences(List<InventoryDifferenceDTO> recentDifferences) {
+        this.recentDifferences = recentDifferences;
     }
 
     public TaskDTO getCurrentTask() {

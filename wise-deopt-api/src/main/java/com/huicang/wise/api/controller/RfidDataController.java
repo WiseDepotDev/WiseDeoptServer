@@ -2,7 +2,7 @@ package com.huicang.wise.api.controller;
 
 import com.huicang.wise.application.rfid.RfidDataApplicationService;
 import com.huicang.wise.application.rfid.RfidReportDTO;
-import com.huicang.wise.common.response.ApiResponse;
+import com.huicang.wise.common.api.ApiResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
