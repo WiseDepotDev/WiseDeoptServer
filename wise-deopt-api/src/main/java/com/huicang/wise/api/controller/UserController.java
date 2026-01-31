@@ -14,6 +14,7 @@ import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
 import com.huicang.wise.application.user.UserDTO;
 import com.huicang.wise.application.user.UserPageDTO;
+import com.huicang.wise.application.user.UserPasswordChangeRequest;
 import com.huicang.wise.application.user.UserUpdateRequest;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.protocol.ApiPacketType;
@@ -85,6 +86,16 @@ public class UserController {
             @ApiParam(value = "用户ID", required = true)
             @PathVariable("userId") Long userId) {
         userApplicationService.deleteUser(userId);
+        return ApiResponse.success(null);
+    }
+
+    @ApiOperation(value = "修改密码", notes = "修改用户登录密码。成功返回200；旧密码错误返回400；服务器异常返回500。")
+    @ApiPacketType(PacketType.USER_CHANGE_PASSWORD)
+    @PostMapping("/{userId}/password")
+    public ApiResponse<Void> changePassword(
+            @ApiParam(value = "用户ID", required = true) @PathVariable("userId") Long userId,
+            @RequestBody UserPasswordChangeRequest request) {
+        userApplicationService.changePassword(userId, request);
         return ApiResponse.success(null);
     }
 }

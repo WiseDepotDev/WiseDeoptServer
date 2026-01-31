@@ -31,6 +31,7 @@ public enum PacketType {
     USER_CREATE("0x1103", "创建用户"),
     USER_UPDATE("0x1104", "更新用户"),
     USER_DELETE("0x1105", "删除用户"),
+    USER_CHANGE_PASSWORD("0x1106", "修改密码"),
 
     // Device (0x1200 - 0x12FF)
     DEVICE_LIST("0x1201", "获取设备列表"),
@@ -59,6 +60,7 @@ public enum PacketType {
     STOCK_ORDER_LIST("0x1404", "获取出入库单列表"),
     STOCK_ORDER_SUBMIT("0x1405", "提交出入库单"),
     STOCK_ORDER_DETAIL("0x1406", "获取出入库单详情"),
+    STOCK_ORDER_BIND_LOCATION("0x1407", "入库单绑定货位"),
 
     // Task (0x1500 - 0x15FF)
     TASK_LIST("0x1501", "任务列表"),

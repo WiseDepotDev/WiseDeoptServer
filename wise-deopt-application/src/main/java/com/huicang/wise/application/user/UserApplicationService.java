@@ -113,6 +113,22 @@ public class UserApplicationService {
         userCoreRepository.deleteById(userId);
     }
 
+    @Transactional
+    public void changePassword(Long userId, UserPasswordChangeRequest request) {
+        UserCoreJpaEntity user = userCoreRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
+
+        // Verify old password
+        String oldHash = hash(request.getOldPassword());
+        if (oldHash == null || !oldHash.equals(user.getPasswordHash())) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "旧密码错误");
+        }
+
+        user.setPasswordHash(hash(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userCoreRepository.save(user);
+    }
+
     private UserDTO toUserDTO(UserCoreJpaEntity entity) {
         if (entity == null) return null;
         UserDTO dto = new UserDTO();

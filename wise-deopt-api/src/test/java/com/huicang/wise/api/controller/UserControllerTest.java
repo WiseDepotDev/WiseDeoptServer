@@ -29,7 +29,9 @@ import com.huicang.wise.application.user.UserDTO;
 import com.huicang.wise.application.user.UserPageDTO;
 import com.huicang.wise.application.user.UserUpdateRequest;
 
-@WebMvcTest(controllers = UserController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class))
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
+@WebMvcTest(controllers = UserController.class)
 public class UserControllerTest {
 
     @Autowired
@@ -59,10 +61,11 @@ public class UserControllerTest {
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.userId").value(1))
-                .andExpect(jsonPath("$.data.username").value("testuser"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.userId").value(1))
+                .andExpect(jsonPath("$.body.payload.data.username").value("testuser"));
     }
 
     @Test
@@ -82,8 +85,8 @@ public class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.email").value("updated@example.com"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.email").value("updated@example.com"));
     }
 
     @Test
@@ -97,8 +100,8 @@ public class UserControllerTest {
 
         mockMvc.perform(get("/api/users/{userId}", userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.userId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.userId").value(1));
     }
 
     @Test
@@ -114,8 +117,8 @@ public class UserControllerTest {
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.items[0].userId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.items[0].userId").value(1));
     }
 
     @Test
@@ -125,6 +128,6 @@ public class UserControllerTest {
 
         mockMvc.perform(delete("/api/users/{userId}", userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"));
     }
 }

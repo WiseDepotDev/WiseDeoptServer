@@ -105,6 +105,8 @@ public class AuthApplicationService {
             user.setLoginFailCount(failCount);
             if (failCount >= 5) {
                 user.setLockedUntil(java.time.LocalDateTime.now().plusMinutes(30));
+                userCoreRepository.save(user);
+                throw new BusinessException(ErrorCode.AUTH_ACCOUNT_LOCKED, "PIN码错误次数过多，" + ErrorCode.AUTH_ACCOUNT_LOCKED.getMessage());
             }
             userCoreRepository.save(user);
             throw new BusinessException(ErrorCode.AUTH_PIN_ERROR, ErrorCode.AUTH_PIN_ERROR.getMessage());

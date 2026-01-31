@@ -73,11 +73,11 @@ public class RfidDataApplicationService {
 
         // 遍历RFID标签进行处理
         for (String rfid : distinctRfids) {
-            processSingleTag(device, rfid);
+            processSingleTag(device, rfid, request.getSnapshotUrl());
         }
     }
 
-    private void processSingleTag(DeviceCoreJpaEntity device, String rfid) {
+    private void processSingleTag(DeviceCoreJpaEntity device, String rfid, String snapshotUrl) {
         // 查找标签对应的产品
         ProductTagJpaEntity tagEntity = productTagRepository.findByRfid(rfid);
         if (tagEntity == null) {
@@ -92,7 +92,7 @@ public class RfidDataApplicationService {
             boolean hasActiveOrder = checkActiveOrder(tagEntity.getProductId());
             if (!hasActiveOrder) {
                 // 违规移动告警
-                triggerUnauthorizedMovementAlert(device, tagEntity, rfid);
+                triggerUnauthorizedMovementAlert(device, tagEntity, rfid, snapshotUrl);
             }
         }
     }
@@ -114,13 +114,18 @@ public class RfidDataApplicationService {
         return false;
     }
 
-    private void triggerUnauthorizedMovementAlert(DeviceCoreJpaEntity device, ProductTagJpaEntity tag, String rfid) {
+    private void triggerUnauthorizedMovementAlert(DeviceCoreJpaEntity device, ProductTagJpaEntity tag, String rfid, String snapshotUrl) {
         try {
             AlertCreateRequest alertRequest = new AlertCreateRequest();
             alertRequest.setAlertType("UNAUTHORIZED_MOVEMENT"); // 违规移动
             alertRequest.setAlertLevel("HIGH"); // 严重
-            alertRequest.setDescription(String.format("检测到违规移动！设备：%s(%s)，RFID：%s，产品ID：%d",
-                    device.getName(), device.getDeviceCode(), rfid, tag.getProductId()));
+            String desc = String.format("检测到违规移动！设备：%s(%s)，RFID：%s，产品ID：%d",
+                    device.getName(), device.getDeviceCode(), rfid, tag.getProductId());
+            
+            if (snapshotUrl != null && !snapshotUrl.isEmpty()) {
+                desc += String.format("，抓拍画面：%s", snapshotUrl);
+            }
+            alertRequest.setDescription(desc);
             
             alertApplicationService.createAlert(alertRequest);
         } catch (Exception e) {

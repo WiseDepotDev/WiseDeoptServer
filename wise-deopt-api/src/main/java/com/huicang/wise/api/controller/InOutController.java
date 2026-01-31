@@ -1,6 +1,7 @@
 package com.huicang.wise.api.controller;
 
 import com.huicang.wise.application.inout.InOutApplicationService;
+import com.huicang.wise.application.inout.StockOrderBindLocationRequest;
 import com.huicang.wise.application.inout.StockOrderCreateRequest;
 import com.huicang.wise.application.inout.StockOrderDTO;
 import com.huicang.wise.application.inout.StockOrderPageDTO;
@@ -78,6 +79,21 @@ public class InOutController {
             @ApiParam(value = "出入库单ID", required = true)
             @PathVariable("orderId") Long orderId) {
         return ApiResponse.success(inOutApplicationService.submitStockOrder(orderId));
+    }
+
+    @ApiOperation(
+            value = "入库单绑定货位",
+            notes = "为入库单明细绑定货位。成功返回200；参数错误返回400；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.STOCK_ORDER_BIND_LOCATION)
+    @PostMapping("/{orderId}/bind-locations")
+    public ApiResponse<Void> bindLocations(
+            @ApiParam(value = "出入库单ID", required = true)
+            @PathVariable("orderId") Long orderId,
+            @ApiParam(value = "绑定货位请求", required = true)
+            @RequestBody StockOrderBindLocationRequest request) {
+        inOutApplicationService.bindLocations(orderId, request);
+        return ApiResponse.success(null);
     }
 
     /**

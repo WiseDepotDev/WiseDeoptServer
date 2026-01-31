@@ -24,6 +24,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import com.huicang.wise.infrastructure.repository.alert.AlertEventJpaEntity;
 import com.huicang.wise.infrastructure.repository.alert.AlertEventRepository;
+import com.huicang.wise.infrastructure.repository.device.DeviceCoreRepository;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryJpaEntity;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryRepository;
 import com.huicang.wise.infrastructure.repository.task.TaskJpaEntity;
@@ -42,6 +43,9 @@ class DashboardApplicationServiceTest {
     private TaskRepository taskRepository;
 
     @Mock
+    private DeviceCoreRepository deviceCoreRepository;
+
+    @Mock
     private StringRedisTemplate stringRedisTemplate;
 
     @Mock
@@ -52,6 +56,13 @@ class DashboardApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
+        dashboardApplicationService = new DashboardApplicationService(
+            inventoryRepository, 
+            alertEventRepository, 
+            taskRepository, 
+            deviceCoreRepository, 
+            stringRedisTemplate
+        );
         lenient().when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
@@ -82,9 +93,11 @@ class DashboardApplicationServiceTest {
         // Mock cache miss
         when(valueOperations.get("dashboard:kpi")).thenReturn(null);
         when(valueOperations.get("inspection:progress")).thenReturn("75");
-        when(valueOperations.get("device:online:count")).thenReturn("15");
+        // when(valueOperations.get("device:online:count")).thenReturn("15"); // Removed
 
         // Mock DB calls
+        when(deviceCoreRepository.countByStatus(1)).thenReturn(15L);
+
         InventoryJpaEntity inv1 = new InventoryJpaEntity();
         inv1.setQuantity(50);
         InventoryJpaEntity inv2 = new InventoryJpaEntity();

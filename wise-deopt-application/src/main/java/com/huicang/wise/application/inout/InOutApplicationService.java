@@ -128,6 +128,32 @@ public class InOutApplicationService {
         return toStockOrderDTO(saved);
     }
 
+    @Transactional
+    public void bindLocations(Long orderId, StockOrderBindLocationRequest request) {
+        StockOrderJpaEntity order = stockOrderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "单据不存在"));
+
+        if (!"INBOUND".equals(order.getOrderType())) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "仅入库单支持绑定货位");
+        }
+
+        if ("SUBMITTED".equals(order.getOrderStatus())) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "单据已提交，无法修改货位");
+        }
+
+        List<StockOrderDetailJpaEntity> details = stockOrderDetailRepository.findByOrderId(orderId);
+
+        for (StockOrderBindLocationRequest.BindItem item : request.getItems()) {
+            StockOrderDetailJpaEntity detail = details.stream()
+                    .filter(d -> d.getProductId().equals(item.getProductId()))
+                    .findFirst()
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARAM_ERROR, "单据中不包含产品ID: " + item.getProductId()));
+
+            detail.setLocationCode(item.getLocationCode());
+            stockOrderDetailRepository.save(detail);
+        }
+    }
+
     private void processInventory(String orderType, StockOrderDetailJpaEntity detail) {
         Optional<InventoryJpaEntity> inventoryOpt = inventoryRepository.findByProductIdAndLocationCode(
                 detail.getProductId(), detail.getLocationCode());
