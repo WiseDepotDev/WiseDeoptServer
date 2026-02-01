@@ -118,6 +118,55 @@ public class TaskApplicationService {
     }
 
     @Transactional
+    public TaskDTO startTask(Long taskId) {
+        TaskJpaEntity entity = taskRepository.findById(taskId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "任务不存在"));
+        
+        if (entity.getStatus() == 1) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "任务已经在进行中");
+        }
+        if (entity.getStatus() == 2 || entity.getStatus() == 3) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "任务已结束，无法开始");
+        }
+
+        entity.setStatus(1); // 进行中
+        if (entity.getActualStartTime() == null) {
+            entity.setActualStartTime(LocalDateTime.now());
+        }
+        TaskJpaEntity saved = taskRepository.save(entity);
+        return toDTO(saved);
+    }
+
+    @Transactional
+    public TaskDTO pauseTask(Long taskId) {
+        TaskJpaEntity entity = taskRepository.findById(taskId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "任务不存在"));
+
+        if (entity.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "任务未在进行中，无法暂停");
+        }
+
+        entity.setStatus(4); // 暂停
+        TaskJpaEntity saved = taskRepository.save(entity);
+        return toDTO(saved);
+    }
+
+    @Transactional
+    public TaskDTO completeTask(Long taskId) {
+        TaskJpaEntity entity = taskRepository.findById(taskId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "任务不存在"));
+
+        if (entity.getStatus() == 2) {
+            return toDTO(entity);
+        }
+
+        entity.setStatus(2); // 已完成
+        entity.setActualEndTime(LocalDateTime.now());
+        TaskJpaEntity saved = taskRepository.save(entity);
+        return toDTO(saved);
+    }
+
+    @Transactional
     public void deleteTask(Long taskId) {
         if (!taskRepository.existsById(taskId)) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "任务不存在");

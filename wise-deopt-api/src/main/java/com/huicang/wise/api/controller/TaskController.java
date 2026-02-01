@@ -112,4 +112,58 @@ public class TaskController {
         taskApplicationService.deleteTask(taskId);
         return ApiResponse.success(null);
     }
+
+    /**
+     * 开始任务
+     *
+     * @param taskId 任务ID
+     * @return 任务信息
+     */
+    @ApiOperation(
+            value = "开始任务",
+            notes = "开始任务。成功返回200；任务状态不合法返回400；任务不存在返回404；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.TASK_START)
+    @PostMapping("/{taskId}/start")
+    public ApiResponse<TaskDTO> startTask(
+            @ApiParam(value = "任务ID", required = true)
+            @PathVariable("taskId") Long taskId) {
+        return ApiResponse.success(taskApplicationService.startTask(taskId));
+    }
+
+    /**
+     * 暂停任务
+     *
+     * @param taskId 任务ID
+     * @return 任务信息
+     */
+    @ApiOperation(
+            value = "暂停任务",
+            notes = "暂停任务。成功返回200；任务状态不合法返回400；任务不存在返回404；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.TASK_PAUSE)
+    @PostMapping("/{taskId}/pause")
+    public ApiResponse<TaskDTO> pauseTask(
+            @ApiParam(value = "任务ID", required = true)
+            @PathVariable("taskId") Long taskId) {
+        return ApiResponse.success(taskApplicationService.pauseTask(taskId));
+    }
+
+    /**
+     * 完成任务
+     *
+     * @param taskId 任务ID
+     * @return 任务信息
+     */
+    @ApiOperation(
+            value = "完成任务",
+            notes = "完成任务。成功返回200；任务状态不合法返回400；任务不存在返回404；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.TASK_COMPLETE)
+    @PostMapping("/{taskId}/complete")
+    public ApiResponse<TaskDTO> completeTask(
+            @ApiParam(value = "任务ID", required = true)
+            @PathVariable("taskId") Long taskId) {
+        return ApiResponse.success(taskApplicationService.completeTask(taskId));
+    }
 }

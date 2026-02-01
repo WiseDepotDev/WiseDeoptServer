@@ -50,15 +50,34 @@ public class AuthApplicationService {
         UserCoreJpaEntity user = userCoreRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_LOGIN_FAILED, ErrorCode.AUTH_LOGIN_FAILED.getMessage()));
         
-        // 校验密码
-        String inputHash = hash(request.getPassword());
-        if (user.getPasswordHash() != null && !user.getPasswordHash().equals(inputHash)) {
-             throw new BusinessException(ErrorCode.AUTH_LOGIN_FAILED, ErrorCode.AUTH_LOGIN_FAILED.getMessage());
-        }
-
         if (Boolean.FALSE.equals(user.getEnabled())) {
             throw new BusinessException(ErrorCode.AUTH_ACCOUNT_DISABLED, ErrorCode.AUTH_ACCOUNT_DISABLED.getMessage());
         }
+
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(java.time.LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.AUTH_ACCOUNT_LOCKED, ErrorCode.AUTH_ACCOUNT_LOCKED.getMessage());
+        }
+
+        // 校验密码
+        String inputHash = hash(request.getPassword());
+        if (user.getPasswordHash() != null && !user.getPasswordHash().equals(inputHash)) {
+            int failCount = user.getLoginFailCount() == null ? 0 : user.getLoginFailCount();
+            failCount++;
+            user.setLoginFailCount(failCount);
+            if (failCount >= 5) {
+                user.setLockedUntil(java.time.LocalDateTime.now().plusMinutes(30));
+                userCoreRepository.save(user);
+                throw new BusinessException(ErrorCode.AUTH_ACCOUNT_LOCKED, "密码错误次数过多，" + ErrorCode.AUTH_ACCOUNT_LOCKED.getMessage());
+            }
+            userCoreRepository.save(user);
+            throw new BusinessException(ErrorCode.AUTH_LOGIN_FAILED, ErrorCode.AUTH_LOGIN_FAILED.getMessage());
+        }
+
+        // 登录成功，重置失败次数
+        user.setLoginFailCount(0);
+        user.setLockedUntil(null);
+        userCoreRepository.save(user);
+
         return generateTokens(user);
     }
 

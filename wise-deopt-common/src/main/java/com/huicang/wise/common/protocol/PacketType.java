@@ -68,6 +68,9 @@ public enum PacketType {
     TASK_UPDATE("0x1503", "更新任务"),
     TASK_DETAIL("0x1504", "获取任务详情"),
     TASK_DELETE("0x1505", "删除任务"),
+    TASK_START("0x1506", "开始任务"),
+    TASK_PAUSE("0x1507", "暂停任务"),
+    TASK_COMPLETE("0x1508", "完成任务"),
 
     // Alert (0x1600 - 0x16FF)
     ALERT_LIST("0x1601", "告警列表"),
