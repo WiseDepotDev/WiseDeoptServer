@@ -1,37 +1,43 @@
 package com.huicang.wise.application.dashboard;
 
-import com.huicang.wise.application.alert.AlertEventSummaryDTO;
-import com.huicang.wise.application.inventory.InventoryDifferenceDTO;
+import com.huicang.wise.application.alert.AlertDTO;
 import com.huicang.wise.application.task.TaskDTO;
 import com.huicang.wise.infrastructure.repository.alert.AlertEventJpaEntity;
 import com.huicang.wise.infrastructure.repository.alert.AlertEventRepository;
 import com.huicang.wise.infrastructure.repository.device.DeviceCoreRepository;
-import com.huicang.wise.infrastructure.repository.inventory.InventoryDifferenceJpaEntity;
-import com.huicang.wise.infrastructure.repository.inventory.InventoryDifferenceRepository;
-import com.huicang.wise.infrastructure.repository.inventory.InventoryJpaEntity;
 import com.huicang.wise.infrastructure.repository.inventory.InventoryRepository;
 import com.huicang.wise.infrastructure.repository.task.TaskJpaEntity;
 import com.huicang.wise.infrastructure.repository.task.TaskRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * 类功能描述：看板应用服务
+ *
+ * @author xingchentye
+ * @since 2026-02-02
+ */
 @Service
 public class DashboardApplicationService {
-
-    private static final String DASHBOARD_KPI_KEY = "dashboard:kpi";
-    private static final String INSPECTION_PROGRESS_KEY = "inspection:progress";
 
     private final InventoryRepository inventoryRepository;
     private final AlertEventRepository alertEventRepository;
     private final TaskRepository taskRepository;
     private final DeviceCoreRepository deviceCoreRepository;
     private final StringRedisTemplate stringRedisTemplate;
+
+    private static final String DASHBOARD_KPI_KEY = "dashboard:kpi";
+    private static final String INSPECTION_PROGRESS_KEY = "inspection:progress";
 
     public DashboardApplicationService(InventoryRepository inventoryRepository,
                                        AlertEventRepository alertEventRepository,
@@ -45,117 +51,98 @@ public class DashboardApplicationService {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    /**
+     * 方法功能描述：获取看板摘要数据
+     *
+     * @return 看板摘要DTO
+     */
+    @Transactional(readOnly = true)
     public DashboardSummaryDTO getSummary() {
-        DashboardSummaryDTO dto = new DashboardSummaryDTO();
-
-        // 1. 获取基础KPI（优先从缓存）
-        DashboardSummaryDTO cached = parseCache(stringRedisTemplate.opsForValue().get(DASHBOARD_KPI_KEY));
-        if (cached != null) {
-            dto.setInventoryTotal(cached.getInventoryTotal());
-            dto.setTodayAlertCount(cached.getTodayAlertCount());
-            dto.setInspectionProgress(cached.getInspectionProgress());
-            dto.setDeviceOnlineCount(cached.getDeviceOnlineCount());
+        DashboardSummaryDTO summary = new DashboardSummaryDTO();
+        
+        // 尝试从缓存获取 KPI 数据
+        String cachedKpi = stringRedisTemplate.opsForValue().get(DASHBOARD_KPI_KEY);
+        if (StringUtils.hasText(cachedKpi)) {
+            DashboardSummaryDTO kpiDto = parseKpi(cachedKpi);
+            summary.setInventoryTotal(kpiDto.getInventoryTotal());
+            summary.setTodayAlertCount(kpiDto.getTodayAlertCount());
+            summary.setInspectionProgress(kpiDto.getInspectionProgress());
+            summary.setDeviceOnlineCount(kpiDto.getDeviceOnlineCount());
         } else {
-            long inventoryTotal = calculateInventoryTotal();
-            long todayAlertCount = calculateTodayAlertCount();
-            int inspectionProgress = readInteger(INSPECTION_PROGRESS_KEY);
-            int deviceOnlineCount = (int) deviceCoreRepository.countByStatus(1); // 假设1为在线
+            // 1. 库存总量 (Inventory Total)
+            Long totalInventory = inventoryRepository.sumTotalQuantity();
+            summary.setInventoryTotal(totalInventory != null ? totalInventory : 0L);
 
-            dto.setInventoryTotal(inventoryTotal);
-            dto.setTodayAlertCount(todayAlertCount);
-            dto.setInspectionProgress(inspectionProgress);
-            dto.setDeviceOnlineCount(deviceOnlineCount);
+            // 2. 今日报警数 (Today's Alerts)
+            LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+            LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+            long todayAlertCount = alertEventRepository.countByAlertTimeBetween(todayStart, todayEnd);
+            summary.setTodayAlertCount(todayAlertCount);
 
-            String cacheValue = inventoryTotal + "|" + todayAlertCount + "|" + inspectionProgress + "|" + deviceOnlineCount;
-            stringRedisTemplate.opsForValue().set(DASHBOARD_KPI_KEY, cacheValue, Duration.ofMinutes(1)); // 缓存1分钟
+            // 3. 巡检进度 (Inspection Progress)
+            String progressStr = stringRedisTemplate.opsForValue().get(INSPECTION_PROGRESS_KEY);
+            int progress = 0;
+            if (StringUtils.hasText(progressStr)) {
+                try {
+                    progress = Integer.parseInt(progressStr);
+                } catch (NumberFormatException e) {
+                    // Ignore
+                }
+            }
+            summary.setInspectionProgress(progress);
+
+            // 4. 设备在线数 (Online Device Count) - Status 1: Online
+            long onlineDeviceCount = deviceCoreRepository.countByStatus(1);
+            summary.setDeviceOnlineCount(onlineDeviceCount);
+
+            // 缓存结果 (1分钟)
+            String kpiValue = String.format("%d|%d|%d|%d",
+                    summary.getInventoryTotal(),
+                    summary.getTodayAlertCount(),
+                    summary.getInspectionProgress(),
+                    summary.getDeviceOnlineCount());
+            stringRedisTemplate.opsForValue().set(DASHBOARD_KPI_KEY, kpiValue, 1, TimeUnit.MINUTES);
         }
 
-        // 2. 获取未处理告警（实时）
-        List<AlertEventJpaEntity> alertEntities = alertEventRepository.findTop5ByStatusOrderByAlertTimeDesc(0);
-        dto.setUnprocessedAlerts(alertEntities.stream().map(this::toAlertDTO).collect(Collectors.toList()));
+        // 5. 未处理告警列表 (Top 3-5, Status 0: Pending)
+        // 实时查询，不缓存
+        List<AlertEventJpaEntity> pendingAlerts = alertEventRepository.findTop5ByStatusOrderByAlertTimeDesc(0);
+        summary.setUnprocessedAlerts(pendingAlerts.stream().map(this::toAlertDTO).collect(Collectors.toList()));
 
-        // 3. 获取当前任务（实时，进行中）
-        TaskJpaEntity taskEntity = taskRepository.findFirstByStatusOrderByCreatedAtDesc(1);
-        if (taskEntity != null) {
-            dto.setCurrentTask(toTaskDTO(taskEntity));
+        // 6. 当前进行中的任务 (Status 1: In Progress)
+        // 实时查询，不缓存
+        TaskJpaEntity activeTask = taskRepository.findFirstByStatusOrderByCreatedAtDesc(1);
+        if (activeTask != null) {
+            summary.setCurrentTask(toTaskDTO(activeTask));
         }
 
-        return dto;
+        return summary;
     }
 
-    private long calculateInventoryTotal() {
-        List<InventoryJpaEntity> entities = inventoryRepository.findAll();
-        return entities.stream()
-                .mapToLong(entity -> entity.getQuantity() == null ? 0L : entity.getQuantity())
-                .sum();
-    }
-
-    private long calculateTodayAlertCount() {
-        LocalDateTime start = LocalDate.now().atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
-        return alertEventRepository.countByAlertTimeBetween(start, end);
-    }
-
-    private int readInteger(String key) {
-        String value = stringRedisTemplate.opsForValue().get(key);
-        if (value == null || value.isBlank()) {
-            return 0;
-        }
+    private DashboardSummaryDTO parseKpi(String kpi) {
+        DashboardSummaryDTO summary = new DashboardSummaryDTO();
         try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException ex) {
-            return 0;
+            String[] parts = kpi.split("\\|");
+            if (parts.length >= 4) {
+                summary.setInventoryTotal(Long.parseLong(parts[0]));
+                summary.setTodayAlertCount(Long.parseLong(parts[1]));
+                summary.setInspectionProgress(Integer.parseInt(parts[2]));
+                summary.setDeviceOnlineCount(Long.parseLong(parts[3]));
+            }
+        } catch (Exception e) {
+            // Ignore
         }
+        return summary;
     }
 
-    private DashboardSummaryDTO parseCache(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        String[] parts = value.split("\\|", -1);
-        if (parts.length != 4) {
-            return null;
-        }
-        try {
-            DashboardSummaryDTO dto = new DashboardSummaryDTO();
-            dto.setInventoryTotal(Long.parseLong(parts[0]));
-            dto.setTodayAlertCount(Long.parseLong(parts[1]));
-            dto.setInspectionProgress(Integer.parseInt(parts[2]));
-            dto.setDeviceOnlineCount(Integer.parseInt(parts[3]));
-            return dto;
-        } catch (NumberFormatException ex) {
-            return null;
-        }
-    }
-
-    private InventoryDifferenceDTO toInventoryDifferenceDTO(InventoryDifferenceJpaEntity entity) {
-        InventoryDifferenceDTO dto = new InventoryDifferenceDTO();
-        dto.setDiffId(entity.getDiffId());
-        dto.setTaskId(entity.getTaskId());
-        dto.setProductId(entity.getProductId());
-        dto.setProductName(entity.getProductName());
-        dto.setLocationCode(entity.getLocationCode());
-        dto.setExpectedQuantity(entity.getExpectedQuantity());
-        dto.setActualQuantity(entity.getActualQuantity());
-        dto.setDiffType(entity.getDiffType());
-        dto.setStatus(entity.getStatus());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        return dto;
-    }
-
-    private AlertEventSummaryDTO toAlertDTO(AlertEventJpaEntity entity) {
-        AlertEventSummaryDTO dto = new AlertEventSummaryDTO();
+    private AlertDTO toAlertDTO(AlertEventJpaEntity entity) {
+        AlertDTO dto = new AlertDTO();
         dto.setEventId(entity.getEventId());
-        dto.setSourceModule(entity.getSourceModule());
-        dto.setLevel(entity.getLevel());
-        dto.setLevelDescription(entity.getAlertLevel()); // Assume alertLevel stores description or code
         dto.setTitle(entity.getTitle());
-        dto.setMessage(entity.getMessage());
-        dto.setStatus(entity.getStatus());
-        dto.setIsActive(entity.getIsActive());
-        dto.setCreateTime(entity.getAlertTime()); // Use alertTime as createTime
-        dto.setExtendedData(entity.getExtendedData());
+        dto.setAlertType(entity.getAlertType());
+        dto.setAlertLevel(entity.getAlertLevel());
+        dto.setDescription(entity.getDescription());
+        dto.setAlertTime(entity.getAlertTime());
         return dto;
     }
 
@@ -169,30 +156,7 @@ public class DashboardApplicationService {
         dto.setPlannedStartTime(entity.getPlannedStartTime());
         dto.setActualStartTime(entity.getActualStartTime());
         dto.setActualEndTime(entity.getActualEndTime());
-        dto.setCreatedBy(entity.getCreatedBy());
-        dto.setCreatedAt(entity.getCreatedAt());
         dto.setRemark(entity.getRemark());
-        
-        // Populate descriptions
-        dto.setTaskTypeDesc(resolveTaskTypeDesc(entity.getTaskType()));
-        dto.setStatusDesc(resolveTaskStatusDesc(entity.getStatus()));
-        
         return dto;
-    }
-
-    private String resolveTaskTypeDesc(Integer type) {
-        if (type == null) return "";
-        if (type == 0) return "盘点任务";
-        if (type == 1) return "巡检任务";
-        return "未知类型";
-    }
-
-    private String resolveTaskStatusDesc(Integer status) {
-        if (status == null) return "";
-        if (status == 0) return "待开始";
-        if (status == 1) return "进行中";
-        if (status == 2) return "已完成";
-        if (status == 3) return "已取消";
-        return "未知状态";
     }
 }

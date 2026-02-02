@@ -19,4 +19,6 @@ public interface TaskRepository extends JpaRepository<TaskJpaEntity, Long> {
     List<TaskJpaEntity> findByTaskType(Integer taskType);
 
     TaskJpaEntity findFirstByStatusOrderByCreatedAtDesc(Integer status);
+
+    long countByStatus(Integer status);
 }

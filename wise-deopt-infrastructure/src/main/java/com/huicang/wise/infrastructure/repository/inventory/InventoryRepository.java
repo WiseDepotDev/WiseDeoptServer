@@ -30,4 +30,7 @@ public interface InventoryRepository extends JpaRepository<InventoryJpaEntity, L
      * @return 库存列表
      */
     List<InventoryJpaEntity> findByLocationCodeContaining(String locationCode);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(i.quantity) FROM InventoryJpaEntity i")
+    Long sumTotalQuantity();
 }

@@ -1,79 +1,47 @@
 package com.huicang.wise.application.dashboard;
 
-import com.huicang.wise.application.alert.AlertEventSummaryDTO;
+import com.huicang.wise.application.alert.AlertDTO;
 import com.huicang.wise.application.task.TaskDTO;
-import com.huicang.wise.application.inventory.InventoryDifferenceDTO;
+import lombok.Data;
+
 import java.util.List;
 
+/**
+ * 类功能描述：首页看板摘要DTO
+ *
+ * @author xingchentye
+ * @since 2026-02-02
+ */
+@Data
 public class DashboardSummaryDTO {
 
+    /**
+     * 库存总量
+     */
     private Long inventoryTotal;
 
+    /**
+     * 今日报警数
+     */
     private Long todayAlertCount;
 
+    /**
+     * 巡检进度/状态
+     */
     private Integer inspectionProgress;
 
-    private Integer deviceOnlineCount;
+    /**
+     * 设备在线数
+     */
+    private Long deviceOnlineCount;
 
-    private List<AlertEventSummaryDTO> unprocessedAlerts;
-    
-    private List<InventoryDifferenceDTO> recentDifferences;
+    /**
+     * 未处理告警列表 (Top 3-5)
+     */
+    private List<AlertDTO> unprocessedAlerts;
 
+    /**
+     * 当前进行中的任务
+     */
     private TaskDTO currentTask;
-
-    public Long getInventoryTotal() {
-        return inventoryTotal;
-    }
-
-    public void setInventoryTotal(Long inventoryTotal) {
-        this.inventoryTotal = inventoryTotal;
-    }
-
-    public Long getTodayAlertCount() {
-        return todayAlertCount;
-    }
-
-    public void setTodayAlertCount(Long todayAlertCount) {
-        this.todayAlertCount = todayAlertCount;
-    }
-
-    public Integer getInspectionProgress() {
-        return inspectionProgress;
-    }
-
-    public void setInspectionProgress(Integer inspectionProgress) {
-        this.inspectionProgress = inspectionProgress;
-    }
-
-    public Integer getDeviceOnlineCount() {
-        return deviceOnlineCount;
-    }
-
-    public void setDeviceOnlineCount(Integer deviceOnlineCount) {
-        this.deviceOnlineCount = deviceOnlineCount;
-    }
-
-    public List<AlertEventSummaryDTO> getUnprocessedAlerts() {
-        return unprocessedAlerts;
-    }
-
-    public void setUnprocessedAlerts(List<AlertEventSummaryDTO> unprocessedAlerts) {
-        this.unprocessedAlerts = unprocessedAlerts;
-    }
-
-    public List<InventoryDifferenceDTO> getRecentDifferences() {
-        return recentDifferences;
-    }
-
-    public void setRecentDifferences(List<InventoryDifferenceDTO> recentDifferences) {
-        this.recentDifferences = recentDifferences;
-    }
-
-    public TaskDTO getCurrentTask() {
-        return currentTask;
-    }
-
-    public void setCurrentTask(TaskDTO currentTask) {
-        this.currentTask = currentTask;
-    }
 }

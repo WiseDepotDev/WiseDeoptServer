@@ -36,12 +36,25 @@ public class AlertDTO {
      */
     private LocalDateTime alertTime;
 
+    /**
+     * 告警标题
+     */
+    private String title;
+
     public Long getEventId() {
         return eventId;
     }
 
     public void setEventId(Long eventId) {
         this.eventId = eventId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getAlertType() {
