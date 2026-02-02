@@ -32,6 +32,9 @@ public class InspectionPlanJpaEntity {
     @Column(name = "cron_expression")
     private String cronExpression;
 
+    @Column(name = "route_id")
+    private Long routeId;
+
     /**
      * 巡检路线数据（JSON或描述）
      */

@@ -24,6 +24,9 @@ public class CreateInspectionPlanDTO {
     @ApiModelProperty(value = "定时表达式", required = true)
     private String cronExpression;
 
-    @ApiModelProperty(value = "巡检路线数据")
+    @ApiModelProperty(value = "巡检路线ID")
+    private Long routeId;
+
+    @ApiModelProperty(value = "巡检路线数据（若指定routeId则优先使用路线中的数据）")
     private String routeData;
 }

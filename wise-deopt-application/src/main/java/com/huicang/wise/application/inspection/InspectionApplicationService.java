@@ -38,6 +38,7 @@ public class InspectionApplicationService {
     private final InspectionTaskRepository inspectionTaskRepository;
     private final InspectionDetailRepository inspectionDetailRepository;
     private final InspectionResultRepository inspectionResultRepository;
+    private final InspectionRouteRepository inspectionRouteRepository;
     private final DeviceCoreRepository deviceCoreRepository;
     private final ProductTagRepository productTagRepository;
     private final ProductRepository productRepository;
@@ -50,6 +51,7 @@ public class InspectionApplicationService {
                                         InspectionTaskRepository inspectionTaskRepository,
                                         InspectionDetailRepository inspectionDetailRepository,
                                         InspectionResultRepository inspectionResultRepository,
+                                        InspectionRouteRepository inspectionRouteRepository,
                                         DeviceCoreRepository deviceCoreRepository,
                                         ProductTagRepository productTagRepository,
                                         ProductRepository productRepository,
@@ -60,12 +62,61 @@ public class InspectionApplicationService {
         this.inspectionTaskRepository = inspectionTaskRepository;
         this.inspectionDetailRepository = inspectionDetailRepository;
         this.inspectionResultRepository = inspectionResultRepository;
+        this.inspectionRouteRepository = inspectionRouteRepository;
         this.deviceCoreRepository = deviceCoreRepository;
         this.productTagRepository = productTagRepository;
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.inventoryDifferenceRepository = inventoryDifferenceRepository;
         this.alertApplicationService = alertApplicationService;
+    }
+
+    // --- 巡检路线管理 ---
+
+    @Transactional
+    public InspectionRouteDTO createRoute(CreateInspectionRouteRequest request) {
+        InspectionRouteJpaEntity entity = new InspectionRouteJpaEntity();
+        entity.setRouteId(System.currentTimeMillis());
+        entity.setRouteName(request.getRouteName());
+        entity.setRouteData(request.getRouteData());
+        entity.setCreateTime(LocalDateTime.now());
+        entity.setUpdateTime(LocalDateTime.now());
+
+        InspectionRouteJpaEntity saved = inspectionRouteRepository.save(entity);
+        return toRouteDTO(saved);
+    }
+
+    @Transactional
+    public InspectionRouteDTO updateRoute(UpdateInspectionRouteRequest request) throws BusinessException {
+        InspectionRouteJpaEntity entity = inspectionRouteRepository.findById(request.getRouteId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARAM_ERROR, "路线不存在"));
+
+        if (request.getRouteName() != null) entity.setRouteName(request.getRouteName());
+        if (request.getRouteData() != null) entity.setRouteData(request.getRouteData());
+        entity.setUpdateTime(LocalDateTime.now());
+
+        return toRouteDTO(inspectionRouteRepository.save(entity));
+    }
+
+    public void deleteRoute(Long routeId) {
+        inspectionRouteRepository.deleteById(routeId);
+    }
+
+    public InspectionRouteDTO getRoute(Long routeId) throws BusinessException {
+        return toRouteDTO(inspectionRouteRepository.findById(routeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARAM_ERROR, "路线不存在")));
+    }
+
+    public List<InspectionRouteDTO> listRoutes() {
+        return inspectionRouteRepository.findAll().stream()
+                .map(this::toRouteDTO)
+                .collect(Collectors.toList());
+    }
+
+    private InspectionRouteDTO toRouteDTO(InspectionRouteJpaEntity entity) {
+        InspectionRouteDTO dto = new InspectionRouteDTO();
+        BeanUtils.copyProperties(entity, dto);
+        return dto;
     }
 
     // --- 巡检计划管理 ---
@@ -82,7 +133,20 @@ public class InspectionApplicationService {
         entity.setPlanName(request.getPlanName());
         entity.setDeviceId(request.getDeviceId());
         entity.setCronExpression(request.getCronExpression());
-        entity.setRouteData(request.getRouteData());
+        
+        if (request.getRouteId() != null) {
+            entity.setRouteId(request.getRouteId());
+            // 如果提供了routeData则使用提供的，否则使用路线的
+            if (request.getRouteData() != null) {
+                entity.setRouteData(request.getRouteData());
+            } else {
+                inspectionRouteRepository.findById(request.getRouteId())
+                        .ifPresent(route -> entity.setRouteData(route.getRouteData()));
+            }
+        } else {
+            entity.setRouteData(request.getRouteData());
+        }
+
         entity.setStatus(1); // 默认启用
         entity.setCreateTime(LocalDateTime.now());
         
@@ -102,6 +166,15 @@ public class InspectionApplicationService {
             entity.setDeviceId(request.getDeviceId());
         }
         if (request.getCronExpression() != null) entity.setCronExpression(request.getCronExpression());
+        
+        if (request.getRouteId() != null) {
+            entity.setRouteId(request.getRouteId());
+            if (request.getRouteData() == null) {
+                 inspectionRouteRepository.findById(request.getRouteId())
+                        .ifPresent(route -> entity.setRouteData(route.getRouteData()));
+            }
+        }
+        
         if (request.getRouteData() != null) entity.setRouteData(request.getRouteData());
         if (request.getStatus() != null) entity.setStatus(request.getStatus());
 
