@@ -175,4 +175,19 @@ public class AuthApplicationService {
         response.setUsername(user.getUsername());
         return response;
     }
+
+    /**
+     * 方法功能描述：验证令牌并返回用户名
+     *
+     * @param token 访问令牌
+     * @return 用户名
+     */
+    public String validateToken(String token) {
+        String accessKey = "auth:token:access:" + token;
+        String username = stringRedisTemplate.opsForValue().get(accessKey);
+        if (username == null) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_TOKEN, "无效的访问令牌");
+        }
+        return username;
+    }
 }

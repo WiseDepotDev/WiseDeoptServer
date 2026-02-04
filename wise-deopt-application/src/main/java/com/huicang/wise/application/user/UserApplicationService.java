@@ -89,6 +89,12 @@ public class UserApplicationService {
         return toUserDTO(user);
     }
 
+    public UserDTO getUserByUsername(String username) {
+        UserCoreJpaEntity user = userCoreRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
+        return toUserDTO(user);
+    }
+
     public UserPageDTO listUsers(Integer page, Integer size) {
         if (page == null || page < 1) page = 1;
         if (size == null || size < 1) size = 10;

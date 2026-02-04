@@ -32,6 +32,7 @@ public enum PacketType {
     USER_UPDATE("0x1104", "更新用户"),
     USER_DELETE("0x1105", "删除用户"),
     USER_CHANGE_PASSWORD("0x1106", "修改密码"),
+    USER_CURRENT("0x1107", "获取当前用户"),
 
     // Device (0x1200 - 0x12FF)
     DEVICE_LIST("0x1201", "获取设备列表"),

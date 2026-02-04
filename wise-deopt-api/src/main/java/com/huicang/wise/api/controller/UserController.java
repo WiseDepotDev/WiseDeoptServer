@@ -6,10 +6,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
 import com.huicang.wise.application.user.UserDTO;
@@ -36,9 +38,22 @@ import io.swagger.annotations.ApiParam;
 public class UserController {
 
     private final UserApplicationService userApplicationService;
+    private final AuthApplicationService authApplicationService;
 
-    public UserController(UserApplicationService userApplicationService) {
+    public UserController(UserApplicationService userApplicationService, AuthApplicationService authApplicationService) {
         this.userApplicationService = userApplicationService;
+        this.authApplicationService = authApplicationService;
+    }
+
+    @ApiOperation(value = "获取当前用户信息", notes = "获取当前登录用户信息。成功返回200；未登录或Token无效返回401；服务器异常返回500。")
+    @ApiPacketType(PacketType.USER_CURRENT)
+    @GetMapping("/current")
+    public ApiResponse<UserDTO> getCurrentUser(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        String username = authApplicationService.validateToken(token);
+        return ApiResponse.success(userApplicationService.getUserByUsername(username));
     }
 
     @ApiOperation(value = "创建用户", notes = "创建用户。成功返回200；用户名已存在返回400；服务器异常返回500。")

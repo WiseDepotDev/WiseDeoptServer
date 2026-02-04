@@ -28,6 +28,7 @@ public enum ErrorCode {
      * 方法功能描述：未认证或登录状态失效
      */
     UNAUTHORIZED("AUTH-0001", "未认证或登录状态已失效"),
+    AUTH_INVALID_TOKEN("AUTH-0002", "无效的访问令牌"),
 
     /**
      * 方法功能描述：无访问权限

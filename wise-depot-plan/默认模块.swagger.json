@@ -46,54 +46,6 @@
     }
   ],
   "paths": {
-    "/user/verify-password": {
-      "post": {
-        "summary": "验证用户密码",
-        "deprecated": true,
-        "description": "",
-        "tags": [
-          "用户服务",
-          "微服务内部接口"
-        ],
-        "parameters": [
-          {
-            "required": true,
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/VerifyPasswordDTO"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/Result"
-            }
-          },
-          "403": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/ErrorResult"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/ErrorResult"
-            }
-          }
-        },
-        "security": [],
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ]
-      }
-    },
     "/user": {
       "post": {
         "summary": "创建用户",
