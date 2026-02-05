@@ -191,10 +191,12 @@ public class AlertApplicationService {
     private AlertDTO toAlertDTO(AlertEventJpaEntity entity) {
         AlertDTO dto = new AlertDTO();
         dto.setEventId(entity.getEventId());
+        dto.setTitle(entity.getTitle());
         dto.setAlertType(entity.getAlertType());
         dto.setAlertLevel(entity.getAlertLevel());
         dto.setDescription(entity.getDescription());
         dto.setAlertTime(entity.getAlertTime());
+        dto.setSnapshotUrl(entity.getSnapshotUrl());
         return dto;
     }
 

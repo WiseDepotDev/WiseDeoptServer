@@ -30,6 +30,11 @@ public class UserUpdateRequest {
     @ApiModelProperty(value = "新PIN码（留空则不修改）")
     private String pin;
 
+    /**
+     * 角色
+     */
+    private String role;
+
     public Long getUserId() {
         return userId;
     }
@@ -76,5 +81,13 @@ public class UserUpdateRequest {
 
     public void setPin(String pin) {
         this.pin = pin;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -220,11 +220,22 @@ public class AlertEventJpaEntity {
         this.resolvedBy = resolvedBy;
     }
 
+    @Column(name = "snapshot_url")
+    private String snapshotUrl;
+
     public String getExtendedData() {
         return extendedData;
     }
 
     public void setExtendedData(String extendedData) {
         this.extendedData = extendedData;
+    }
+
+    public String getSnapshotUrl() {
+        return snapshotUrl;
+    }
+
+    public void setSnapshotUrl(String snapshotUrl) {
+        this.snapshotUrl = snapshotUrl;
     }
 }

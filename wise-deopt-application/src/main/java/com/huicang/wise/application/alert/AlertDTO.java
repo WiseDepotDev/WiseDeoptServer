@@ -41,6 +41,11 @@ public class AlertDTO {
      */
     private String title;
 
+    /**
+     * 告警快照URL
+     */
+    private String snapshotUrl;
+
     public Long getEventId() {
         return eventId;
     }
@@ -55,6 +60,14 @@ public class AlertDTO {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getSnapshotUrl() {
+        return snapshotUrl;
+    }
+
+    public void setSnapshotUrl(String snapshotUrl) {
+        this.snapshotUrl = snapshotUrl;
     }
 
     public String getAlertType() {

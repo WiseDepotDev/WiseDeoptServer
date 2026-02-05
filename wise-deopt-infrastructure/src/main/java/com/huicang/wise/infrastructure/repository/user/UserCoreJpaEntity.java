@@ -52,6 +52,9 @@ public class UserCoreJpaEntity {
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
 
+    @Column(name = "role")
+    private String role;
+
     public Long getUserId() {
         return userId;
     }
@@ -114,6 +117,14 @@ public class UserCoreJpaEntity {
 
     public void setLockedUntil(LocalDateTime lockedUntil) {
         this.lockedUntil = lockedUntil;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public Boolean getEnabled() {

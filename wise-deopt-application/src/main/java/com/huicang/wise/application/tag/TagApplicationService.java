@@ -77,6 +77,22 @@ public class TagApplicationService {
         return toDTO(entity);
     }
 
+    public ProductTagDTO getTagByNfcUid(String nfcUid) throws BusinessException {
+        ProductTagJpaEntity entity = productTagRepository.findByNfcUid(nfcUid);
+        if (entity == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "标签不存在");
+        }
+        return toDTO(entity);
+    }
+
+    public ProductTagDTO getTagByBarcode(String barcode) throws BusinessException {
+        ProductTagJpaEntity entity = productTagRepository.findByBarcode(barcode);
+        if (entity == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "标签不存在");
+        }
+        return toDTO(entity);
+    }
+
     public ProductTagPageDTO listTags(Integer page, Integer size) {
         int pageIndex = page == null || page < 1 ? 0 : page - 1;
         int pageSize = size == null || size < 1 ? 10 : size;

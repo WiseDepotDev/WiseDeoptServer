@@ -48,6 +48,7 @@ public class UserApplicationService {
         if (request.getPin() != null && !request.getPin().isBlank()) {
             user.setPinHash(hash(request.getPin()));
         }
+        user.setRole(request.getRole() != null ? request.getRole() : "user");
         user.setEnabled(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
@@ -76,6 +77,9 @@ public class UserApplicationService {
         }
         if (request.getPin() != null && !request.getPin().isBlank()) {
             user.setPinHash(hash(request.getPin()));
+        }
+        if (request.getRole() != null) {
+            user.setRole(request.getRole());
         }
         user.setUpdatedAt(LocalDateTime.now());
 
@@ -143,6 +147,7 @@ public class UserApplicationService {
         dto.setEmail(entity.getEmail());
         dto.setEnabled(entity.getEnabled());
         dto.setNfcId(entity.getNfcId());
+        dto.setRole(entity.getRole());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;

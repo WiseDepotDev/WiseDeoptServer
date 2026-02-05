@@ -27,6 +27,11 @@ public class UserCreateRequest {
     @ApiModelProperty(value = "PIN码")
     private String pin;
 
+    /**
+     * 角色 (admin/user)
+     */
+    private String role;
+
     public String getUsername() {
         return username;
     }
@@ -65,5 +70,13 @@ public class UserCreateRequest {
 
     public void setPin(String pin) {
         this.pin = pin;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

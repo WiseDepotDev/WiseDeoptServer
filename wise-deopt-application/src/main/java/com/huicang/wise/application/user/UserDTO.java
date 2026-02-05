@@ -34,6 +34,11 @@ public class UserDTO {
     @ApiModelProperty(value = "更新时间")
     private LocalDateTime updatedAt;
 
+    /**
+     * 用户角色
+     */
+    private String role;
+
     public Long getUserId() {
         return userId;
     }
@@ -88,5 +93,13 @@ public class UserDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

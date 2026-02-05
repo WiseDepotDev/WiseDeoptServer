@@ -5,6 +5,8 @@ import java.util.List;
 
 public interface ProductTagRepository extends JpaRepository<ProductTagJpaEntity, Long> {
     ProductTagJpaEntity findByRfid(String rfid);
+    ProductTagJpaEntity findByNfcUid(String nfcUid);
+    ProductTagJpaEntity findByBarcode(String barcode);
     List<ProductTagJpaEntity> findByStatus(String status);
 }
 

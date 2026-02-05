@@ -83,6 +83,30 @@ public class TagController {
     }
 
     @ApiOperation(
+            value = "根据NFC UID获取标签",
+            notes = "根据NFC UID获取标签详情。用于快速扫码。"
+    )
+    @ApiPacketType(PacketType.TAG_DETAIL)
+    @GetMapping("/nfc/{nfcUid}")
+    public ApiResponse<ProductTagDTO> getTagByNfcUid(
+            @ApiParam(value = "NFC UID", required = true)
+            @PathVariable("nfcUid") String nfcUid) {
+        return ApiResponse.success(tagApplicationService.getTagByNfcUid(nfcUid));
+    }
+
+    @ApiOperation(
+            value = "根据条码获取标签",
+            notes = "根据条码获取标签详情。用于扫码枪。"
+    )
+    @ApiPacketType(PacketType.TAG_DETAIL)
+    @GetMapping("/barcode/{barcode}")
+    public ApiResponse<ProductTagDTO> getTagByBarcode(
+            @ApiParam(value = "条码", required = true)
+            @PathVariable("barcode") String barcode) {
+        return ApiResponse.success(tagApplicationService.getTagByBarcode(barcode));
+    }
+
+    @ApiOperation(
             value = "获取产品标签列表",
             notes = "获取产品标签分页列表。成功返回200；服务器异常返回500。"
     )
