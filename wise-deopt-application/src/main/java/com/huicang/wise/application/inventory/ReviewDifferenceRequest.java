@@ -18,6 +18,11 @@ public class ReviewDifferenceRequest {
      */
     private String remark;
 
+    /**
+     * 目标库位（用于移位操作）
+     */
+    private String targetLocation;
+
     public String getAction() {
         return action;
     }
@@ -32,5 +37,13 @@ public class ReviewDifferenceRequest {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public String getTargetLocation() {
+        return targetLocation;
+    }
+
+    public void setTargetLocation(String targetLocation) {
+        this.targetLocation = targetLocation;
     }
 }

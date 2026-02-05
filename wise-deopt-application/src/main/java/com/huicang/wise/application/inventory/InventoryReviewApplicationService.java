@@ -67,7 +67,7 @@ public class InventoryReviewApplicationService {
         }
 
         String action = request.getAction();
-        if ("CORRECT".equalsIgnoreCase(action)) {
+        if ("CORRECT".equalsIgnoreCase(action) || "ADD".equalsIgnoreCase(action)) {
             // 修正库存：将系统库存更新为实际盘点数量
             InventoryJpaEntity inventory = inventoryRepository.findByProductIdAndLocationCode(
                     diff.getProductId(), diff.getLocationCode())
@@ -88,6 +88,45 @@ public class InventoryReviewApplicationService {
                     newInventory.setLastCheckTime(LocalDateTime.now());
                     inventoryRepository.save(newInventory);
                 }
+            }
+        } else if ("MOVE".equalsIgnoreCase(action)) {
+            // 移位：将库存从当前位置移动到目标位置
+            String targetLocation = request.getTargetLocation();
+            if (targetLocation == null || targetLocation.isBlank()) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "移位操作必须指定目标库位");
+            }
+
+            // 1. 扣减原位置库存
+            InventoryJpaEntity sourceInventory = inventoryRepository.findByProductIdAndLocationCode(
+                    diff.getProductId(), diff.getLocationCode())
+                    .orElse(null);
+            
+            int quantityToMove = diff.getActualQuantity() > 0 ? diff.getActualQuantity() : diff.getExpectedQuantity();
+            
+            if (sourceInventory != null) {
+                int newSourceQty = Math.max(0, sourceInventory.getQuantity() - quantityToMove);
+                sourceInventory.setQuantity(newSourceQty);
+                sourceInventory.setLastCheckTime(LocalDateTime.now());
+                inventoryRepository.save(sourceInventory);
+            }
+
+            // 2. 增加目标位置库存
+            InventoryJpaEntity targetInventory = inventoryRepository.findByProductIdAndLocationCode(
+                    diff.getProductId(), targetLocation)
+                    .orElse(null);
+
+            if (targetInventory != null) {
+                targetInventory.setQuantity(targetInventory.getQuantity() + quantityToMove);
+                targetInventory.setLastCheckTime(LocalDateTime.now());
+                inventoryRepository.save(targetInventory);
+            } else {
+                InventoryJpaEntity newInventory = new InventoryJpaEntity();
+                newInventory.setInventoryId(System.currentTimeMillis());
+                newInventory.setProductId(diff.getProductId());
+                newInventory.setLocationCode(targetLocation);
+                newInventory.setQuantity(quantityToMove);
+                newInventory.setLastCheckTime(LocalDateTime.now());
+                inventoryRepository.save(newInventory);
             }
         }
 
