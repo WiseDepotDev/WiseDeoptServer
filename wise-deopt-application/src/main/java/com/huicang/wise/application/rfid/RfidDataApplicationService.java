@@ -124,6 +124,7 @@ public class RfidDataApplicationService {
             
             if (snapshotUrl != null && !snapshotUrl.isEmpty()) {
                 desc += String.format("，抓拍画面：%s", snapshotUrl);
+                alertRequest.setSnapshotUrl(snapshotUrl);
             }
             alertRequest.setDescription(desc);
             

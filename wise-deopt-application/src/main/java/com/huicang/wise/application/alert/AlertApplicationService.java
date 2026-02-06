@@ -56,6 +56,7 @@ public class AlertApplicationService {
         entity.setAlertType(request.getAlertType());
         entity.setAlertLevel(request.getAlertLevel());
         entity.setDescription(request.getDescription());
+        entity.setSnapshotUrl(request.getSnapshotUrl());
         entity.setAlertTime(LocalDateTime.now());
         AlertEventJpaEntity saved = alertEventRepository.save(entity);
         cacheUnhandledAlert(saved);

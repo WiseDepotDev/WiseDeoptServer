@@ -24,6 +24,11 @@ public class AlertCreateRequest {
      */
     private String description;
 
+    /**
+     * 告警快照URL
+     */
+    private String snapshotUrl;
+
     public String getAlertType() {
         return alertType;
     }
@@ -46,6 +51,14 @@ public class AlertCreateRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getSnapshotUrl() {
+        return snapshotUrl;
+    }
+
+    public void setSnapshotUrl(String snapshotUrl) {
+        this.snapshotUrl = snapshotUrl;
     }
 }
 
