@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 
+import java.util.concurrent.TimeUnit;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,11 +100,7 @@ class DashboardApplicationServiceTest {
         // Mock DB calls
         when(deviceCoreRepository.countByStatus(1)).thenReturn(15L);
 
-        InventoryJpaEntity inv1 = new InventoryJpaEntity();
-        inv1.setQuantity(50);
-        InventoryJpaEntity inv2 = new InventoryJpaEntity();
-        inv2.setQuantity(60);
-        when(inventoryRepository.findAll()).thenReturn(Arrays.asList(inv1, inv2));
+        when(inventoryRepository.sumTotalQuantity()).thenReturn(110L);
 
         when(alertEventRepository.countByAlertTimeBetween(any(), any())).thenReturn(3L);
 
@@ -132,6 +130,6 @@ class DashboardApplicationServiceTest {
         assertEquals("Test Task", summary.getCurrentTask().getTaskName());
 
         // Verify cache set
-        verify(valueOperations).set(eq("dashboard:kpi"), anyString(), any(Duration.class));
+        verify(valueOperations).set(eq("dashboard:kpi"), anyString(), eq(1L), eq(TimeUnit.MINUTES));
     }
 }
