@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huicang.wise.api.config.JpaConfiguration;
+import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
 import com.huicang.wise.application.user.UserDTO;
@@ -39,6 +40,9 @@ public class UserControllerTest {
 
     @MockBean
     private UserApplicationService userApplicationService;
+
+    @MockBean
+    private AuthApplicationService authApplicationService;
 
     @Autowired
     private ObjectMapper objectMapper;

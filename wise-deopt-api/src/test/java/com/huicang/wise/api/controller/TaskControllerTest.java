@@ -28,7 +28,9 @@ import com.huicang.wise.application.task.TaskCreateRequest;
 import com.huicang.wise.application.task.TaskDTO;
 import com.huicang.wise.application.task.TaskUpdateRequest;
 
-@WebMvcTest(controllers = TaskController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class))
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
+@WebMvcTest(controllers = TaskController.class)
 public class TaskControllerTest {
 
     @Autowired
@@ -59,10 +61,11 @@ public class TaskControllerTest {
         mockMvc.perform(post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.taskId").value(1))
-                .andExpect(jsonPath("$.data.taskName").value("Test Task"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.taskId").value(1))
+                .andExpect(jsonPath("$.body.payload.data.taskName").value("Test Task"));
     }
 
     @Test
@@ -83,8 +86,8 @@ public class TaskControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.taskName").value("Updated Task"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.taskName").value("Updated Task"));
     }
 
     @Test
@@ -97,8 +100,8 @@ public class TaskControllerTest {
 
         mockMvc.perform(get("/api/tasks"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data[0].taskId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data[0].taskId").value(1));
     }
 
     @Test
@@ -112,8 +115,8 @@ public class TaskControllerTest {
 
         mockMvc.perform(get("/api/tasks/{taskId}", taskId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.taskId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.taskId").value(1));
     }
 
     @Test
@@ -123,6 +126,6 @@ public class TaskControllerTest {
 
         mockMvc.perform(delete("/api/tasks/{taskId}", taskId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"));
     }
 }

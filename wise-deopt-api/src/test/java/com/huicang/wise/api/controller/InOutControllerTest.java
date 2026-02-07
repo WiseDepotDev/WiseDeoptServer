@@ -56,9 +56,9 @@ public class InOutControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.orderId").value(1))
-                .andExpect(jsonPath("$.data.orderNo").value("IN-001"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.orderId").value(1))
+                .andExpect(jsonPath("$.body.payload.data.orderNo").value("IN-001"));
     }
 
     @Test
@@ -74,8 +74,8 @@ public class InOutControllerTest {
 
         mockMvc.perform(get("/api/stock-orders"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.rows[0].orderId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.rows[0].orderId").value(1));
     }
 
     @Test
@@ -89,8 +89,8 @@ public class InOutControllerTest {
 
         mockMvc.perform(post("/api/stock-orders/{orderId}/submit", orderId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.orderStatus").value("SUBMITTED"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.orderStatus").value("SUBMITTED"));
     }
 
     @Test
@@ -104,7 +104,7 @@ public class InOutControllerTest {
 
         mockMvc.perform(get("/api/stock-orders/{orderId}", orderId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.orderId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.orderId").value(1));
     }
 }

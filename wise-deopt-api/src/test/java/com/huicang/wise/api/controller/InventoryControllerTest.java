@@ -24,6 +24,7 @@ import com.huicang.wise.api.config.JpaConfiguration;
 import com.huicang.wise.application.inventory.InventoryApplicationService;
 import com.huicang.wise.application.inventory.InventoryCreateRequest;
 import com.huicang.wise.application.inventory.InventoryDTO;
+import com.huicang.wise.application.inventory.InventoryReviewApplicationService;
 import com.huicang.wise.application.inventory.ProductCreateRequest;
 import com.huicang.wise.application.inventory.ProductDTO;
 import com.huicang.wise.application.inventory.ProductUpdateRequest;
@@ -36,6 +37,9 @@ public class InventoryControllerTest {
 
     @MockBean
     private InventoryApplicationService inventoryApplicationService;
+
+    @MockBean
+    private InventoryReviewApplicationService inventoryReviewApplicationService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -58,9 +62,9 @@ public class InventoryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.productId").value(1))
-                .andExpect(jsonPath("$.data.productName").value("Test Product"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.productId").value(1))
+                .andExpect(jsonPath("$.body.payload.data.productName").value("Test Product"));
     }
 
     @Test
@@ -79,8 +83,8 @@ public class InventoryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.productName").value("Updated Product"));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.productName").value("Updated Product"));
     }
 
     @Test
@@ -102,8 +106,8 @@ public class InventoryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data.inventoryId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data.inventoryId").value(1));
     }
 
     @Test
@@ -118,7 +122,7 @@ public class InventoryControllerTest {
         mockMvc.perform(get("/api/inventories")
                 .param("productId", productId.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("RES-0000"))
-                .andExpect(jsonPath("$.data[0].inventoryId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.body.payload.data[0].inventoryId").value(1));
     }
 }
