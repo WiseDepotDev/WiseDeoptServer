@@ -83,6 +83,9 @@ public class InventoryDifferenceJpaEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "remark")
+    private String remark;
+
     public Long getDiffId() {
         return diffId;
     }
@@ -97,6 +100,14 @@ public class InventoryDifferenceJpaEntity {
 
     public void setTaskId(Long taskId) {
         this.taskId = taskId;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public Long getProductId() {

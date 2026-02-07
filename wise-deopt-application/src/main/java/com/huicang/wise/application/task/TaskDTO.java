@@ -22,7 +22,15 @@ public class TaskDTO {
     private LocalDateTime actualEndTime;
     private String createdBy;
     private LocalDateTime createdAt;
+    /**
+     * 方法功能描述：备注
+     */
     private String remark;
+
+    /**
+     * 方法功能描述：关联路线ID
+     */
+    private Long routeId;
 
     public Long getTaskId() {
         return taskId;
@@ -126,5 +134,13 @@ public class TaskDTO {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public Long getRouteId() {
+        return routeId;
+    }
+
+    public void setRouteId(Long routeId) {
+        this.routeId = routeId;
     }
 }

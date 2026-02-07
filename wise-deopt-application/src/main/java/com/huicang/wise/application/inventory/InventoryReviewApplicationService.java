@@ -170,6 +170,7 @@ public class InventoryReviewApplicationService {
         dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setRemark(entity.getRemark());
         return dto;
     }
 }

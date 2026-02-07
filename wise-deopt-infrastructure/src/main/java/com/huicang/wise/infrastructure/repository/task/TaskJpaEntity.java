@@ -51,6 +51,9 @@ public class TaskJpaEntity {
     @Column(name = "remark")
     private String remark;
 
+    @Column(name = "route_id")
+    private Long routeId;
+
     public Long getTaskId() {
         return taskId;
     }
@@ -137,5 +140,13 @@ public class TaskJpaEntity {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public Long getRouteId() {
+        return routeId;
+    }
+
+    public void setRouteId(Long routeId) {
+        this.routeId = routeId;
     }
 }

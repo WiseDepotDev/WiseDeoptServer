@@ -21,6 +21,7 @@ public class InventoryDifferenceDTO {
     private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String remark;
 
     public Long getDiffId() {
         return diffId;
@@ -108,5 +109,13 @@ public class InventoryDifferenceDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

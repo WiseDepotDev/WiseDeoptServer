@@ -35,6 +35,11 @@ public class TaskCreateRequest {
      */
     private String createdBy;
 
+    /**
+     * 方法功能描述：关联路线ID
+     */
+    private Long routeId;
+
     public String getTaskName() {
         return taskName;
     }
@@ -73,5 +78,13 @@ public class TaskCreateRequest {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public Long getRouteId() {
+        return routeId;
+    }
+
+    public void setRouteId(Long routeId) {
+        this.routeId = routeId;
     }
 }

@@ -53,6 +53,7 @@ public class TaskApplicationService {
         entity.setCreatedBy(request.getCreatedBy());
         entity.setCreatedAt(LocalDateTime.now());
         entity.setRemark(request.getRemark());
+        entity.setRouteId(request.getRouteId());
 
         TaskJpaEntity saved = taskRepository.save(entity);
         return toDTO(saved);
@@ -189,6 +190,7 @@ public class TaskApplicationService {
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setRemark(entity.getRemark());
+        dto.setRouteId(entity.getRouteId());
         return dto;
     }
 
