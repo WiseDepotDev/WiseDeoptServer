@@ -15,6 +15,12 @@ public class UserUpdateRequest {
     @ApiModelProperty(value = "用户ID", hidden = true)
     private Long userId;
 
+    @ApiModelProperty(value = "昵称")
+    private String nickname;
+
+    @ApiModelProperty(value = "头像URL")
+    private String avatar;
+
     @ApiModelProperty(value = "邮箱")
     private String email;
 
@@ -41,6 +47,22 @@ public class UserUpdateRequest {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     public String getEmail() {

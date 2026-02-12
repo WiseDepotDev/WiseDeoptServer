@@ -31,6 +31,7 @@ import com.huicang.wise.application.user.UserPageDTO;
 import com.huicang.wise.application.user.UserUpdateRequest;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import org.junit.jupiter.api.BeforeEach;
 
 @WebMvcTest(controllers = UserController.class)
 public class UserControllerTest {
@@ -46,6 +47,11 @@ public class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        when(authApplicationService.validateToken(any())).thenReturn("admin");
+    }
 
     @Test
     void testCreateUser() throws Exception {
@@ -63,6 +69,7 @@ public class UserControllerTest {
         when(userApplicationService.createUser(any(UserCreateRequest.class))).thenReturn(userDTO);
 
         mockMvc.perform(post("/api/users")
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -86,6 +93,7 @@ public class UserControllerTest {
         when(userApplicationService.updateUser(any(UserUpdateRequest.class))).thenReturn(userDTO);
 
         mockMvc.perform(put("/api/users/{userId}", userId)
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -102,7 +110,8 @@ public class UserControllerTest {
 
         when(userApplicationService.getUser(userId)).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/{userId}", userId))
+        mockMvc.perform(get("/api/users/{userId}", userId)
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.userId").value(1));
@@ -119,7 +128,8 @@ public class UserControllerTest {
 
         when(userApplicationService.listUsers(any(), any())).thenReturn(pageDTO);
 
-        mockMvc.perform(get("/api/users"))
+        mockMvc.perform(get("/api/users")
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.items[0].userId").value(1));
@@ -130,7 +140,8 @@ public class UserControllerTest {
         Long userId = 1L;
         doNothing().when(userApplicationService).deleteUser(userId);
 
-        mockMvc.perform(delete("/api/users/{userId}", userId))
+        mockMvc.perform(delete("/api/users/{userId}", userId)
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"));
     }

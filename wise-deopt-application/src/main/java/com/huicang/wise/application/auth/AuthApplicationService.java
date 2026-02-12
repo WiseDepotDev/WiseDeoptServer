@@ -2,6 +2,7 @@ package com.huicang.wise.application.auth;
 
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.infrastructure.repository.auth.*;
 import com.huicang.wise.infrastructure.repository.user.UserCoreJpaEntity;
 import com.huicang.wise.infrastructure.repository.user.UserCoreRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -11,7 +12,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * 类功能描述：认证应用服务
@@ -24,12 +27,20 @@ import java.util.UUID;
 public class AuthApplicationService {
 
     private final UserCoreRepository userCoreRepository;
-
+    private final RoleRepository roleRepository;
+    private final RolePermissionRepository rolePermissionRepository;
+    private final PermissionRepository permissionRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
     public AuthApplicationService(UserCoreRepository userCoreRepository,
+                                  RoleRepository roleRepository,
+                                  RolePermissionRepository rolePermissionRepository,
+                                  PermissionRepository permissionRepository,
                                   StringRedisTemplate stringRedisTemplate) {
         this.userCoreRepository = userCoreRepository;
+        this.roleRepository = roleRepository;
+        this.rolePermissionRepository = rolePermissionRepository;
+        this.permissionRepository = permissionRepository;
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
@@ -93,6 +104,8 @@ public class AuthApplicationService {
 
         NfcLoginResponse response = new NfcLoginResponse();
         response.setUsername(user.getUsername());
+        response.setNickname(user.getNickname());
+        response.setAvatarFileUrl(user.getAvatar());
         // 生成临时验证ID，后续可用于关联PIN验证（此处简化处理，仅返回随机ID）
         response.setVerificationId(UUID.randomUUID().toString());
         return response;
@@ -189,5 +202,54 @@ public class AuthApplicationService {
             throw new BusinessException(ErrorCode.AUTH_INVALID_TOKEN, "无效的访问令牌");
         }
         return username;
+    }
+
+    /**
+     * 方法功能描述：检查用户权限
+     *
+     * @param username 用户名
+     * @param permissionCode 权限编码
+     */
+    public void checkPermission(String username, String permissionCode) {
+        UserCoreJpaEntity user = userCoreRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
+
+        String roleCode = user.getRole();
+        if (roleCode == null) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "用户无角色");
+        }
+
+        // 超级管理员拥有所有权限
+        if ("admin".equals(roleCode)) {
+            return;
+        }
+
+        RoleJpaEntity role = roleRepository.findByRoleCode(roleCode)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FORBIDDEN, "角色未定义"));
+
+        List<RolePermissionJpaEntity> rolePermissions = rolePermissionRepository.findByRoleId(role.getRoleId());
+        List<Long> permissionIds = rolePermissions.stream()
+                .map(RolePermissionJpaEntity::getPermissionId)
+                .collect(Collectors.toList());
+
+        List<PermissionJpaEntity> permissions = permissionRepository.findAllById(permissionIds);
+        boolean hasPermission = permissions.stream()
+                .anyMatch(p -> p.getPermissionCode().equals(permissionCode));
+
+        if (!hasPermission) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权访问此资源");
+        }
+    }
+
+    /**
+     * 方法功能描述：退出登录
+     *
+     * @param token 访问令牌
+     */
+    public void logout(String token) {
+        String accessKey = "auth:token:access:" + token;
+        // 同时删除关联的Refresh Token（如果需要更严格的安全控制）
+        // 这里简化处理，只删除Access Token
+        stringRedisTemplate.delete(accessKey);
     }
 }

@@ -18,6 +18,7 @@ import com.huicang.wise.application.user.UserDTO;
 import com.huicang.wise.application.user.UserPageDTO;
 import com.huicang.wise.application.user.UserPasswordChangeRequest;
 import com.huicang.wise.application.user.UserUpdateRequest;
+import com.huicang.wise.common.annotation.RequiresPermission;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.protocol.ApiPacketType;
 import com.huicang.wise.common.protocol.PacketType;
@@ -58,6 +59,7 @@ public class UserController {
 
     @ApiOperation(value = "创建用户", notes = "创建用户。成功返回200；用户名已存在返回400；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_CREATE)
+    @RequiresPermission("user:create")
     @PostMapping
     public ApiResponse<UserDTO> createUser(@RequestBody UserCreateRequest request) {
         return ApiResponse.success(userApplicationService.createUser(request));
@@ -65,6 +67,7 @@ public class UserController {
 
     @ApiOperation(value = "更新用户", notes = "更新用户信息。成功返回200；用户不存在返回404；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_UPDATE)
+    @RequiresPermission("user:edit")
     @PutMapping("/{userId}")
     public ApiResponse<UserDTO> updateUser(
             @ApiParam(value = "用户ID", required = true)
@@ -76,6 +79,7 @@ public class UserController {
 
     @ApiOperation(value = "查询用户详情", notes = "根据ID查询用户详情。成功返回200；用户不存在返回404；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_DETAIL)
+    @RequiresPermission("user:view")
     @GetMapping("/{userId}")
     public ApiResponse<UserDTO> getUser(
             @ApiParam(value = "用户ID", required = true)
@@ -85,6 +89,7 @@ public class UserController {
 
     @ApiOperation(value = "查询用户列表", notes = "分页查询用户列表。成功返回200；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_LIST)
+    @RequiresPermission("user:view")
     @GetMapping
     public ApiResponse<UserPageDTO> listUsers(
             @ApiParam(value = "页码", required = false)
@@ -96,6 +101,7 @@ public class UserController {
 
     @ApiOperation(value = "删除用户", notes = "根据ID删除用户。成功返回200；用户不存在返回404；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_DELETE)
+    @RequiresPermission("user:delete")
     @DeleteMapping("/{userId}")
     public ApiResponse<Void> deleteUser(
             @ApiParam(value = "用户ID", required = true)

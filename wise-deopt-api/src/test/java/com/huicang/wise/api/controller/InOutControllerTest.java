@@ -24,6 +24,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import org.junit.jupiter.api.BeforeEach;
 
 @WebMvcTest(controllers = InOutController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class))
 public class InOutControllerTest {
@@ -34,8 +36,16 @@ public class InOutControllerTest {
     @MockBean
     private InOutApplicationService inOutApplicationService;
 
+    @MockBean
+    private AuthApplicationService authApplicationService;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        when(authApplicationService.validateToken(any())).thenReturn("admin");
+    }
 
     @Test
     void testCreateStockOrder() throws Exception {
@@ -53,6 +63,7 @@ public class InOutControllerTest {
         when(inOutApplicationService.createStockOrder(any(StockOrderCreateRequest.class))).thenReturn(dto);
 
         mockMvc.perform(post("/api/stock-orders")
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -72,7 +83,8 @@ public class InOutControllerTest {
 
         when(inOutApplicationService.listStockOrders(any(), any())).thenReturn(pageDTO);
 
-        mockMvc.perform(get("/api/stock-orders"))
+        mockMvc.perform(get("/api/stock-orders")
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.rows[0].orderId").value(1));
@@ -87,7 +99,8 @@ public class InOutControllerTest {
 
         when(inOutApplicationService.submitStockOrder(orderId)).thenReturn(dto);
 
-        mockMvc.perform(post("/api/stock-orders/{orderId}/submit", orderId))
+        mockMvc.perform(post("/api/stock-orders/{orderId}/submit", orderId)
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.orderStatus").value("SUBMITTED"));
@@ -102,7 +115,8 @@ public class InOutControllerTest {
 
         when(inOutApplicationService.getStockOrder(orderId)).thenReturn(dto);
 
-        mockMvc.perform(get("/api/stock-orders/{orderId}", orderId))
+        mockMvc.perform(get("/api/stock-orders/{orderId}", orderId)
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.orderId").value(1));

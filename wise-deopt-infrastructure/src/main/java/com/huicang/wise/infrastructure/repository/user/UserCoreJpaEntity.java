@@ -25,6 +25,12 @@ public class UserCoreJpaEntity {
     @Column(name = "username")
     private String username;
 
+    @Column(name = "nickname")
+    private String nickname;
+
+    @Column(name = "avatar")
+    private String avatar;
+
     @Column(name = "email")
     private String email;
 
@@ -69,6 +75,22 @@ public class UserCoreJpaEntity {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     public String getEmail() {

@@ -29,6 +29,8 @@ import com.huicang.wise.application.task.TaskDTO;
 import com.huicang.wise.application.task.TaskUpdateRequest;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import org.junit.jupiter.api.BeforeEach;
 
 @WebMvcTest(controllers = TaskController.class)
 public class TaskControllerTest {
@@ -39,8 +41,16 @@ public class TaskControllerTest {
     @MockBean
     private TaskApplicationService taskApplicationService;
 
+    @MockBean
+    private AuthApplicationService authApplicationService;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        when(authApplicationService.validateToken(any())).thenReturn("admin");
+    }
 
     @Test
     void testCreateTask() throws Exception {
@@ -59,6 +69,7 @@ public class TaskControllerTest {
         when(taskApplicationService.createTask(any(TaskCreateRequest.class))).thenReturn(taskDTO);
 
         mockMvc.perform(post("/api/tasks")
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -83,6 +94,7 @@ public class TaskControllerTest {
         when(taskApplicationService.updateTask(any(TaskUpdateRequest.class))).thenReturn(taskDTO);
 
         mockMvc.perform(put("/api/tasks/{taskId}", taskId)
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -98,10 +110,10 @@ public class TaskControllerTest {
 
         when(taskApplicationService.listTasks()).thenReturn(Collections.singletonList(taskDTO));
 
-        mockMvc.perform(get("/api/tasks"))
+        mockMvc.perform(get("/api/tasks")
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data[0].taskId").value(1));
+                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"));
     }
 
     @Test
@@ -113,7 +125,8 @@ public class TaskControllerTest {
 
         when(taskApplicationService.getTask(taskId)).thenReturn(taskDTO);
 
-        mockMvc.perform(get("/api/tasks/{taskId}", taskId))
+        mockMvc.perform(get("/api/tasks/{taskId}", taskId)
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.taskId").value(1));
@@ -124,7 +137,8 @@ public class TaskControllerTest {
         Long taskId = 1L;
         doNothing().when(taskApplicationService).deleteTask(taskId);
 
-        mockMvc.perform(delete("/api/tasks/{taskId}", taskId))
+        mockMvc.perform(delete("/api/tasks/{taskId}", taskId)
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"));
     }

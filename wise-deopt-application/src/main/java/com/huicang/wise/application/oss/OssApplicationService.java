@@ -24,11 +24,12 @@ import io.minio.http.Method;
 @Service
 public class OssApplicationService {
 
-    private final MinioClient minioClient;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private MinioClient minioClient;
+    
     private final MinioFileRepository minioFileRepository;
 
-    public OssApplicationService(MinioClient minioClient, MinioFileRepository minioFileRepository) {
-        this.minioClient = minioClient;
+    public OssApplicationService(MinioFileRepository minioFileRepository) {
         this.minioFileRepository = minioFileRepository;
     }
 
@@ -77,6 +78,9 @@ public class OssApplicationService {
         }
         if (expiresIn == null || expiresIn <= 0 || expiresIn > 604800) {
             throw new BusinessException(ErrorCode.OSS_EXPIRES_OUT_OF_RANGE, ErrorCode.OSS_EXPIRES_OUT_OF_RANGE.getMessage());
+        }
+        if (minioClient == null) {
+            throw new BusinessException(ErrorCode.OSS_SERVICE_UNAVAILABLE, "MinIO服务未启用");
         }
         try {
             String url = minioClient.getPresignedObjectUrl(

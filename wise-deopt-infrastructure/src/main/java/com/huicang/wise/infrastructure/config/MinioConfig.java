@@ -24,10 +24,15 @@ public class MinioConfig {
      */
     @Bean
     public MinioClient minioClient(MinioProperties properties) {
-        return MinioClient.builder()
-                .endpoint(properties.getEndpoint())
-                .credentials(properties.getAccessKey(), properties.getSecretKey())
-                .build();
+        try {
+            return MinioClient.builder()
+                    .endpoint(properties.getEndpoint())
+                    .credentials(properties.getAccessKey(), properties.getSecretKey())
+                    .build();
+        } catch (Exception e) {
+            // MinIO连接失败时不影响应用启动
+            return null;
+        }
     }
 }
 

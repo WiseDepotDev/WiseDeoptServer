@@ -30,6 +30,8 @@ import com.huicang.wise.application.alert.AlertDTO;
 import com.huicang.wise.application.alert.AlertEventPageDTO;
 import com.huicang.wise.application.alert.AlertEventSummaryDTO;
 import com.huicang.wise.application.alert.UpdateAlertStatusRequest;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import org.junit.jupiter.api.BeforeEach;
 
 @WebMvcTest(controllers = AlertController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class))
 public class AlertControllerTest {
@@ -40,8 +42,16 @@ public class AlertControllerTest {
     @MockBean
     private AlertApplicationService alertApplicationService;
 
+    @MockBean
+    private AuthApplicationService authApplicationService;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        when(authApplicationService.validateToken(any())).thenReturn("admin");
+    }
 
     @Test
     void testCreateAlert() throws Exception {
@@ -60,6 +70,7 @@ public class AlertControllerTest {
         when(alertApplicationService.createAlert(any(AlertCreateRequest.class))).thenReturn(dto);
 
         mockMvc.perform(post("/api/alerts")
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -77,6 +88,7 @@ public class AlertControllerTest {
         doNothing().when(alertApplicationService).updateAlertStatus(eq(eventId), any(UpdateAlertStatusRequest.class));
 
         mockMvc.perform(put("/api/alerts/{eventId}/status", eventId)
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -94,7 +106,8 @@ public class AlertControllerTest {
 
         when(alertApplicationService.listAlertEvents(any(), any(), any(), any(), any(), any())).thenReturn(pageDTO);
 
-        mockMvc.perform(get("/api/alerts"))
+        mockMvc.perform(get("/api/alerts")
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.rows[0].eventId").value(1))
@@ -110,7 +123,8 @@ public class AlertControllerTest {
 
         when(alertApplicationService.getAlert(eventId)).thenReturn(dto);
 
-        mockMvc.perform(get("/api/alerts/{eventId}", eventId))
+        mockMvc.perform(get("/api/alerts/{eventId}", eventId)
+                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.eventId").value(1));

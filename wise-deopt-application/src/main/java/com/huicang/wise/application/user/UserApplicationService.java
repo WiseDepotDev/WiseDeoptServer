@@ -42,6 +42,8 @@ public class UserApplicationService {
         // Simple ID generation strategy
         user.setUserId(System.nanoTime() + (long)(Math.random() * 1000));
         user.setUsername(request.getUsername());
+        user.setNickname(request.getNickname());
+        user.setAvatar(request.getAvatar());
         user.setEmail(request.getEmail());
         user.setPasswordHash(hash(request.getPassword()));
         user.setNfcId(request.getNfcId());
@@ -65,6 +67,12 @@ public class UserApplicationService {
 
         if (request.getEmail() != null) {
             user.setEmail(request.getEmail());
+        }
+        if (request.getNickname() != null) {
+            user.setNickname(request.getNickname());
+        }
+        if (request.getAvatar() != null) {
+            user.setAvatar(request.getAvatar());
         }
         if (request.getEnabled() != null) {
             user.setEnabled(request.getEnabled());
@@ -144,6 +152,8 @@ public class UserApplicationService {
         UserDTO dto = new UserDTO();
         dto.setUserId(entity.getUserId());
         dto.setUsername(entity.getUsername());
+        dto.setNickname(entity.getNickname());
+        dto.setAvatar(entity.getAvatar());
         dto.setEmail(entity.getEmail());
         dto.setEnabled(entity.getEnabled());
         dto.setNfcId(entity.getNfcId());

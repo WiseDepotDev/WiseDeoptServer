@@ -19,6 +19,12 @@ public class UserDTO {
     @ApiModelProperty(value = "用户名")
     private String username;
 
+    @ApiModelProperty(value = "昵称")
+    private String nickname;
+
+    @ApiModelProperty(value = "头像URL")
+    private String avatar;
+
     @ApiModelProperty(value = "邮箱")
     private String email;
 
@@ -53,6 +59,22 @@ public class UserDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     public String getEmail() {

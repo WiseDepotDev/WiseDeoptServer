@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "Dashboard", description = "首页看板")
 @RestController
-@RequestMapping("/dashboard")
+@RequestMapping("/api/dashboard")
 public class DashboardController {
 
     private final DashboardApplicationService dashboardApplicationService;

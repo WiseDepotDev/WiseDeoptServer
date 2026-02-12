@@ -71,6 +71,26 @@ public class AuthController {
     }
 
     /**
+     * 方法功能描述：退出登录接口
+     *
+     * @param token 访问令牌
+     * @return 无
+     */
+    @ApiOperation(
+            value = "退出登录",
+            notes = "退出当前登录状态，使令牌失效。成功返回200；服务器异常返回500。"
+    )
+    @ApiPacketType(PacketType.AUTH_LOGOUT)
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@org.springframework.web.bind.annotation.RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        authApplicationService.logout(token);
+        return ApiResponse.success(null);
+    }
+
+    /**
      * 方法功能描述：NFC+PIN登录接口
      *
      * @param request NFC+PIN登录请求参数

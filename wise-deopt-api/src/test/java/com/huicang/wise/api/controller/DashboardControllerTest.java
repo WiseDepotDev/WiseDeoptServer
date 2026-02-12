@@ -20,6 +20,9 @@ import com.huicang.wise.application.alert.AlertDTO;
 import com.huicang.wise.application.task.TaskDTO;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import org.junit.jupiter.api.BeforeEach;
+import static org.mockito.ArgumentMatchers.any;
 
 @WebMvcTest(controllers = DashboardController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class))
 public class DashboardControllerTest {
@@ -29,6 +32,14 @@ public class DashboardControllerTest {
 
     @MockBean
     private DashboardApplicationService dashboardApplicationService;
+
+    @MockBean
+    private AuthApplicationService authApplicationService;
+
+    @BeforeEach
+    void setUp() {
+        when(authApplicationService.validateToken(any())).thenReturn("admin");
+    }
 
     @Test
     void testGetSummary() throws Exception {
@@ -50,7 +61,8 @@ public class DashboardControllerTest {
 
         when(dashboardApplicationService.getSummary()).thenReturn(summary);
 
-        mockMvc.perform(get("/dashboard/summary"))
+        mockMvc.perform(get("/api/dashboard/summary")
+                .header("Authorization", "Bearer token"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))

@@ -28,6 +28,8 @@ import com.huicang.wise.application.inventory.InventoryReviewApplicationService;
 import com.huicang.wise.application.inventory.ProductCreateRequest;
 import com.huicang.wise.application.inventory.ProductDTO;
 import com.huicang.wise.application.inventory.ProductUpdateRequest;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import org.junit.jupiter.api.BeforeEach;
 
 @WebMvcTest(controllers = InventoryController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class))
 public class InventoryControllerTest {
@@ -41,8 +43,16 @@ public class InventoryControllerTest {
     @MockBean
     private InventoryReviewApplicationService inventoryReviewApplicationService;
 
+    @MockBean
+    private AuthApplicationService authApplicationService;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        when(authApplicationService.validateToken(any())).thenReturn("admin");
+    }
 
     @Test
     void testCreateProduct() throws Exception {
@@ -59,6 +69,7 @@ public class InventoryControllerTest {
         when(inventoryApplicationService.createProduct(any(ProductCreateRequest.class))).thenReturn(dto);
 
         mockMvc.perform(post("/api/inventories/products")
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -80,6 +91,7 @@ public class InventoryControllerTest {
         when(inventoryApplicationService.updateProduct(eq(productId), any(ProductUpdateRequest.class))).thenReturn(dto);
 
         mockMvc.perform(put("/api/inventories/products/{productId}", productId)
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -103,6 +115,7 @@ public class InventoryControllerTest {
         when(inventoryApplicationService.createInventory(any(InventoryCreateRequest.class))).thenReturn(dto);
 
         mockMvc.perform(post("/api/inventories")
+                .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -120,6 +133,7 @@ public class InventoryControllerTest {
         when(inventoryApplicationService.listInventoryByProduct(productId)).thenReturn(Collections.singletonList(dto));
 
         mockMvc.perform(get("/api/inventories")
+                .header("Authorization", "Bearer token")
                 .param("productId", productId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
