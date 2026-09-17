@@ -1,0 +1,24 @@
+# 统一行尾与文本属性（STD-CODE-04）
+# 默认：自动识别文本 + 仓库内统一 LF，消除 Windows/Linux 行尾抖动
+* text=auto eol=lf
+
+# Windows 批处理与 PowerShell 脚本：CRLF（兼容 Windows PowerShell 5.1）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 二进制：禁止行尾转换与 diff
+*.jar binary
+*.war binary
+*.zip binary
+*.7z binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.doc binary
+*.docx binary
