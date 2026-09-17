@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.common.api.ErrorCode;
 
 /**
  * Redis缓存管理器
@@ -45,7 +47,7 @@ public class RedisCacheManager {
             logger.debug("设置缓存成功，key: {}", key);
         } catch (Exception e) {
             logger.error("设置缓存失败，key: {}", key, e);
-            throw new RuntimeException("设置缓存失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "设置缓存失败", e);
         }
     }
 
@@ -63,7 +65,7 @@ public class RedisCacheManager {
             logger.debug("设置缓存成功，key: {}, timeout: {} {}", key, timeout, unit);
         } catch (Exception e) {
             logger.error("设置缓存失败，key: {}", key, e);
-            throw new RuntimeException("设置缓存失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "设置缓存失败", e);
         }
     }
 

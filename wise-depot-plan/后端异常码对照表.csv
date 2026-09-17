@@ -40,6 +40,7 @@ SYS-IO-OSS-1005,SYS,IO,OSS,"1,005",删除MinIO文件失败,500,,2025/10/21,2025/
 VAL-FORMAT-AUTH-1002,VAL,FORMAT,AUTH,"1,002",cardUuid格式错误,422,,2025/10/22,2025/10/22,@年华✨,
 VAL-PARAM-AUTH-1009,VAL,PARAM,AUTH,"1,009",captchaId字段为空,422,请确认请求参数，确保包含captchaId字段。,2026/02/27,2026/02/27,@年华✨,补齐登记（原仅在代码中存在）
 VAL-PARAM-AUTH-1010,VAL,PARAM,AUTH,"1,010",captchaCode字段为空,422,请确认请求参数，确保包含captchaCode字段。,2026/02/27,2026/02/27,@年华✨,补齐登记（原仅在代码中存在）
+VAL-CONFLICT-PERMISSION-1001,VAL,CONFLICT,PERMISSION,"1,001",权限编码已存在,409,请更换权限编码后重试。,2026/02/27,2026/02/27,@年华✨,P2-06 新增（业务冲突）
 --,,,,,,,,,,,
 --,,,,,,,,,,,
 --,,,,,,,,,,,

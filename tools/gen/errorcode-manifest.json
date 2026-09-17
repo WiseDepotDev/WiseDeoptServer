@@ -340,6 +340,12 @@
                         "name":  "SYS_IO_OSS_DELETE_ERROR",
                         "code":  "SYS-IO-OSS-1005",
                         "origin":  "csv"
+                    },
+                    {
+                        "group":  14,
+                        "name":  "VAL_CONFLICT_PERMISSION_CODE_EXISTS",
+                        "code":  "VAL-CONFLICT-PERMISSION-1001",
+                        "origin":  "csv"
                     }
                 ]
 }

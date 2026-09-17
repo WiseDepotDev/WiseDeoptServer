@@ -11,6 +11,8 @@ import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Map;
 import java.util.TreeMap;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.common.api.ErrorCode;
 
 @Component
 @Slf4j
@@ -54,7 +56,7 @@ public class RequestSignatureService {
             return signature;
         } catch (Exception e) {
             log.error("生成签名失败", e);
-            throw new RuntimeException("生成签名失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成签名失败", e);
         }
     }
 

@@ -30,7 +30,7 @@ public class PermissionAspect {
     public Object checkPermission(ProceedingJoinPoint joinPoint, RequiresPermission requiresPermission) throws Throwable {
         HttpServletRequest request = getCurrentRequest();
         if (request == null) {
-            throw new RuntimeException("无法获取请求上下文");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "无法获取请求上下文");
         }
 
         Long userId = (Long) request.getAttribute("userId");

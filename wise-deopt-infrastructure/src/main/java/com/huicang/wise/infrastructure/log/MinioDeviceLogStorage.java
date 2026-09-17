@@ -2,6 +2,8 @@ package com.huicang.wise.infrastructure.log;
 
 import com.huicang.wise.domain.service.DeviceLogStorage;
 import com.huicang.wise.infrastructure.config.MinioProperties;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.common.api.ErrorCode;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -112,7 +114,7 @@ public class MinioDeviceLogStorage implements DeviceLogStorage {
             log.info("已存储设备日志: {}/{}", bucket, objectName);
         } catch (Exception e) {
             log.error("存储设备日志失败", e);
-            throw new RuntimeException("存储设备日志失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "存储设备日志失败", e);
         }
     }
 }

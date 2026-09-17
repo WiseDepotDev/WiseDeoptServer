@@ -4,6 +4,8 @@ import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.domain.warehouse.Warehouse;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.common.api.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,7 +99,7 @@ public class WarehouseApplicationService {
      */
     public void deleteWarehouse(Long id) {
         if (!warehouseRepository.existsById(id)) {
-            throw new RuntimeException("Warehouse not found with id: " + id);
+            throw new BusinessException(ErrorCode.NOT_FOUND, "Warehouse not found with id: " + id);
         }
         warehouseRepository.deleteById(id);
     }

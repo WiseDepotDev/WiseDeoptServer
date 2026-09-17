@@ -13,6 +13,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.common.api.ErrorCode;
 
 @Component
 @Slf4j
@@ -64,7 +66,7 @@ public class DataEncryptionService {
             return Base64.getEncoder().encodeToString(encryptedBytesWithIv);
         } catch (Exception e) {
             log.error("加密失败", e);
-            throw new RuntimeException("加密失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "加密失败", e);
         }
     }
 
@@ -88,7 +90,7 @@ public class DataEncryptionService {
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("解密失败", e);
-            throw new RuntimeException("解密失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "解密失败", e);
         }
     }
 

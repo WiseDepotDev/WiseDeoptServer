@@ -71,7 +71,9 @@ public enum ErrorCode {
     SYS_IO_OSS_PRESIGN_ERROR("SYS-IO-OSS-1002", "获取MinIO临时访问链接异常", 500),
     SYS_IO_OSS_STAT_ERROR("SYS-IO-OSS-1003", "获取MinIO文件状态异常", 500),
     SYS_IO_OSS_UPLOAD_ERROR("SYS-IO-OSS-1004", "上传文件到MinIO失败", 500),
-    SYS_IO_OSS_DELETE_ERROR("SYS-IO-OSS-1005", "删除MinIO文件失败", 500);
+    SYS_IO_OSS_DELETE_ERROR("SYS-IO-OSS-1005", "删除MinIO文件失败", 500),
+
+    VAL_CONFLICT_PERMISSION_CODE_EXISTS("VAL-CONFLICT-PERMISSION-1001", "权限编码已存在", 409);
 
     private final String code;
 

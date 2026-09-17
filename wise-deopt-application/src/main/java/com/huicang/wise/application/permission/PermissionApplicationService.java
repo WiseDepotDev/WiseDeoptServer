@@ -2,6 +2,8 @@ package com.huicang.wise.application.permission;
 
 import com.huicang.wise.domain.auth.Permission;
 import com.huicang.wise.domain.repository.auth.PermissionRepository;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.common.api.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +54,7 @@ public class PermissionApplicationService {
     @Transactional
     public PermissionDTO createPermission(CreatePermissionRequest request) {
         if (permissionRepository.findByCode(request.getPermissionCode()).isPresent()) {
-            throw new RuntimeException("权限编码已存在");
+            throw new BusinessException(ErrorCode.VAL_CONFLICT_PERMISSION_CODE_EXISTS, "权限编码已存在");
         }
 
         Permission permission = new Permission();

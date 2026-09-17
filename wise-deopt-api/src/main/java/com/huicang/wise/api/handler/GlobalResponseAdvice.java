@@ -21,6 +21,8 @@ import com.huicang.wise.common.protocol.ApiPacketType;
 import com.huicang.wise.common.protocol.Packet;
 import com.huicang.wise.common.protocol.PacketHeader;
 import com.huicang.wise.common.protocol.PacketType;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.common.api.ErrorCode;
 
 /**
  * 全局响应包装处理器
@@ -86,7 +88,7 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
             try {
                 return objectMapper.writeValueAsString(packet);
             } catch (JsonProcessingException e) {
-                throw new RuntimeException("序列化响应失败", e);
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "序列化响应失败", e);
             }
         }
 
