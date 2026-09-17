@@ -42,13 +42,13 @@ public class PermissionApplicationService {
     public PermissionDTO getPermissionById(Long id) {
         return permissionRepository.findById(id)
                 .map(permissionMapper::toDTO)
-                .orElseThrow(() -> new RuntimeException("权限不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "权限不存在"));
     }
 
     public PermissionDTO getPermissionByCode(String code) {
         return permissionRepository.findByCode(code)
                 .map(permissionMapper::toDTO)
-                .orElseThrow(() -> new RuntimeException("权限不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "权限不存在"));
     }
 
     @Transactional
@@ -71,7 +71,7 @@ public class PermissionApplicationService {
     @Transactional
     public PermissionDTO updatePermission(Long id, UpdatePermissionRequest request) {
         Permission permission = permissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("权限不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "权限不存在"));
 
         permission.setName(request.getPermissionName());
         permission.setDescription(request.getDescription());
@@ -84,7 +84,7 @@ public class PermissionApplicationService {
     @Transactional
     public void deletePermission(Long id) {
         Permission permission = permissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("权限不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "权限不存在"));
 
         permissionRepository.delete(permission);
     }

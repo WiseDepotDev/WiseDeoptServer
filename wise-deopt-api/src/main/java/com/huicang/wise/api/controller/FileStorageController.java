@@ -3,11 +3,10 @@ package com.huicang.wise.api.controller;
 import com.huicang.wise.application.oss.FileStorageApplicationService;
 import com.huicang.wise.application.oss.FileUploadRequest;
 import com.huicang.wise.application.oss.FileUploadResponse;
+import com.huicang.wise.application.oss.MinioFileDTO;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.oss.MinioFile;
-import com.huicang.wise.domain.repository.oss.MinioFileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -31,13 +30,10 @@ import java.util.Map;
 public class FileStorageController {
 
     private final FileStorageApplicationService fileStorageService;
-    private final MinioFileRepository minioFileRepository;
 
     @Autowired
-    public FileStorageController(FileStorageApplicationService fileStorageService,
-                                 MinioFileRepository minioFileRepository) {
+    public FileStorageController(FileStorageApplicationService fileStorageService) {
         this.fileStorageService = fileStorageService;
-        this.minioFileRepository = minioFileRepository;
     }
 
     /**
@@ -126,11 +122,11 @@ public class FileStorageController {
      * @return 文件列表
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<MinioFile>>> listFiles(
+    public ResponseEntity<ApiResponse<List<MinioFileDTO>>> listFiles(
             @RequestParam(value = "uploadBy", required = false) Long uploadBy) {
 
         try {
-            List<MinioFile> files = fileStorageService.listFiles(uploadBy);
+            List<MinioFileDTO> files = fileStorageService.listFiles(uploadBy);
             return ResponseEntity.ok(ApiResponse.success(files));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "查询文件列表失败: " + e.getMessage()));
@@ -144,10 +140,9 @@ public class FileStorageController {
      * @return 文件详情
      */
     @GetMapping("/{fileId}")
-    public ResponseEntity<ApiResponse<MinioFile>> getFileDetail(@PathVariable Long fileId) {
+    public ResponseEntity<ApiResponse<MinioFileDTO>> getFileDetail(@PathVariable Long fileId) {
         try {
-            MinioFile file = minioFileRepository.findById(fileId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在"));
+            MinioFileDTO file = fileStorageService.getFileDetail(fileId);
             return ResponseEntity.ok(ApiResponse.success(file));
         } catch (BusinessException e) {
             return ResponseEntity.notFound().build();

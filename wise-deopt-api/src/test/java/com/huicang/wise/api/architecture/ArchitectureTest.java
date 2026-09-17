@@ -74,6 +74,40 @@ class ArchitectureTest {
             .because("入口层必须经应用服务/领域端口访问基础设施（STD-ARCH-02 / STD-ARCH-05）");
 
     /**
+     * 入口层不得直接访问仓储（必须经应用服务）。
+     *
+     * <p>已知存量债务以「显式例外 + 任务号」记录，新代码不得再引入：
+     * <ul>
+     *   <li>{@code DataInitializer}：启动期数据播种，直接使用 12 个仓储（P2-04b 迁移）；</li>
+     *   <li>{@code JpaConfiguration}：`@EnableJpaRepositories` 属持久化配置，应在 infrastructure（P2-10）。</li>
+     * </ul>
+     */
+    @ArchTest
+    static final ArchRule api_不应直接访问仓储 = noClasses()
+            .that().resideInAPackage("com.huicang.wise.api..")
+            .and().haveSimpleNameNotContaining("DataInitializer")
+            .and().haveSimpleNameNotContaining("JpaConfiguration")
+            .should().dependOnClassesThat().resideInAPackage("com.huicang.wise.domain.repository..")
+            .because("入口层只做参数适配与转发，持久化访问必须经应用服务（STD-ARCH-02；存量债务见 P2-04b / P2-10）");
+
+    /**
+     * 业务代码不得直接构造 {@link RuntimeException}（STD-ERR-01）。
+     *
+     * <p>业务失败必须使用统一异常类型（{@code BusinessException} + {@link ErrorCode}），
+     * 否则会被全局兜底处理器映射为 `SYS-*` 500，把「客户端/业务错误」误报为「系统故障」。
+     * 这条规则用于防止 `RuntimeException` 回归。
+     */
+    @ArchTest
+    static final ArchRule 业务代码不应构造_RuntimeException = noClasses()
+            .that().resideInAnyPackage(
+                    "com.huicang.wise.application..",
+                    "com.huicang.wise.domain..",
+                    "com.huicang.wise.infrastructure..",
+                    "com.huicang.wise.api..")
+            .should().callConstructor(RuntimeException.class)
+            .because("业务失败必须用 BusinessException + ErrorCode（STD-ERR-01；否则被兜底映射为 500）");
+
+    /**
      * 领域层不得出现 ORM / Spring 技术细节（STD-ARCH-05）。
      *
      * <p>当前存量违规：`domain` 有 35 个 `@Entity`、36 处 `jakarta.persistence` 与 142 处

@@ -6,6 +6,8 @@ import com.huicang.wise.domain.auth.Role;
 import com.huicang.wise.domain.auth.UserRole;
 import com.huicang.wise.domain.repository.auth.RoleRepository;
 import com.huicang.wise.domain.repository.auth.UserRoleRepository;
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +50,7 @@ public class UserRoleApplicationService {
 
         for (Long roleId : distinctRoleIds) {
             Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new RuntimeException("角色不存在，ID: " + roleId));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "角色不存在，ID: " + roleId));
 
             UserRole userRole = new UserRole();
             userRole.setUserId(userId);

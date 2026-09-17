@@ -72,7 +72,7 @@ public class WarehouseApplicationService {
      */
     public WarehouseDTO updateWarehouse(Long id, WarehouseUpdateRequest request) {
         Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + id));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Warehouse not found with id: " + id));
 
         if (request.getWarehouseName() != null) {
             warehouse.setWarehouseName(request.getWarehouseName());
@@ -113,7 +113,7 @@ public class WarehouseApplicationService {
     @Cacheable(prefix = "warehouse", key = "#id", timeout = 3600)
     public WarehouseDTO getWarehouse(Long id) {
         Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + id));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Warehouse not found with id: " + id));
         return toDTO(warehouse);
     }
 

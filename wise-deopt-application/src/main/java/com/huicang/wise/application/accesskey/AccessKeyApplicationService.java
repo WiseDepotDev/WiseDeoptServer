@@ -7,6 +7,8 @@ import com.huicang.wise.application.accesskey.KeyAccessAuditLogMapper;
 import com.huicang.wise.domain.repository.auth.KeyAccessAuditLogRepository;
 import com.huicang.wise.domain.repository.user.UserAccessKeyRepository;
 import com.huicang.wise.infrastructure.security.PasswordEncoder;
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +49,25 @@ public class AccessKeyApplicationService {
 
     public AccessKeyDTO getAccessKeyById(Long keyId) {
         UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new RuntimeException("访问密钥不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         return accessKeyMapper.toDTO(accessKey);
+    }
+
+    /**
+     * 按访问密钥（accessKey）反查记录。
+     *
+     * <p>供入口层（如审计拦截器）使用，避免入口层直接依赖仓储（STD-ARCH-02）。
+     *
+     * @param accessKey 访问密钥明文
+     * @return 访问密钥 DTO；不存在时返回 null
+     */
+    public AccessKeyDTO findByAccessKey(String accessKey) {
+        if (accessKey == null) {
+            return null;
+        }
+        return accessKeyRepository.findByAccessKey(accessKey)
+                .map(accessKeyMapper::toDTO)
+                .orElse(null);
     }
 
     @Transactional
@@ -79,7 +98,7 @@ public class AccessKeyApplicationService {
     @Transactional
     public void enableAccessKey(Long keyId) {
         UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new RuntimeException("访问密钥不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKey.setStatus((short) 1);
         accessKey.setUpdateBy(keyId);
         accessKey.setUpdateTime(LocalDateTime.now());
@@ -89,7 +108,7 @@ public class AccessKeyApplicationService {
     @Transactional
     public void disableAccessKey(Long keyId) {
         UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new RuntimeException("访问密钥不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKey.setStatus((short) 0);
         accessKey.setUpdateBy(keyId);
         accessKey.setUpdateTime(LocalDateTime.now());
@@ -99,13 +118,13 @@ public class AccessKeyApplicationService {
     @Transactional
     public void deleteAccessKey(Long keyId) {
         UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new RuntimeException("访问密钥不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKeyRepository.delete(accessKey);
     }
 
     public List<AccessKeyAuditLogDTO> getAccessKeyAuditLogs(Long keyId) {
         UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new RuntimeException("访问密钥不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         List<KeyAccessAuditLog> logs = auditLogRepository.findByAccessKey(accessKey.getAccessKey());
         return logs.stream()
                 .map(auditLogMapper::toDTO)
@@ -131,7 +150,7 @@ public class AccessKeyApplicationService {
     @Transactional
     public void updateLastUsed(Long keyId) {
         UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new RuntimeException("访问密钥不存在"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKey.setUpdateBy(keyId);
         accessKey.setUpdateTime(LocalDateTime.now());
         accessKeyRepository.save(accessKey);

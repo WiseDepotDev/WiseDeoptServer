@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 类功能描述：文件存储应用服务
@@ -180,12 +181,51 @@ public class FileStorageApplicationService {
      * @param uploadBy 上传者ID
      * @return 文件列表
      */
-    public List<MinioFile> listFiles(Long uploadBy) {
-        if (uploadBy != null) {
-            return minioFileRepository.findByUploadBy(uploadBy);
-        } else {
-            return minioFileRepository.findAll();
-        }
+    public List<MinioFileDTO> listFiles(Long uploadBy) {
+        List<MinioFile> files = (uploadBy != null)
+                ? minioFileRepository.findByUploadBy(uploadBy)
+                : minioFileRepository.findAll();
+        return files.stream().map(FileStorageApplicationService::toDto).collect(Collectors.toList());
+    }
+
+    /**
+     * 查询文件详情（对外返回 DTO，避免领域实体出现在接口签名）。
+     *
+     * @param fileId 文件ID
+     * @return 文件详情 DTO
+     * @throws BusinessException 文件不存在时抛出
+     */
+    public MinioFileDTO getFileDetail(Long fileId) throws BusinessException {
+        return toDto(findFileOrThrow(fileId));
+    }
+
+    /**
+     * 领域实体转 DTO。
+     *
+     * @param file 文件实体
+     * @return 传输对象
+     */
+    private static MinioFileDTO toDto(MinioFile file) {
+        MinioFileDTO dto = new MinioFileDTO();
+        dto.setFileId(file.getFileId());
+        dto.setBucketName(file.getBucketName());
+        dto.setFilePath(file.getFilePath());
+        dto.setFileSize(file.getFileSize());
+        dto.setUploadTime(file.getUploadTime());
+        dto.setUploadBy(file.getUploadBy());
+        return dto;
+    }
+
+    /**
+     * 按主键查询文件，不存在时抛出业务异常。
+     *
+     * @param fileId 文件ID
+     * @return 文件实体
+     * @throws BusinessException 文件不存在时抛出
+     */
+    private MinioFile findFileOrThrow(Long fileId) throws BusinessException {
+        return minioFileRepository.findById(fileId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在: " + fileId));
     }
 
     /**

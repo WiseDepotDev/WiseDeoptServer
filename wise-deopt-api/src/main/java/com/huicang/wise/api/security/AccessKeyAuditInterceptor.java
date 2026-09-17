@@ -1,8 +1,7 @@
 package com.huicang.wise.api.security;
 
 import com.huicang.wise.application.accesskey.AccessKeyApplicationService;
-import com.huicang.wise.domain.user.UserAccessKey;
-import com.huicang.wise.domain.repository.user.UserAccessKeyRepository;
+import com.huicang.wise.application.accesskey.AccessKeyDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -12,20 +11,24 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Enumeration;
 
+/**
+ * 访问密钥审计拦截器：解析请求中的访问密钥并在请求结束时记录审计日志。
+ *
+ * @author WiseDepot
+ * @version 1.1
+ * @since 2026-02-27
+ */
 @Component
 public class AccessKeyAuditInterceptor implements HandlerInterceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(AccessKeyAuditInterceptor.class);
 
-    private final UserAccessKeyRepository accessKeyRepository;
     private final AccessKeyApplicationService accessKeyApplicationService;
 
     private static final String ACCESS_KEY_HEADER = "X-Access-Key";
     private static final String ACCESS_SECRET_HEADER = "X-Access-Secret";
 
-    public AccessKeyAuditInterceptor(UserAccessKeyRepository accessKeyRepository,
-                                   AccessKeyApplicationService accessKeyApplicationService) {
-        this.accessKeyRepository = accessKeyRepository;
+    public AccessKeyAuditInterceptor(AccessKeyApplicationService accessKeyApplicationService) {
         this.accessKeyApplicationService = accessKeyApplicationService;
     }
 
@@ -35,7 +38,8 @@ public class AccessKeyAuditInterceptor implements HandlerInterceptor {
         String accessSecret = request.getHeader(ACCESS_SECRET_HEADER);
 
         if (accessKey != null && accessSecret != null) {
-            UserAccessKey userAccessKey = accessKeyRepository.findByAccessKey(accessKey).orElse(null);
+            // 经应用服务反查，入口层不直接访问仓储（STD-ARCH-02）
+            AccessKeyDTO userAccessKey = accessKeyApplicationService.findByAccessKey(accessKey);
             if (userAccessKey != null) {
                 request.setAttribute("accessKeyId", userAccessKey.getKeyId());
                 request.setAttribute("accessKeyUserId", userAccessKey.getUserId());
