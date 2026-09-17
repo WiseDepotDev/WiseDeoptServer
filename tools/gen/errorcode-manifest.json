@@ -1,0 +1,345 @@
+{
+    "generatorVersion":  1,
+    "description":  "错误码映射清单：name/order/group 为权威；message/httpStatus 一律取自 CSV；supplement 项为 CSV 未登记的扩展码",
+    "csvSource":  "WiseDeoptServer/wise-depot-plan/后端异常码对照表.csv",
+    "outputs":  {
+                    "java":  "WiseDeoptServer/wise-deopt-common/src/main/java/com/huicang/wise/common/api/ErrorCode.java",
+                    "kotlin":  "WiseDepotApp/wise-depot-android-refactor/app/src/main/java/com/huicang/wise/network/ErrorCode.kt",
+                    "cHeader":  "WiseDepotDevice/include/common/error_code.h"
+                },
+    "entries":  [
+                    {
+                        "group":  0,
+                        "name":  "SUCCESS",
+                        "code":  "RES-0000",
+                        "origin":  "supplement",
+                        "message":  "处理成功",
+                        "httpStatus":  200,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  1,
+                        "name":  "PARAM_ERROR",
+                        "code":  "VAL-0001",
+                        "origin":  "supplement",
+                        "message":  "请求参数不合法",
+                        "httpStatus":  400,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  1,
+                        "name":  "NOT_FOUND",
+                        "code":  "RES-0004",
+                        "origin":  "supplement",
+                        "message":  "资源不存在",
+                        "httpStatus":  404,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  2,
+                        "name":  "UNAUTHORIZED",
+                        "code":  "AUTH-0001",
+                        "origin":  "supplement",
+                        "message":  "未认证或登录状态已失效",
+                        "httpStatus":  401,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  2,
+                        "name":  "AUTH_INVALID_TOKEN",
+                        "code":  "AUTH-0002",
+                        "origin":  "supplement",
+                        "message":  "无效的访问令牌",
+                        "httpStatus":  401,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  2,
+                        "name":  "AUTH_TOKEN_EXPIRED",
+                        "code":  "AUTH-0003",
+                        "origin":  "supplement",
+                        "message":  "访问令牌已过期",
+                        "httpStatus":  419,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  2,
+                        "name":  "AUTH_REFRESH_TOKEN_INVALID",
+                        "code":  "AUTH-0004",
+                        "origin":  "supplement",
+                        "message":  "刷新令牌已失效",
+                        "httpStatus":  401,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  3,
+                        "name":  "FORBIDDEN",
+                        "code":  "AUTH-0005",
+                        "origin":  "supplement",
+                        "message":  "无访问权限",
+                        "httpStatus":  403,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  4,
+                        "name":  "SYSTEM_ERROR",
+                        "code":  "SYS-0001",
+                        "origin":  "supplement",
+                        "message":  "系统内部错误，请稍后重试",
+                        "httpStatus":  500,
+                        "note":  "未在《后端异常码对照表.csv》登记，作为扩展码保留"
+                    },
+                    {
+                        "group":  5,
+                        "name":  "REQUEST_NOT_FOUND",
+                        "code":  "RES-REQUEST-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  5,
+                        "name":  "REQUEST_METHOD_NOT_ALLOWED",
+                        "code":  "RES-REQUEST-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  5,
+                        "name":  "REQUEST_ID_MISSING",
+                        "code":  "RES-REQUEST-1004",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  5,
+                        "name":  "SYSTEM_REQUEST_ERROR",
+                        "code":  "SYS-REQUEST-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_NO_IP",
+                        "code":  "AUTH-REQUEST-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_USERNAME_PASSWORD_ERROR",
+                        "code":  "AUTH-REQUEST-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_EMAIL_PASSWORD_ERROR",
+                        "code":  "AUTH-REQUEST-1003",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_NFC_NOT_FOUND",
+                        "code":  "AUTH-REQUEST-1004",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_VERIFICATION_ID_INVALID",
+                        "code":  "AUTH-REQUEST-1005",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_PIN_ERROR",
+                        "code":  "AUTH-REQUEST-1006",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_REFRESH_TOKEN_INVALID",
+                        "code":  "AUTH-REQUEST-1007",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_PASSWORD_VERIFY_FAILED",
+                        "code":  "AUTH-REQUEST-1008",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_TOKEN_PARSE_FAILED",
+                        "code":  "AUTH-REQUEST-1009",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_TOKEN_EMPTY",
+                        "code":  "AUTH-REQUEST-1010",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  6,
+                        "name":  "AUTH_REQUEST_TOKEN_EXPIRED",
+                        "code":  "AUTH-REQUEST-1011",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  7,
+                        "name":  "AUTH_ACCOUNT_DISABLED",
+                        "code":  "AUTH-ACCOUNT-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  7,
+                        "name":  "AUTH_ACCOUNT_LOCKED",
+                        "code":  "AUTH-ACCOUNT-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  8,
+                        "name":  "VAL_REQUEST_BODY_INVALID",
+                        "code":  "VAL-REQUEST-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  9,
+                        "name":  "VAL_REQUEST_OSS_NO_FILE",
+                        "code":  "VAL-REQUEST-OSS-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  9,
+                        "name":  "VAL_REQUEST_OSS_FILE_EMPTY",
+                        "code":  "VAL-REQUEST-OSS-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_LOGIN_TYPE_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_RANGE_AUTH_LOGIN_TYPE_ERROR",
+                        "code":  "VAL-RANGE-AUTH-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_USERNAME_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_EMAIL_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1003",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_PASSWORD_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1004",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_FORMAT_AUTH_EMAIL_ERROR",
+                        "code":  "VAL-FORMAT-AUTH-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_CARD_UUID_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1005",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_VERIFICATION_ID_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1006",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_PIN_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1007",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_ACCESS_TOKEN_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1008",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_CAPTCHA_ID_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1009",
+                        "origin":  "csv",
+                        "message":  "captchaId字段为空",
+                        "httpStatus":  422,
+                        "note":  "原仅在代码中存在，2026-02-27 补齐登记到对照表"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_PARAM_AUTH_CAPTCHA_CODE_EMPTY",
+                        "code":  "VAL-PARAM-AUTH-1010",
+                        "origin":  "csv",
+                        "message":  "captchaCode字段为空",
+                        "httpStatus":  422,
+                        "note":  "原仅在代码中存在，2026-02-27 补齐登记到对照表"
+                    },
+                    {
+                        "group":  10,
+                        "name":  "VAL_FORMAT_AUTH_CARD_UUID_ERROR",
+                        "code":  "VAL-FORMAT-AUTH-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  11,
+                        "name":  "VAL_PARAM_USER_ID_EMPTY",
+                        "code":  "VAL-PARAM-USER-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  11,
+                        "name":  "VAL_PARAM_USER_PASSWORD_EMPTY",
+                        "code":  "VAL-PARAM-USER-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  12,
+                        "name":  "VAL_RANGE_OSS_EXPIRES_OUT_OF_RANGE",
+                        "code":  "VAL-RANGE-OSS-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  13,
+                        "name":  "SYS_IO_OSS_SERVICE_UNAVAILABLE",
+                        "code":  "SYS-IO-OSS-1001",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  13,
+                        "name":  "SYS_IO_OSS_PRESIGN_ERROR",
+                        "code":  "SYS-IO-OSS-1002",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  13,
+                        "name":  "SYS_IO_OSS_STAT_ERROR",
+                        "code":  "SYS-IO-OSS-1003",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  13,
+                        "name":  "SYS_IO_OSS_UPLOAD_ERROR",
+                        "code":  "SYS-IO-OSS-1004",
+                        "origin":  "csv"
+                    },
+                    {
+                        "group":  13,
+                        "name":  "SYS_IO_OSS_DELETE_ERROR",
+                        "code":  "SYS-IO-OSS-1005",
+                        "origin":  "csv"
+                    }
+                ]
+}
