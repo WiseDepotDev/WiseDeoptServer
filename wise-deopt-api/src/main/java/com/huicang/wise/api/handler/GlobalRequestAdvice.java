@@ -17,6 +17,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAd
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 全局请求解包处理器
@@ -27,6 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @RestControllerAdvice
 public class GlobalRequestAdvice extends RequestBodyAdviceAdapter {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalRequestAdvice.class);
+
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -64,6 +69,11 @@ public class GlobalRequestAdvice extends RequestBodyAdviceAdapter {
             JsonNode payloadNode = rootNode.path("payload");
 
             if (headerNode.isMissingNode() && payloadNode.isMissingNode()) {
+                // 过渡期兼容：无信封的扁平请求体。
+                // 按 STD-CONTRACT-02，该兼容分支必须在三端全部切换信封后移除；
+                // 此处保留 WARN + deprecated 标记，便于灰度期统计残留调用方。
+                log.warn("收到无信封请求，已按兼容模式处理: deprecated=true, bodyLength={}",
+                        rootNode.toString().length());
                 this.body = new ByteArrayInputStream(rootNode.toString().getBytes(StandardCharsets.UTF_8));
                 return;
             }
