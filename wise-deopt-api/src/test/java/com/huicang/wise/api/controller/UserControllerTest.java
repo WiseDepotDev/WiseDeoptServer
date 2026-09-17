@@ -8,8 +8,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
@@ -22,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.api.config.JpaConfiguration;
 import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.user.UserApplicationService;
@@ -33,8 +36,10 @@ import com.huicang.wise.application.user.UserUpdateRequest;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import org.junit.jupiter.api.BeforeEach;
 
-@WebMvcTest(controllers = UserController.class)
-public class UserControllerTest {
+
+@AutoConfigureMockMvc(addFilters = false)
+@WebMvcTest(controllers = UserController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
+public class UserControllerTest extends AbstractWebMvcSliceTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -9,6 +9,7 @@ import com.huicang.wise.application.oss.FileStorageApplicationService;
 import com.huicang.wise.application.report.ReportApplicationService;
 import com.huicang.wise.application.tag.TagApplicationService;
 import com.huicang.wise.application.user.UserApplicationService;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 0.1.20
  * @since 2026-02-27
  */
+@Tag("e2e")
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional

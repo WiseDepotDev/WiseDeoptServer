@@ -3,6 +3,7 @@ package com.huicang.wise.performance;
 import com.huicang.wise.application.inventory.InventoryApplicationService;
 import com.huicang.wise.application.device.DeviceApplicationService;
 import com.huicang.wise.application.tag.TagApplicationService;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 0.1.20
  * @since 2026-02-27
  */
+@Tag("e2e")
 @SpringBootTest
 @ActiveProfiles("test")
 public class ResponseTimeTest {

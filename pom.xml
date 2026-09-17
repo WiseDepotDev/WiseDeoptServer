@@ -14,6 +14,8 @@
     <properties>
         <java.version>17</java.version>
         <spring.boot.version>3.2.5</spring.boot.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <googleauth.version>1.5.0</googleauth.version>
@@ -158,5 +160,38 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                      默认只运行单元测试（不依赖外部环境）。
+                      标注 @Tag("e2e") 的用例需要真实 MySQL/Redis/MinIO，默认排除；
+                      需要时用 mvn test -Pe2e 运行（见下方 profile）。
+                    -->
+                    <excludedGroups>e2e</excludedGroups>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>e2e</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- 仅运行 @Tag("e2e")：需要先启动 deploy/docker-compose.yml 中的依赖 -->
+                            <excludedGroups>none</excludedGroups>
+                            <groups>e2e</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

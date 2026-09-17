@@ -8,6 +8,7 @@ import com.huicang.wise.domain.tag.ProductTag;
 import com.huicang.wise.domain.repository.tag.TagRepository;
 import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.domain.repository.user.UserRepository;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 0.1.20
  * @since 2026-02-27
  */
+@Tag("e2e")
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
