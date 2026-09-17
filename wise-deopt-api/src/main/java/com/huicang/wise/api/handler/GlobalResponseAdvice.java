@@ -37,7 +37,9 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
 
     private final Map<Method, String> packetTypeCache = new ConcurrentHashMap<>();
 
-    private static final String REQUEST_ID_ATTRIBUTE = "REQUEST_ID";
+    private static final String REQUEST_ID_HEADER = "REQUEST-ID";
+    /** 历史下划线写法，仅作兼容读取（标准要求 REQUEST-ID） */
+    private static final String REQUEST_ID_HEADER_LEGACY = "REQUEST_ID";
     private static final String PACKET_TYPE_ATTRIBUTE = "PACKET_TYPE";
     private static final String TIMESTAMP_ATTRIBUTE = "TIMESTAMP";
     private static final String REQUEST_START_TIME_ATTRIBUTE = "REQUEST_START_TIME";
@@ -56,7 +58,7 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
             return body;
         }
 
-        String requestId = (String) request.getHeaders().getFirst(REQUEST_ID_ATTRIBUTE);
+        String requestId = resolveRequestId(request);
         String packetTypeCode = (String) request.getHeaders().getFirst(PACKET_TYPE_ATTRIBUTE);
         Long timestamp = request.getHeaders().getFirst(TIMESTAMP_ATTRIBUTE) != null 
             ? Long.parseLong(request.getHeaders().getFirst(TIMESTAMP_ATTRIBUTE)) 
@@ -89,6 +91,20 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
         }
 
         return packet;
+    }
+
+    /**
+     * 解析链路标识：标准要求请求头 {@code REQUEST-ID}，同时兼容历史下划线写法 {@code REQUEST_ID}。
+     *
+     * @param request 当前请求
+     * @return 请求头中的链路标识；均未携带时返回 null（由调用方生成）
+     */
+    private String resolveRequestId(ServerHttpRequest request) {
+        String requestId = request.getHeaders().getFirst(REQUEST_ID_HEADER);
+        if (requestId == null || requestId.isBlank()) {
+            requestId = request.getHeaders().getFirst(REQUEST_ID_HEADER_LEGACY);
+        }
+        return requestId;
     }
 
     private String getPacketTypeCode(MethodParameter returnType) {
