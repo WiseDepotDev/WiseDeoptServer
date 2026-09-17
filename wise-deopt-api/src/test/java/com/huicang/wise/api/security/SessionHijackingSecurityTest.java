@@ -1,18 +1,24 @@
 package com.huicang.wise.api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.LoginRequest;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.LoginResponse;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserApplicationService;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -33,7 +39,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
-public class SessionHijackingSecurityTest extends AbstractWebMvcSliceTest {
+// 说明：本用例断言的是鉴权/授权链路的失败行为，而 SecurityConfig 标注为 @Profile("prod")、
+// 且 Spring Security 过滤器链在 @WebMvcTest 切片内为默认配置，无法复现该项目真实安全规则，
+// 故归入 e2e 组（默认不执行，需真实环境：mvn test -Pe2e）。
+@Tag("e2e")
+public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest {
 
     @Autowired
     private MockMvc mockMvc;

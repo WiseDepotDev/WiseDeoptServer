@@ -27,6 +27,7 @@ import com.huicang.wise.api.config.JpaConfiguration;
 import com.huicang.wise.application.inventory.InventoryApplicationService;
 import com.huicang.wise.application.inventory.InventoryCreateRequest;
 import com.huicang.wise.application.inventory.InventoryDTO;
+import com.huicang.wise.application.inventory.InventoryPageDTO;
 import com.huicang.wise.application.inventory.ProductCreateRequest;
 import com.huicang.wise.application.inventory.ProductDTO;
 import com.huicang.wise.application.inventory.ProductUpdateRequest;
@@ -72,9 +73,9 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.productId").value(1))
-                .andExpect(jsonPath("$.body.payload.data.productName").value("Test Product"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.productId").value(1))
+                .andExpect(jsonPath("$.payload.data.productName").value("Test Product"));
     }
 
     @Test
@@ -94,8 +95,8 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.productName").value("Updated Product"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.productName").value("Updated Product"));
     }
 
     @Test
@@ -121,8 +122,8 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.inventoryId").value(1));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.inventoryId").value(1));
         */
     }
 
@@ -133,13 +134,17 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
         dto.setInventoryId(1L);
         dto.setProductId(productId);
 
-        when(inventoryApplicationService.listInventoryByProduct(productId)).thenReturn(Collections.singletonList(dto));
+        InventoryPageDTO pageDTO = new InventoryPageDTO();
+        pageDTO.setTotal(1L);
+        pageDTO.setRows(Collections.singletonList(dto));
+        when(inventoryApplicationService.listAllInventory(any(), any(), any(), any()))
+                .thenReturn(pageDTO);
 
         mockMvc.perform(get("/api/inventories")
                 .header("Authorization", "Bearer token")
                 .param("productId", productId.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data[0].inventoryId").value(1));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.rows[0].inventoryId").value(1));
     }
 }

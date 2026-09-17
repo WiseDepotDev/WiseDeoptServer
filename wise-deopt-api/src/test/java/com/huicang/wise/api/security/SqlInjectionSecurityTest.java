@@ -1,17 +1,22 @@
 package com.huicang.wise.api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserApplicationService;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserCreateRequest;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ComponentScan;
@@ -29,8 +34,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
+@AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
-public class SqlInjectionSecurityTest extends AbstractWebMvcSliceTest {
+public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -103,7 +109,7 @@ public class SqlInjectionSecurityTest extends AbstractWebMvcSliceTest {
 
         mockMvc.perform(get("/api/users/1' OR '1'='1")
                 .header("Authorization", "Bearer token"))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -116,7 +122,7 @@ public class SqlInjectionSecurityTest extends AbstractWebMvcSliceTest {
 
         mockMvc.perform(get("/api/users/1' UNION SELECT * FROM users--")
                 .header("Authorization", "Bearer token"))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -173,7 +179,7 @@ public class SqlInjectionSecurityTest extends AbstractWebMvcSliceTest {
 
         mockMvc.perform(get("/api/users/1' AND SLEEP(5)--")
                 .header("Authorization", "Bearer token"))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -186,7 +192,7 @@ public class SqlInjectionSecurityTest extends AbstractWebMvcSliceTest {
 
         mockMvc.perform(get("/api/users/1' AND 1=1--")
                 .header("Authorization", "Bearer token"))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

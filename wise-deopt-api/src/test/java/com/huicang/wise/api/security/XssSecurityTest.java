@@ -1,17 +1,22 @@
 package com.huicang.wise.api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserApplicationService;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserCreateRequest;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ComponentScan;
@@ -29,8 +34,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
+@AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
-public class XssSecurityTest extends AbstractWebMvcSliceTest {
+public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -83,9 +83,9 @@ public class AlertControllerTest extends AbstractWebMvcSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.eventId").value(1))
-                .andExpect(jsonPath("$.body.payload.data.message").value("Test Alert"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.eventId").value(1))
+                .andExpect(jsonPath("$.payload.data.message").value("Test Alert"));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class AlertControllerTest extends AbstractWebMvcSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"));
     }
 
     @Test
@@ -118,9 +118,9 @@ public class AlertControllerTest extends AbstractWebMvcSliceTest {
         mockMvc.perform(get("/api/alerts")
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.rows[0].eventId").value(1))
-                .andExpect(jsonPath("$.body.payload.data.rows[0].message").value("Test Alert"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.rows[0].eventId").value(1))
+                .andExpect(jsonPath("$.payload.data.rows[0].message").value("Test Alert"));
     }
 
     @Test
@@ -135,7 +135,7 @@ public class AlertControllerTest extends AbstractWebMvcSliceTest {
         mockMvc.perform(get("/api/alerts/{eventId}", eventId)
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.eventId").value(1));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.eventId").value(1));
     }
 }

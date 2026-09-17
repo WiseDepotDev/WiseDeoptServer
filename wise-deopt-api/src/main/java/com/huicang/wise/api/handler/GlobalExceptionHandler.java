@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -193,6 +194,25 @@ public class GlobalExceptionHandler {
     public ApiResponse<Void> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex, HttpServletRequest request) {
         log.warn("缺少必需的请求参数: {}, uri={}", ex.getParameterName(), request.getRequestURI());
         return ApiResponse.failure(ErrorCode.PARAM_ERROR, "缺少必需的请求参数: " + ex.getParameterName());
+    }
+
+    /**
+     * 处理请求参数类型不匹配异常（如路径变量/查询参数无法转换为期望类型）。
+     *
+     * <p>此类请求属于客户端参数错误，必须返回 400 而非 500；
+     * 此前缺少本处理器时会落入兜底分支返回 SYS 类 500，造成「非法输入被当作系统故障」的误导。
+     *
+     * @param ex 类型不匹配异常对象
+     * @param request 当前请求
+     * @return 统一响应结果
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<Void> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        log.warn("请求参数类型不匹配: name={}, value={}, uri={}",
+                ex.getName(), ex.getValue(), request.getRequestURI());
+        return ApiResponse.failure(ErrorCode.PARAM_ERROR,
+                "请求参数类型不合法: " + ex.getName());
     }
 
     /**

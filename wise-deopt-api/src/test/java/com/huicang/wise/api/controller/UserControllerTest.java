@@ -79,9 +79,9 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.userId").value(1))
-                .andExpect(jsonPath("$.body.payload.data.username").value("testuser"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.userId").value(1))
+                .andExpect(jsonPath("$.payload.data.username").value("testuser"));
     }
 
     @Test
@@ -102,8 +102,8 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.email").value("updated@example.com"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.email").value("updated@example.com"));
     }
 
     @Test
@@ -118,8 +118,8 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
         mockMvc.perform(get("/api/users/{userId}", userId)
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.userId").value(1));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.userId").value(1));
     }
 
     @Test
@@ -136,8 +136,8 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
         mockMvc.perform(get("/api/users")
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
-                .andExpect(jsonPath("$.body.payload.data.items[0].userId").value(1));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"))
+                .andExpect(jsonPath("$.payload.data.items[0].userId").value(1));
     }
 
     @Test
@@ -148,6 +148,6 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
         mockMvc.perform(delete("/api/users/{userId}", userId)
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body.payload.code").value("RES-0000"));
+                .andExpect(jsonPath("$.payload.code").value("RES-0000"));
     }
 }
