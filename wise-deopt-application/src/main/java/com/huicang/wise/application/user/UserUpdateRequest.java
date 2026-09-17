@@ -1,39 +1,37 @@
 package com.huicang.wise.application.user;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * 类功能描述：用户更新请求
  *
  * @author xingchentye
  * @date 2026-01-22
  */
-@ApiModel(description = "用户更新请求")
+@Schema(description = "用户更新请求")
 public class UserUpdateRequest {
 
-    @ApiModelProperty(value = "用户ID", hidden = true)
+    @Schema(description = "用户ID", hidden = true)
     private Long userId;
 
-    @ApiModelProperty(value = "昵称")
+    @Schema(description = "昵称")
     private String nickname;
 
-    @ApiModelProperty(value = "头像URL")
+    @Schema(description = "头像URL")
     private String avatar;
 
-    @ApiModelProperty(value = "邮箱")
+    @Schema(description = "邮箱")
     private String email;
 
-    @ApiModelProperty(value = "是否启用")
+    @Schema(description = "是否启用")
     private Boolean enabled;
 
-    @ApiModelProperty(value = "NFC ID")
+    @Schema(description = "NFC ID")
     private String nfcId;
 
-    @ApiModelProperty(value = "新密码（留空则不修改）")
+    @Schema(description = "新密码（留空则不修改）")
     private String password;
 
-    @ApiModelProperty(value = "新PIN码（留空则不修改）")
+    @Schema(description = "新PIN码（留空则不修改）")
     private String pin;
 
     /**
@@ -113,3 +111,4 @@ public class UserUpdateRequest {
         this.role = role;
     }
 }
+

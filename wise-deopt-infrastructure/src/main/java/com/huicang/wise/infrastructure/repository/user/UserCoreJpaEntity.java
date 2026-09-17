@@ -25,41 +25,29 @@ public class UserCoreJpaEntity {
     @Column(name = "username")
     private String username;
 
-    @Column(name = "nickname")
-    private String nickname;
+    @Column(name = "user_type", columnDefinition = "tinyint unsigned")
+    private Short userType;
 
-    @Column(name = "avatar")
-    private String avatar;
+    @Column(name = "owner_device_id")
+    private Long ownerDeviceId;
 
-    @Column(name = "email")
-    private String email;
+    @Column(name = "status", columnDefinition = "tinyint unsigned")
+    private Short status;
 
-    @Column(name = "password_hash")
-    private String passwordHash;
+    @Column(name = "is_deleted", columnDefinition = "tinyint unsigned")
+    private Short isDeleted;
 
-    @Column(name = "enabled")
-    private Boolean enabled;
+    @Column(name = "create_by")
+    private Long createBy;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "update_by")
+    private Long updateBy;
 
-    @Column(name = "nfc_id")
-    private String nfcId;
-
-    @Column(name = "pin_hash")
-    private String pinHash;
-
-    @Column(name = "login_fail_count")
-    private Integer loginFailCount;
-
-    @Column(name = "locked_until")
-    private LocalDateTime lockedUntil;
-
-    @Column(name = "role")
-    private String role;
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
 
     public Long getUserId() {
         return userId;
@@ -77,100 +65,68 @@ public class UserCoreJpaEntity {
         this.username = username;
     }
 
-    public String getNickname() {
-        return nickname;
+    public Short getUserType() {
+        return userType;
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
+    public void setUserType(Short userType) {
+        this.userType = userType;
     }
 
-    public String getAvatar() {
-        return avatar;
+    public Long getOwnerDeviceId() {
+        return ownerDeviceId;
     }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
+    public void setOwnerDeviceId(Long ownerDeviceId) {
+        this.ownerDeviceId = ownerDeviceId;
     }
 
-    public String getEmail() {
-        return email;
+    public Short getStatus() {
+        return status;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setStatus(Short status) {
+        this.status = status;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public Short getIsDeleted() {
+        return isDeleted;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setIsDeleted(Short isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
-    public String getNfcId() {
-        return nfcId;
+    public Long getCreateBy() {
+        return createBy;
     }
 
-    public void setNfcId(String nfcId) {
-        this.nfcId = nfcId;
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 
-    public String getPinHash() {
-        return pinHash;
+    public LocalDateTime getCreateTime() {
+        return createTime;
     }
 
-    public void setPinHash(String pinHash) {
-        this.pinHash = pinHash;
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
     }
 
-    public Integer getLoginFailCount() {
-        return loginFailCount;
+    public Long getUpdateBy() {
+        return updateBy;
     }
 
-    public void setLoginFailCount(Integer loginFailCount) {
-        this.loginFailCount = loginFailCount;
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
     }
 
-    public LocalDateTime getLockedUntil() {
-        return lockedUntil;
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
     }
 
-    public void setLockedUntil(LocalDateTime lockedUntil) {
-        this.lockedUntil = lockedUntil;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public Boolean getEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
     }
 }
 

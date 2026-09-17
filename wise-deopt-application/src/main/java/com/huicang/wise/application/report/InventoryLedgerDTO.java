@@ -1,28 +1,27 @@
 package com.huicang.wise.application.report;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 /**
  * 库存台账DTO
  */
-@ApiModel("库存台账信息")
+@Schema(description = "库存台账信息")
 public class InventoryLedgerDTO {
 
-    @ApiModelProperty("发生时间")
+    @Schema(description = "发生时间")
     private LocalDateTime time;
 
-    @ApiModelProperty("单据编号")
+    @Schema(description = "单据编号")
     private String orderNo;
 
-    @ApiModelProperty("类型(IN/OUT)")
+    @Schema(description = "类型(IN/OUT)")
     private String type;
 
-    @ApiModelProperty("变动数量")
+    @Schema(description = "变动数量")
     private Integer quantity;
 
-    @ApiModelProperty("库位")
+    @Schema(description = "库位")
     private String locationCode;
 
     public LocalDateTime getTime() {
@@ -65,3 +64,4 @@ public class InventoryLedgerDTO {
         this.locationCode = locationCode;
     }
 }
+

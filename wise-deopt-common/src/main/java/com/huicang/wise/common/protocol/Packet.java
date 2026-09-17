@@ -12,14 +12,14 @@ public class Packet<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private PacketHeader header;
-    private PacketBody<T> body;
+    private T payload;
 
     public Packet() {
     }
 
-    public Packet(PacketHeader header, PacketBody<T> body) {
+    public Packet(PacketHeader header, T payload) {
         this.header = header;
-        this.body = body;
+        this.payload = payload;
     }
 
     public PacketHeader getHeader() {
@@ -30,11 +30,11 @@ public class Packet<T> implements Serializable {
         this.header = header;
     }
 
-    public PacketBody<T> getBody() {
-        return body;
+    public T getPayload() {
+        return payload;
     }
 
-    public void setBody(PacketBody<T> body) {
-        this.body = body;
+    public void setPayload(T payload) {
+        this.payload = payload;
     }
 }

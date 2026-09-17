@@ -1,32 +1,22 @@
 package com.huicang.wise.application.device;
 
+/**
+ * 类功能描述：设备创建请求
+ *
+ * @author xingchentye
+ * @date 2026-02-27
+ */
 public class DeviceCreateRequest {
-
-    private String name;
 
     private String deviceCode;
 
-    private Integer type;
+    private String deviceName;
+
+    private Short deviceType;
 
     private String ipAddress;
 
     private String remark;
-
-    private String rfidLocation;
-
-    private Integer rfidReadRange;
-
-    private String cameraStreamUrl;
-
-    private String cameraLocation;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getDeviceCode() {
         return deviceCode;
@@ -36,12 +26,20 @@ public class DeviceCreateRequest {
         this.deviceCode = deviceCode;
     }
 
-    public Integer getType() {
-        return type;
+    public String getDeviceName() {
+        return deviceName;
     }
 
-    public void setType(Integer type) {
-        this.type = type;
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
+
+    public Short getDeviceType() {
+        return deviceType;
+    }
+
+    public void setDeviceType(Short deviceType) {
+        this.deviceType = deviceType;
     }
 
     public String getIpAddress() {
@@ -59,37 +57,4 @@ public class DeviceCreateRequest {
     public void setRemark(String remark) {
         this.remark = remark;
     }
-
-    public String getRfidLocation() {
-        return rfidLocation;
-    }
-
-    public void setRfidLocation(String rfidLocation) {
-        this.rfidLocation = rfidLocation;
-    }
-
-    public Integer getRfidReadRange() {
-        return rfidReadRange;
-    }
-
-    public void setRfidReadRange(Integer rfidReadRange) {
-        this.rfidReadRange = rfidReadRange;
-    }
-
-    public String getCameraStreamUrl() {
-        return cameraStreamUrl;
-    }
-
-    public void setCameraStreamUrl(String cameraStreamUrl) {
-        this.cameraStreamUrl = cameraStreamUrl;
-    }
-
-    public String getCameraLocation() {
-        return cameraLocation;
-    }
-
-    public void setCameraLocation(String cameraLocation) {
-        this.cameraLocation = cameraLocation;
-    }
 }
-

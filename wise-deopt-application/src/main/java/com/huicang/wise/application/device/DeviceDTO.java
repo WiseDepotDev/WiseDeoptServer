@@ -1,36 +1,54 @@
 package com.huicang.wise.application.device;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
+/**
+ * 类功能描述：设备数据传输对象
+ *
+ * @author xingchentye
+ * @date 2026-02-27
+ */
 public class DeviceDTO {
 
     private Long deviceId;
 
-    private String name;
-
     private String deviceCode;
 
-    private Integer type;
+    private String deviceName;
 
-    private String typeDesc;
+    private Short deviceType;
+
+    private String deviceTypeName;
 
     private String ipAddress;
 
-    private Integer status;
+    private Short deviceStatus;
 
-    private String statusDesc;
+    private String deviceStatusName;
 
     private LocalDateTime lastHeartbeat;
 
     private String remark;
 
-    private LocalDateTime createdAt;
+    private String token;
 
-    private Long createdBy;
+    @JsonProperty("refreshToken")
+    private String refreshToken;
 
-    private LocalDateTime updatedAt;
+    private LocalDateTime createTime;
 
-    private Long updatedBy;
+    private LocalDateTime updateTime;
+
+    private Float moveSpeedCmS;
+
+    private Float motorTrimA;
+
+    private Float motorTrimB;
+
+    private Float motorTrimC;
+
+    private Float motorTrimD;
 
     public Long getDeviceId() {
         return deviceId;
@@ -38,14 +56,6 @@ public class DeviceDTO {
 
     public void setDeviceId(Long deviceId) {
         this.deviceId = deviceId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getDeviceCode() {
@@ -56,20 +66,28 @@ public class DeviceDTO {
         this.deviceCode = deviceCode;
     }
 
-    public Integer getType() {
-        return type;
+    public String getDeviceName() {
+        return deviceName;
     }
 
-    public void setType(Integer type) {
-        this.type = type;
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
     }
 
-    public String getTypeDesc() {
-        return typeDesc;
+    public Short getDeviceType() {
+        return deviceType;
     }
 
-    public void setTypeDesc(String typeDesc) {
-        this.typeDesc = typeDesc;
+    public void setDeviceType(Short deviceType) {
+        this.deviceType = deviceType;
+    }
+
+    public String getDeviceTypeName() {
+        return deviceTypeName;
+    }
+
+    public void setDeviceTypeName(String deviceTypeName) {
+        this.deviceTypeName = deviceTypeName;
     }
 
     public String getIpAddress() {
@@ -80,20 +98,20 @@ public class DeviceDTO {
         this.ipAddress = ipAddress;
     }
 
-    public Integer getStatus() {
-        return status;
+    public Short getDeviceStatus() {
+        return deviceStatus;
     }
 
-    public void setStatus(Integer status) {
-        this.status = status;
+    public void setDeviceStatus(Short deviceStatus) {
+        this.deviceStatus = deviceStatus;
     }
 
-    public String getStatusDesc() {
-        return statusDesc;
+    public String getDeviceStatusName() {
+        return deviceStatusName;
     }
 
-    public void setStatusDesc(String statusDesc) {
-        this.statusDesc = statusDesc;
+    public void setDeviceStatusName(String deviceStatusName) {
+        this.deviceStatusName = deviceStatusName;
     }
 
     public LocalDateTime getLastHeartbeat() {
@@ -112,36 +130,75 @@ public class DeviceDTO {
         this.remark = remark;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public String getToken() {
+        return token;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setToken(String token) {
+        this.token = token;
     }
 
-    public Long getCreatedBy() {
-        return createdBy;
+    public String getRefreshToken() {
+        return refreshToken;
     }
 
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDateTime getCreateTime() {
+        return createTime;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
     }
 
-    public Long getUpdatedBy() {
-        return updatedBy;
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
     }
 
-    public void setUpdatedBy(Long updatedBy) {
-        this.updatedBy = updatedBy;
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public Float getMoveSpeedCmS() {
+        return moveSpeedCmS;
+    }
+
+    public void setMoveSpeedCmS(Float moveSpeedCmS) {
+        this.moveSpeedCmS = moveSpeedCmS;
+    }
+
+    public Float getMotorTrimA() {
+        return motorTrimA;
+    }
+
+    public void setMotorTrimA(Float motorTrimA) {
+        this.motorTrimA = motorTrimA;
+    }
+
+    public Float getMotorTrimB() {
+        return motorTrimB;
+    }
+
+    public void setMotorTrimB(Float motorTrimB) {
+        this.motorTrimB = motorTrimB;
+    }
+
+    public Float getMotorTrimC() {
+        return motorTrimC;
+    }
+
+    public void setMotorTrimC(Float motorTrimC) {
+        this.motorTrimC = motorTrimC;
+    }
+
+    public Float getMotorTrimD() {
+        return motorTrimD;
+    }
+
+    public void setMotorTrimD(Float motorTrimD) {
+        this.motorTrimD = motorTrimD;
     }
 }
-

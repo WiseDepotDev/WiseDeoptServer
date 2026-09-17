@@ -1,18 +1,21 @@
 package com.huicang.wise.application.inout;
 
-/**
- * 类功能描述：出入库单明细DTO
- *
- * @author xingchentye
- * @date 2026-01-22
- */
 public class StockOrderItemDTO {
-
+    private Long tagId;
     private Long productId;
-
+    private String productName;
+    private String productCode;
+    private String productSpecification;
     private Integer quantity;
-
     private String locationCode;
+
+    public Long getTagId() {
+        return tagId;
+    }
+
+    public void setTagId(Long tagId) {
+        this.tagId = tagId;
+    }
 
     public Long getProductId() {
         return productId;
@@ -20,6 +23,30 @@ public class StockOrderItemDTO {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+
+    public String getProductSpecification() {
+        return productSpecification;
+    }
+
+    public void setProductSpecification(String productSpecification) {
+        this.productSpecification = productSpecification;
     }
 
     public Integer getQuantity() {

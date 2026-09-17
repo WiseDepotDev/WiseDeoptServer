@@ -22,7 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 全局请求解包处理器
  *
  * @author xingchentye
- * @version 1.0
+ * @version 1.1
+ * @since 2026-02-27
  */
 @RestControllerAdvice
 public class GlobalRequestAdvice extends RequestBodyAdviceAdapter {
@@ -47,14 +48,10 @@ public class GlobalRequestAdvice extends RequestBodyAdviceAdapter {
         public PacketUnwrappingInputMessage(HttpInputMessage originalMessage, ObjectMapper objectMapper) throws IOException {
             this.originalMessage = originalMessage;
             
-            // 读取原始数据
-            // 注意：这里假设请求体是JSON。如果不是，readTree会抛异常。
-            // 实际上只有MappingJackson2HttpMessageConverter会触发这个Advice，所以通常是JSON。
             JsonNode rootNode;
             try {
                  rootNode = objectMapper.readTree(originalMessage.getBody());
             } catch (Exception e) {
-                // 如果解析失败，抛出不可读异常，由GlobalExceptionHandler处理
                 throw new HttpMessageNotReadableException("JSON parse error: " + e.getMessage(), originalMessage);
             }
             
@@ -63,17 +60,19 @@ public class GlobalRequestAdvice extends RequestBodyAdviceAdapter {
                  return;
             }
 
-            // 检查是否符合Packet格式
-            if (rootNode.has("header") && rootNode.has("body")) {
-                 JsonNode payload = rootNode.path("body").path("payload");
-                 if (payload.isMissingNode()) {
-                     this.body = new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8));
-                 } else {
-                     this.body = new ByteArrayInputStream(payload.toString().getBytes(StandardCharsets.UTF_8));
-                 }
+            JsonNode headerNode = rootNode.path("header");
+            JsonNode payloadNode = rootNode.path("payload");
+
+            if (headerNode.isMissingNode() && payloadNode.isMissingNode()) {
+                this.body = new ByteArrayInputStream(rootNode.toString().getBytes(StandardCharsets.UTF_8));
+                return;
+            }
+
+            JsonNode dataNode = payloadNode.path("data");
+            if (dataNode.isMissingNode() || dataNode.isNull()) {
+                this.body = new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8));
             } else {
-                 // 不符合Packet格式，保持原样（兼容旧客户端）
-                 this.body = new ByteArrayInputStream(rootNode.toString().getBytes(StandardCharsets.UTF_8));
+                this.body = new ByteArrayInputStream(dataNode.toString().getBytes(StandardCharsets.UTF_8));
             }
         }
 

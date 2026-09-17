@@ -10,19 +10,27 @@ package com.huicang.wise.application.inventory;
 public class InventoryCreateRequest {
 
     /**
+     * 方法功能描述：仓库ID
+     */
+    private Long warehouseId;
+
+    /**
      * 方法功能描述：产品主键ID
      */
     private Long productId;
 
     /**
-     * 方法功能描述：库位编码
-     */
-    private String locationCode;
-
-    /**
      * 方法功能描述：库存数量
      */
     private Integer quantity;
+
+    public Long getWarehouseId() {
+        return warehouseId;
+    }
+
+    public void setWarehouseId(Long warehouseId) {
+        this.warehouseId = warehouseId;
+    }
 
     public Long getProductId() {
         return productId;
@@ -30,14 +38,6 @@ public class InventoryCreateRequest {
 
     public void setProductId(Long productId) {
         this.productId = productId;
-    }
-
-    public String getLocationCode() {
-        return locationCode;
-    }
-
-    public void setLocationCode(String locationCode) {
-        this.locationCode = locationCode;
     }
 
     public Integer getQuantity() {

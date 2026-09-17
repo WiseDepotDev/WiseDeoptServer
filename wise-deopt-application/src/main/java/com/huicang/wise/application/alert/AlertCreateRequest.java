@@ -29,6 +29,11 @@ public class AlertCreateRequest {
      */
     private String snapshotUrl;
 
+    /**
+     * 来源模块
+     */
+    private String sourceModule;
+
     public String getAlertType() {
         return alertType;
     }
@@ -59,6 +64,14 @@ public class AlertCreateRequest {
 
     public void setSnapshotUrl(String snapshotUrl) {
         this.snapshotUrl = snapshotUrl;
+    }
+
+    public String getSourceModule() {
+        return sourceModule;
+    }
+
+    public void setSourceModule(String sourceModule) {
+        this.sourceModule = sourceModule;
     }
 }
 

@@ -4,6 +4,8 @@ public class UpdateAlertStatusRequest {
 
     private Integer status;
 
+    private Long handlerId;
+
     private String remark;
 
     public Integer getStatus() {
@@ -12,6 +14,14 @@ public class UpdateAlertStatusRequest {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public Long getHandlerId() {
+        return handlerId;
+    }
+
+    public void setHandlerId(Long handlerId) {
+        this.handlerId = handlerId;
     }
 
     public String getRemark() {

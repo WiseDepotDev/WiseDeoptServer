@@ -13,32 +13,41 @@ public class PermissionJpaEntity {
     @Column(name = "permission_id")
     private Long permissionId;
 
-    @Column(name = "permission_name")
-    private String permissionName;
+    @Column(name = "name")
+    private String name;
 
-    @Column(name = "permission_code")
-    private String permissionCode;
+    @Column(name = "code")
+    private String code;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "create_by")
+    private Long createBy;
 
-    // Getters and Setters
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
+
+    @Column(name = "update_by")
+    private Long updateBy;
+
     public Long getPermissionId() { return permissionId; }
     public void setPermissionId(Long permissionId) { this.permissionId = permissionId; }
-    public String getPermissionName() { return permissionName; }
-    public void setPermissionName(String permissionName) { this.permissionName = permissionName; }
-    public String getPermissionCode() { return permissionCode; }
-    public void setPermissionCode(String permissionCode) { this.permissionCode = permissionCode; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDateTime getCreateTime() { return createTime; }
+    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    public Long getCreateBy() { return createBy; }
+    public void setCreateBy(Long createBy) { this.createBy = createBy; }
+    public LocalDateTime getUpdateTime() { return updateTime; }
+    public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
+    public Long getUpdateBy() { return updateBy; }
+    public void setUpdateBy(Long updateBy) { this.updateBy = updateBy; }
 }

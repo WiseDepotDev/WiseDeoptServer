@@ -1,42 +1,51 @@
 package com.huicang.wise.infrastructure.repository.inout;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
-/**
- * 类功能描述：出入库单详情JPA实体
- *
- * @author xingchentye
- * @date 2026-01-22
- */
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "stock_order_detail")
+@Table(name = "stock_order_item", indexes = {
+    @Index(name = "idx_order_id", columnList = "order_id"),
+    @Index(name = "idx_tag_id", columnList = "tag_id"),
+    @Index(name = "idx_product_id", columnList = "product_id"),
+    @Index(name = "idx_create_time", columnList = "create_time"),
+    @Index(name = "create_by", columnList = "create_by")
+})
 public class StockOrderDetailJpaEntity {
 
     @Id
-    @Column(name = "detail_id")
-    private Long detailId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "item_id")
+    private Long itemId;
 
-    @Column(name = "order_id")
+    @Column(name = "order_id", nullable = false)
     private Long orderId;
 
-    @Column(name = "product_id")
+    @Column(name = "tag_id", nullable = true)
+    private Long tagId;
+
+    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "quantity")
+    @Column(name = "quantity", nullable = true)
     private Integer quantity;
 
-    @Column(name = "location_code")
+    @Column(name = "location_code", nullable = true)
     private String locationCode;
 
-    public Long getDetailId() {
-        return detailId;
+    @Column(name = "create_time", nullable = false, updatable = false)
+    private LocalDateTime createTime;
+
+    @Column(name = "create_by", nullable = false)
+    private Long createBy;
+
+    public Long getItemId() {
+        return itemId;
     }
 
-    public void setDetailId(Long detailId) {
-        this.detailId = detailId;
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
     }
 
     public Long getOrderId() {
@@ -45,6 +54,14 @@ public class StockOrderDetailJpaEntity {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
+    }
+
+    public Long getTagId() {
+        return tagId;
+    }
+
+    public void setTagId(Long tagId) {
+        this.tagId = tagId;
     }
 
     public Long getProductId() {
@@ -69,5 +86,21 @@ public class StockOrderDetailJpaEntity {
 
     public void setLocationCode(String locationCode) {
         this.locationCode = locationCode;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 }

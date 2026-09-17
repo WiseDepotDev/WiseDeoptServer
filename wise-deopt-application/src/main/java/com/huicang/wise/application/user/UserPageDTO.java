@@ -1,7 +1,6 @@
 package com.huicang.wise.application.user;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 /**
@@ -10,13 +9,13 @@ import java.util.List;
  * @author xingchentye
  * @date 2026-01-22
  */
-@ApiModel(description = "用户分页DTO")
+@Schema(description = "用户分页DTO")
 public class UserPageDTO {
 
-    @ApiModelProperty(value = "总记录数")
+    @Schema(description = "总记录数")
     private Long total;
 
-    @ApiModelProperty(value = "用户列表")
+    @Schema(description = "用户列表")
     private List<UserDTO> items;
 
     public Long getTotal() {
@@ -35,3 +34,4 @@ public class UserPageDTO {
         this.items = items;
     }
 }
+

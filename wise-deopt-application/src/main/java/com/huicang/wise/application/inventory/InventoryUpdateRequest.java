@@ -10,22 +10,14 @@ package com.huicang.wise.application.inventory;
 public class InventoryUpdateRequest {
 
     /**
-     * 方法功能描述：库位编码
-     */
-    private String locationCode;
-
-    /**
      * 方法功能描述：库存数量
      */
     private Integer quantity;
 
-    public String getLocationCode() {
-        return locationCode;
-    }
-
-    public void setLocationCode(String locationCode) {
-        this.locationCode = locationCode;
-    }
+    /**
+     * 方法功能描述：仓库ID
+     */
+    private Long warehouseId;
 
     public Integer getQuantity() {
         return quantity;
@@ -33,6 +25,14 @@ public class InventoryUpdateRequest {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public Long getWarehouseId() {
+        return warehouseId;
+    }
+
+    public void setWarehouseId(Long warehouseId) {
+        this.warehouseId = warehouseId;
     }
 }
 

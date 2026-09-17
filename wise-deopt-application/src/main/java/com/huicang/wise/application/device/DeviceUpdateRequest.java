@@ -1,29 +1,43 @@
 package com.huicang.wise.application.device;
 
+/**
+ * 类功能描述：设备更新请求
+ *
+ * @author xingchentye
+ * @date 2026-02-27
+ */
 public class DeviceUpdateRequest {
 
-    private Long deviceId;
+    private String deviceName;
 
-    private String name;
+    private String ipAddress;
+
+    private Short deviceStatus;
 
     private String remark;
 
-    private Integer status;
-
-    public Long getDeviceId() {
-        return deviceId;
+    public String getDeviceName() {
+        return deviceName;
     }
 
-    public void setDeviceId(Long deviceId) {
-        this.deviceId = deviceId;
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
     }
 
-    public String getName() {
-        return name;
+    public String getIpAddress() {
+        return ipAddress;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public Short getDeviceStatus() {
+        return deviceStatus;
+    }
+
+    public void setDeviceStatus(Short deviceStatus) {
+        this.deviceStatus = deviceStatus;
     }
 
     public String getRemark() {
@@ -33,13 +47,4 @@ public class DeviceUpdateRequest {
     public void setRemark(String remark) {
         this.remark = remark;
     }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
 }
-

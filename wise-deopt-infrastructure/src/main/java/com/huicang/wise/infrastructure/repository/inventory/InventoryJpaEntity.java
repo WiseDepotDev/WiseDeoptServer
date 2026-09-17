@@ -25,14 +25,14 @@ public class InventoryJpaEntity {
     @Column(name = "product_id")
     private Long productId;
 
-    @Column(name = "location_code")
-    private String locationCode;
-
     @Column(name = "quantity")
     private Integer quantity;
 
-    @Column(name = "last_check_time")
-    private LocalDateTime lastCheckTime;
+    @Column(name = "locked_quantity")
+    private Integer lockedQuantity;
+
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
 
     /**
      * 方法功能描述：获取库存明细ID
@@ -73,25 +73,6 @@ public class InventoryJpaEntity {
     }
 
     /**
-     * 方法功能描述：获取库位编码
-     *
-     * @return 库位编码
-     */
-    public String getLocationCode() {
-        return locationCode;
-    }
-
-    /**
-     * 方法功能描述：设置库位编码
-     *
-     * @param locationCode 库位编码
-     * @return 无
-     */
-    public void setLocationCode(String locationCode) {
-        this.locationCode = locationCode;
-    }
-
-    /**
      * 方法功能描述：获取库存数量
      *
      * @return 库存数量
@@ -111,21 +92,40 @@ public class InventoryJpaEntity {
     }
 
     /**
-     * 方法功能描述：获取最后盘点时间
+     * 方法功能描述：获取锁定库存数量
      *
-     * @return 最后盘点时间
+     * @return 锁定库存数量
      */
-    public LocalDateTime getLastCheckTime() {
-        return lastCheckTime;
+    public Integer getLockedQuantity() {
+        return lockedQuantity;
     }
 
     /**
-     * 方法功能描述：设置最后盘点时间
+     * 方法功能描述：设置锁定库存数量
      *
-     * @param lastCheckTime 最后盘点时间
+     * @param lockedQuantity 锁定库存数量
      * @return 无
      */
-    public void setLastCheckTime(LocalDateTime lastCheckTime) {
-        this.lastCheckTime = lastCheckTime;
+    public void setLockedQuantity(Integer lockedQuantity) {
+        this.lockedQuantity = lockedQuantity;
+    }
+
+    /**
+     * 方法功能描述：获取最后库存变动时间
+     *
+     * @return 最后库存变动时间
+     */
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    /**
+     * 方法功能描述：设置最后库存变动时间
+     *
+     * @param updateTime 最后库存变动时间
+     * @return 无
+     */
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
     }
 }

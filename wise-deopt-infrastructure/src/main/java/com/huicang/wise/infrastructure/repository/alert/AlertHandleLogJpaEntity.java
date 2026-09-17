@@ -20,14 +20,8 @@ public class AlertHandleLogJpaEntity {
     @Column(name = "handler_id")
     private Long handlerId;
 
-    @Column(name = "handler_name")
-    private String handlerName;
-
-    @Column(name = "goal_status")
-    private Integer goalStatus;
-
-    @Column(name = "goal_status_description")
-    private String goalStatusDescription;
+    @Column(name = "goal_status", columnDefinition = "tinyint unsigned")
+    private Short goalStatus;
 
     @Column(name = "remark")
     private String remark;
@@ -59,28 +53,12 @@ public class AlertHandleLogJpaEntity {
         this.handlerId = handlerId;
     }
 
-    public String getHandlerName() {
-        return handlerName;
-    }
-
-    public void setHandlerName(String handlerName) {
-        this.handlerName = handlerName;
-    }
-
-    public Integer getGoalStatus() {
+    public Short getGoalStatus() {
         return goalStatus;
     }
 
-    public void setGoalStatus(Integer goalStatus) {
+    public void setGoalStatus(Short goalStatus) {
         this.goalStatus = goalStatus;
-    }
-
-    public String getGoalStatusDescription() {
-        return goalStatusDescription;
-    }
-
-    public void setGoalStatusDescription(String goalStatusDescription) {
-        this.goalStatusDescription = goalStatusDescription;
     }
 
     public String getRemark() {

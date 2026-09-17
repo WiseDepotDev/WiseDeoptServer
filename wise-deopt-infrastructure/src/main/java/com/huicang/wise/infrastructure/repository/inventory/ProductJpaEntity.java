@@ -22,132 +22,99 @@ public class ProductJpaEntity {
     @Column(name = "product_id")
     private Long productId;
 
-    @Column(name = "product_code")
-    private String productCode;
+    @Column(name = "name")
+    private String name;
 
-    @Column(name = "product_name")
-    private String productName;
+    @Column(name = "code")
+    private String code;
 
     @Column(name = "model")
     private String model;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "unit")
+    private String unit;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
 
-    /**
-     * 方法功能描述：获取产品主键ID
-     *
-     * @return 产品主键ID
-     */
+    @Column(name = "create_by")
+    private Long createBy;
+
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
+
+    @Column(name = "update_by")
+    private Long updateBy;
+
     public Long getProductId() {
         return productId;
     }
 
-    /**
-     * 方法功能描述：设置产品主键ID
-     *
-     * @param productId 产品主键ID
-     * @return 无
-     */
     public void setProductId(Long productId) {
         this.productId = productId;
     }
 
-    /**
-     * 方法功能描述：获取产品编码
-     *
-     * @return 产品编码
-     */
-    public String getProductCode() {
-        return productCode;
+    public String getName() {
+        return name;
     }
 
-    /**
-     * 方法功能描述：设置产品编码
-     *
-     * @param productCode 产品编码
-     * @return 无
-     */
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    /**
-     * 方法功能描述：获取产品名称
-     *
-     * @return 产品名称
-     */
-    public String getProductName() {
-        return productName;
+    public String getCode() {
+        return code;
     }
 
-    /**
-     * 方法功能描述：设置产品名称
-     *
-     * @param productName 产品名称
-     * @return 无
-     */
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setCode(String code) {
+        this.code = code;
     }
 
-    /**
-     * 方法功能描述：获取规格型号
-     *
-     * @return 规格型号
-     */
     public String getModel() {
         return model;
     }
 
-    /**
-     * 方法功能描述：设置规格型号
-     *
-     * @param model 规格型号
-     * @return 无
-     */
     public void setModel(String model) {
         this.model = model;
     }
 
-    /**
-     * 方法功能描述：获取创建时间
-     *
-     * @return 创建时间
-     */
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public String getUnit() {
+        return unit;
     }
 
-    /**
-     * 方法功能描述：设置创建时间
-     *
-     * @param createdAt 创建时间
-     * @return 无
-     */
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setUnit(String unit) {
+        this.unit = unit;
     }
 
-    /**
-     * 方法功能描述：获取最后更新时间
-     *
-     * @return 最后更新时间
-     */
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDateTime getCreateTime() {
+        return createTime;
     }
 
-    /**
-     * 方法功能描述：设置最后更新时间
-     *
-     * @param updatedAt 最后更新时间
-     * @return 无
-     */
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
     }
 }

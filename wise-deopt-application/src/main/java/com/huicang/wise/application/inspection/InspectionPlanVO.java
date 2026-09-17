@@ -1,7 +1,6 @@
 package com.huicang.wise.application.inspection;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,45 +13,43 @@ import java.time.LocalDateTime;
  * @since 2024-04-20
  */
 @Data
-@ApiModel(description = "巡检计划VO")
+@Schema(description = "巡检计划VO")
 public class InspectionPlanVO {
 
-    @ApiModelProperty("计划ID")
+    @Schema(description = "计划ID")
     private Long planId;
 
-    @ApiModelProperty("计划名称")
+    @Schema(description = "计划名称")
     private String planName;
 
-    @ApiModelProperty("设备ID")
+    @Schema(description = "设备ID")
     private Long deviceId;
 
-    @ApiModelProperty("设备名称")
+    @Schema(description = "设备名称")
     private String deviceName;
 
-    @ApiModelProperty("定时表达式")
+    @Schema(description = "定时表达式")
     private String cronExpression;
 
-    @ApiModelProperty("巡检路线数据")
-    private String routeData;
+    @Schema(description = "状态：0-禁用 1-启用")
+    private Short status;
 
-    @ApiModelProperty("状态：0-禁用 1-启用")
-    private Integer status;
-
-    @ApiModelProperty("状态描述")
+    @Schema(description = "状态描述")
     private String statusDescription;
 
-    @ApiModelProperty("上次执行时间")
+    @Schema(description = "上次执行时间")
     private LocalDateTime lastExecuteTime;
 
-    @ApiModelProperty("下次执行时间")
-    private LocalDateTime nextExecuteTime;
+    @Schema(description = "下次执行时间")
+    private LocalDateTime nettExecuteTime;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createTime;
 
-    @ApiModelProperty("创建人ID")
+    @Schema(description = "创建人ID")
     private Long createBy;
 
-    @ApiModelProperty("创建人名称")
+    @Schema(description = "创建人名称")
     private String createByName;
 }
+

@@ -24,6 +24,11 @@ public class LoginResponse {
      */
     private String username;
 
+    /**
+     * 方法功能描述：是否需要修改密码
+     */
+    private Boolean passwordChangeRequired;
+
     public String getAccessToken() {
         return accessToken;
     }
@@ -46,6 +51,14 @@ public class LoginResponse {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public Boolean getPasswordChangeRequired() {
+        return passwordChangeRequired;
+    }
+
+    public void setPasswordChangeRequired(Boolean passwordChangeRequired) {
+        this.passwordChangeRequired = passwordChangeRequired;
     }
 }
 

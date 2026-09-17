@@ -10,55 +10,54 @@ package com.huicang.wise.application.oss;
 public class MinioFileCreateRequest {
 
     /**
-     * 方法功能描述：Bucket名称
+     * 方法功能描述：存储桶名称
      */
-    private String bucket;
+    private String bucketName;
 
     /**
-     * 方法功能描述：对象Key
+     * 方法功能描述：文件路径
      */
-    private String objectKey;
+    private String filePath;
 
     /**
      * 方法功能描述：文件大小
      */
-    private Long size;
+    private Long fileSize;
 
     /**
-     * 方法功能描述：内容类型
+     * 方法功能描述：上传者ID
      */
-    private String contentType;
+    private Long uploadBy;
 
-    public String getBucket() {
-        return bucket;
+    public String getBucketName() {
+        return bucketName;
     }
 
-    public void setBucket(String bucket) {
-        this.bucket = bucket;
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
     }
 
-    public String getObjectKey() {
-        return objectKey;
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setObjectKey(String objectKey) {
-        this.objectKey = objectKey;
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
-    public Long getSize() {
-        return size;
+    public Long getFileSize() {
+        return fileSize;
     }
 
-    public void setSize(Long size) {
-        this.size = size;
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
     }
 
-    public String getContentType() {
-        return contentType;
+    public Long getUploadBy() {
+        return uploadBy;
     }
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
+    public void setUploadBy(Long uploadBy) {
+        this.uploadBy = uploadBy;
     }
 }
-

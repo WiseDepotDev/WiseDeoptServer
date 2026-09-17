@@ -1,133 +1,172 @@
 package com.huicang.wise.domain.inventory;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
- * 类功能描述：库存明细实体
+ * 库存信息实体
+ * 存储产品的库存数量信息
  *
- * @author xingchentye
- * @date 2026-01-19
- * @modified xingchentye 2026-01-19 定义库存明细字段
+ * @author WiseDepot
+ * @version 0.0.23
+ * @since 2026-03-03
  */
+@Entity
+@Table(name = "inventory", indexes = {
+    @Index(name = "uk_warehouse_product", columnList = "warehouse_id, product_id", unique = true),
+    @Index(name = "idx_update_time", columnList = "update_time")
+})
 public class Inventory {
 
     /**
-     * 方法功能描述：库存明细ID
+     * 库存主键ID
      */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "inventory_id")
     private Long inventoryId;
 
     /**
-     * 方法功能描述：产品主键ID
+     * 仓库ID
      */
+    @NotNull(message = "仓库ID不能为空")
+    @Column(name = "warehouse_id", nullable = false)
+    private Long warehouseId;
+
+    /**
+     * 产品ID
+     */
+    @NotNull(message = "产品ID不能为空")
+    @Column(name = "product_id", nullable = false)
     private Long productId;
 
     /**
-     * 方法功能描述：所在库位编码
+     * 库存总量
      */
-    private String locationCode;
-
-    /**
-     * 方法功能描述：库存数量
-     */
+    @NotNull(message = "库存总量不能为空")
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
     /**
-     * 方法功能描述：最后盘点时间
+     * 锁定库存数量
      */
-    private LocalDateTime lastCheckTime;
+    @NotNull(message = "锁定库存数量不能为空")
+    @Column(name = "locked_quantity", nullable = false)
+    private Integer lockedQuantity;
 
     /**
-     * 方法功能描述：获取库存明细ID
+     * 最后库存变动时间
+     */
+    @NotNull(message = "最后库存变动时间不能为空")
+    @Column(name = "update_time", nullable = false)
+    private LocalDateTime updateTime;
+
+    /**
+     * 获取库存主键ID
      *
-     * @return 库存明细ID
+     * @return 库存主键ID
      */
     public Long getInventoryId() {
         return inventoryId;
     }
 
     /**
-     * 方法功能描述：设置库存明细ID
+     * 设置库存主键ID
      *
-     * @param inventoryId 库存明细ID
-     * @return 无
+     * @param inventoryId 库存主键ID
      */
     public void setInventoryId(Long inventoryId) {
         this.inventoryId = inventoryId;
     }
 
     /**
-     * 方法功能描述：获取产品主键ID
+     * 获取仓库ID
      *
-     * @return 产品主键ID
+     * @return 仓库ID
+     */
+    public Long getWarehouseId() {
+        return warehouseId;
+    }
+
+    /**
+     * 设置仓库ID
+     *
+     * @param warehouseId 仓库ID
+     */
+    public void setWarehouseId(Long warehouseId) {
+        this.warehouseId = warehouseId;
+    }
+
+    /**
+     * 获取产品ID
+     *
+     * @return 产品ID
      */
     public Long getProductId() {
         return productId;
     }
 
     /**
-     * 方法功能描述：设置产品主键ID
+     * 设置产品ID
      *
-     * @param productId 产品主键ID
-     * @return 无
+     * @param productId 产品ID
      */
     public void setProductId(Long productId) {
         this.productId = productId;
     }
 
     /**
-     * 方法功能描述：获取库位编码
+     * 获取库存总量
      *
-     * @return 库位编码
-     */
-    public String getLocationCode() {
-        return locationCode;
-    }
-
-    /**
-     * 方法功能描述：设置库位编码
-     *
-     * @param locationCode 库位编码
-     * @return 无
-     */
-    public void setLocationCode(String locationCode) {
-        this.locationCode = locationCode;
-    }
-
-    /**
-     * 方法功能描述：获取库存数量
-     *
-     * @return 库存数量
+     * @return 库存总量
      */
     public Integer getQuantity() {
         return quantity;
     }
 
     /**
-     * 方法功能描述：设置库存数量
+     * 设置库存总量
      *
-     * @param quantity 库存数量
-     * @return 无
+     * @param quantity 库存总量
      */
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
     /**
-     * 方法功能描述：获取最后盘点时间
+     * 获取锁定库存数量
      *
-     * @return 最后盘点时间
+     * @return 锁定库存数量
      */
-    public LocalDateTime getLastCheckTime() {
-        return lastCheckTime;
+    public Integer getLockedQuantity() {
+        return lockedQuantity;
     }
 
     /**
-     * 方法功能描述：设置最后盘点时间
+     * 设置锁定库存数量
      *
-     * @param lastCheckTime 最后盘点时间
-     * @return 无
+     * @param lockedQuantity 锁定库存数量
      */
-    public void setLastCheckTime(LocalDateTime lastCheckTime) {
-        this.lastCheckTime = lastCheckTime;
+    public void setLockedQuantity(Integer lockedQuantity) {
+        this.lockedQuantity = lockedQuantity;
+    }
+
+    /**
+     * 获取最后库存变动时间
+     *
+     * @return 最后库存变动时间
+     */
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    /**
+     * 设置最后库存变动时间
+     *
+     * @param updateTime 最后库存变动时间
+     */
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
     }
 }

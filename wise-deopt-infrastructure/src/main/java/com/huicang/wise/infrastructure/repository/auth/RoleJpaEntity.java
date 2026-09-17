@@ -3,42 +3,90 @@ package com.huicang.wise.infrastructure.repository.auth;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * 角色表实体
- */
 @Entity
-@Table(name = "role")
+@Table(name = "role", indexes = {
+    @Index(name = "uk_name", columnList = "name", unique = true),
+    @Index(name = "idx_create_time", columnList = "create_time"),
+    @Index(name = "create_by", columnList = "create_by"),
+    @Index(name = "update_by", columnList = "update_by")
+})
 public class RoleJpaEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_id")
     private Long roleId;
 
-    @Column(name = "role_name")
-    private String roleName;
+    @Column(name = "name", nullable = false, unique = true, length = 32)
+    private String name;
 
-    @Column(name = "role_code")
-    private String roleCode;
-
-    @Column(name = "description")
+    @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "create_time", nullable = false, updatable = false)
+    private LocalDateTime createTime;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "create_by", nullable = false)
+    private Long createBy;
 
-    // Getters and Setters
-    public Long getRoleId() { return roleId; }
-    public void setRoleId(Long roleId) { this.roleId = roleId; }
-    public String getRoleName() { return roleName; }
-    public void setRoleName(String roleName) { this.roleName = roleName; }
-    public String getRoleCode() { return roleCode; }
-    public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    @Column(name = "update_time", nullable = false)
+    private LocalDateTime updateTime;
+
+    @Column(name = "update_by", nullable = false)
+    private Long updateBy;
+
+    public Long getRoleId() { 
+        return roleId; 
+    }
+    
+    public void setRoleId(Long roleId) { 
+        this.roleId = roleId; 
+    }
+    
+    public String getName() { 
+        return name; 
+    }
+    
+    public void setName(String name) { 
+        this.name = name; 
+    }
+    
+    public String getDescription() { 
+        return description; 
+    }
+    
+    public void setDescription(String description) { 
+        this.description = description; 
+    }
+    
+    public LocalDateTime getCreateTime() { 
+        return createTime; 
+    }
+    
+    public void setCreateTime(LocalDateTime createTime) { 
+        this.createTime = createTime; 
+    }
+    
+    public Long getCreateBy() { 
+        return createBy; 
+    }
+    
+    public void setCreateBy(Long createBy) { 
+        this.createBy = createBy; 
+    }
+    
+    public LocalDateTime getUpdateTime() { 
+        return updateTime; 
+    }
+    
+    public void setUpdateTime(LocalDateTime updateTime) { 
+        this.updateTime = updateTime; 
+    }
+    
+    public Long getUpdateBy() { 
+        return updateBy; 
+    }
+    
+    public void setUpdateBy(Long updateBy) { 
+        this.updateBy = updateBy; 
+    }
 }

@@ -62,10 +62,10 @@ public class AlertControllerTest {
 
         AlertDTO dto = new AlertDTO();
         dto.setEventId(1L);
-        dto.setDescription("Test Alert");
-        dto.setAlertType("VIOLATION");
-        dto.setAlertLevel("HIGH");
-        dto.setAlertTime(LocalDateTime.now());
+        dto.setMessage("Test Alert");
+        dto.setSourceModule("MANUAL");
+        dto.setLevel(3);
+        dto.setCreateTime(LocalDateTime.now());
 
         when(alertApplicationService.createAlert(any(AlertCreateRequest.class))).thenReturn(dto);
 
@@ -76,7 +76,7 @@ public class AlertControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.body.payload.data.eventId").value(1))
-                .andExpect(jsonPath("$.body.payload.data.description").value("Test Alert"));
+                .andExpect(jsonPath("$.body.payload.data.message").value("Test Alert"));
     }
 
     @Test
@@ -119,7 +119,7 @@ public class AlertControllerTest {
         Long eventId = 1L;
         AlertDTO dto = new AlertDTO();
         dto.setEventId(eventId);
-        dto.setDescription("Test Alert");
+        dto.setMessage("Test Alert");
 
         when(alertApplicationService.getAlert(eventId)).thenReturn(dto);
 

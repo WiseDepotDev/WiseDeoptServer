@@ -2,8 +2,7 @@ package com.huicang.wise.application.rfid;
 
 import java.util.List;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -14,30 +13,31 @@ import lombok.Data;
  * @since 2024-04-20
  */
 @Data
-@ApiModel(description = "RFID数据上报DTO")
+@Schema(description = "RFID数据上报DTO")
 public class RfidReportDTO {
 
     /**
      * 设备ID
      */
-    @ApiModelProperty(value = "设备ID", required = true)
+    @Schema(description = "设备ID", required = true)
     private Long deviceId;
 
     /**
      * RFID标签数组
      */
-    @ApiModelProperty(value = "RFID标签数组", required = true)
+    @Schema(description = "RFID标签数组", required = true)
     private List<String> rfidTags;
 
     /**
      * 抓拍图片URL
      */
-    @ApiModelProperty(value = "抓拍图片URL", required = false)
+    @Schema(description = "抓拍图片URL", required = false)
     private String snapshotUrl;
 
     /**
      * 事件时间戳
      */
-    @ApiModelProperty(value = "事件时间戳", required = false)
+    @Schema(description = "事件时间戳", required = false)
     private Long eventTime;
 }
+

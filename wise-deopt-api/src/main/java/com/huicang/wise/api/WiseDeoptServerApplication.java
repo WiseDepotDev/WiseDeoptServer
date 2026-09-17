@@ -2,6 +2,9 @@ package com.huicang.wise.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 /**
@@ -12,6 +15,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @modified xingchentye 2026-01-19 创建Spring Boot启动类
  */
 @SpringBootApplication(scanBasePackages = "com.huicang.wise")
+@EntityScan(basePackages = {"com.huicang.wise.domain", "com.huicang.wise.infrastructure.repository", "com.huicang.wise.domain.request"})
+@EnableScheduling
+@EnableAsync
 public class WiseDeoptServerApplication {
 
     /**

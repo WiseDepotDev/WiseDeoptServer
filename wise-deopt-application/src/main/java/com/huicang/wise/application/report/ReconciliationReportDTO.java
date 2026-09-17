@@ -1,7 +1,6 @@
 package com.huicang.wise.application.report;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -13,36 +12,37 @@ import java.time.LocalDateTime;
  * @date 2026-01-26
  */
 @Data
-@ApiModel(description = "对账报表DTO")
+@Schema(description = "对账报表DTO")
 public class ReconciliationReportDTO {
 
-    @ApiModelProperty("差异ID")
+    @Schema(description = "差异ID")
     private Long diffId;
 
-    @ApiModelProperty("产品ID")
+    @Schema(description = "产品ID")
     private Long productId;
 
-    @ApiModelProperty("产品名称")
+    @Schema(description = "产品名称")
     private String productName;
 
-    @ApiModelProperty("库位编码")
+    @Schema(description = "库位编码")
     private String locationCode;
 
-    @ApiModelProperty("预期数量")
+    @Schema(description = "预期数量")
     private Integer expectedQuantity;
 
-    @ApiModelProperty("实际数量")
+    @Schema(description = "实际数量")
     private Integer actualQuantity;
 
-    @ApiModelProperty("差异类型")
+    @Schema(description = "差异类型")
     private String diffType;
 
-    @ApiModelProperty("状态：0-待处理 1-已处理")
+    @Schema(description = "状态：0-待处理 1-已处理")
     private Integer status;
 
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     private LocalDateTime createTime;
 
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 }
+

@@ -1,36 +1,46 @@
 package com.huicang.wise.application.user;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * 类功能描述：用户创建请求
  *
  * @author xingchentye
  * @date 2026-01-22
  */
-@ApiModel(description = "用户创建请求")
+@Schema(description = "用户创建请求")
 public class UserCreateRequest {
 
-    @ApiModelProperty(value = "用户名", required = true)
+    @Schema(description = "用户名", required = true)
+    @NotBlank(message = "用户名不能为空")
+    @Size(max = 32, message = "用户名长度不能超过32个字符")
     private String username;
 
-    @ApiModelProperty(value = "昵称")
+    @Schema(description = "昵称", required = true)
+    @NotBlank(message = "昵称不能为空")
+    @Size(max = 16, message = "昵称长度不能超过16个字符")
     private String nickname;
 
-    @ApiModelProperty(value = "头像URL")
+    @Schema(description = "头像URL")
     private String avatar;
 
-    @ApiModelProperty(value = "密码", required = true)
+    @Schema(description = "密码", required = true)
+    @NotBlank(message = "密码不能为空")
+    @Size(min = 6, max = 20, message = "密码长度必须在6-20个字符之间")
     private String password;
 
-    @ApiModelProperty(value = "邮箱")
+    @Schema(description = "邮箱", required = true)
+    @NotBlank(message = "邮箱不能为空")
+    @Email(message = "邮箱格式不正确")
+    @Size(max = 128, message = "邮箱长度不能超过128个字符")
     private String email;
 
-    @ApiModelProperty(value = "NFC ID")
+    @Schema(description = "NFC ID")
     private String nfcId;
 
-    @ApiModelProperty(value = "PIN码")
+    @Schema(description = "PIN码")
     private String pin;
 
     /**
@@ -102,3 +112,4 @@ public class UserCreateRequest {
         this.role = role;
     }
 }
+

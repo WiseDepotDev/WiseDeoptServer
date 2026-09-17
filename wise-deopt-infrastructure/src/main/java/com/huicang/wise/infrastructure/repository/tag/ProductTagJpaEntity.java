@@ -27,17 +27,17 @@ public class ProductTagJpaEntity {
     @Column(name = "rfid")
     private String rfid;
 
-    @Column(name = "status")
-    private String status;
+    @Column(name = "status", columnDefinition = "tinyint unsigned")
+    private Short status;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+    @Column(name = "create_by")
+    private Long createBy;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
 
     public Long getTagId() {
         return tagId;
@@ -79,36 +79,35 @@ public class ProductTagJpaEntity {
         this.rfid = rfid;
     }
 
-    public String getStatus() {
+    public Short getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Short status) {
         this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getCreateTime() {
+        return createTime;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
     }
 
-    public Long getCreatedBy() {
-        return createdBy;
+    public Long getCreateBy() {
+        return createBy;
     }
 
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
     }
 }
-

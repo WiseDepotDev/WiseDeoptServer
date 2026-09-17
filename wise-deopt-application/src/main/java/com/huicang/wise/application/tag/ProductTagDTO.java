@@ -2,6 +2,13 @@ package com.huicang.wise.application.tag;
 
 import java.time.LocalDateTime;
 
+/**
+ * 类功能描述：产品标签数据传输对象
+ *
+ * @author WiseDepot
+ * @version 0.0.24
+ * @since 2026-03-03
+ */
 public class ProductTagDTO {
 
     private Long tagId;
@@ -14,13 +21,17 @@ public class ProductTagDTO {
 
     private String rfid;
 
-    private String status;
+    private Short status;
 
-    private LocalDateTime createdAt;
+    private Long createBy;
 
-    private Long createdBy;
+    private LocalDateTime createTime;
 
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
+
+    private String productName;
+
+    private String productCode;
 
     public Long getTagId() {
         return tagId;
@@ -62,36 +73,51 @@ public class ProductTagDTO {
         this.rfid = rfid;
     }
 
-    public String getStatus() {
+    public Short getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Short status) {
         this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public Long getCreateBy() {
+        return createBy;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 
-    public Long getCreatedBy() {
-        return createdBy;
+    public LocalDateTime getCreateTime() {
+        return createTime;
     }
 
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
     }
 }
-

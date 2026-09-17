@@ -38,8 +38,14 @@ public class InspectionDetailJpaEntity {
     /**
      * 是否匹配：0-不匹配，1-匹配
      */
-    @Column(name = "matched")
-    private Integer matched;
+    @Column(name = "matched", columnDefinition = "tinyint unsigned")
+    private Short matched;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "tid")
+    private String tid;
 
     @Column(name = "remark")
     private String remark;

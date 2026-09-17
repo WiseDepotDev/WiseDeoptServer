@@ -1,10 +1,17 @@
 package com.huicang.wise.application.tag;
 
+/**
+ * 类功能描述：产品标签更新请求
+ *
+ * @author WiseDepot
+ * @version 0.0.24
+ * @since 2026-03-03
+ */
 public class ProductTagUpdateRequest {
 
-    private Long tagId;
-
     private Long productId;
+
+    private Short status;
 
     private String barcode;
 
@@ -12,22 +19,20 @@ public class ProductTagUpdateRequest {
 
     private String rfid;
 
-    private String status;
-
-    public Long getTagId() {
-        return tagId;
-    }
-
-    public void setTagId(Long tagId) {
-        this.tagId = tagId;
-    }
-
     public Long getProductId() {
         return productId;
     }
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public Short getStatus() {
+        return status;
+    }
+
+    public void setStatus(Short status) {
+        this.status = status;
     }
 
     public String getBarcode() {
@@ -53,13 +58,4 @@ public class ProductTagUpdateRequest {
     public void setRfid(String rfid) {
         this.rfid = rfid;
     }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 }
-

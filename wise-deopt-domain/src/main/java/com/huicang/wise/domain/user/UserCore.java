@@ -1,61 +1,101 @@
 package com.huicang.wise.domain.user;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.time.LocalDateTime;
 
 /**
- * 类功能描述：用户核心信息实体
+ * 用户核心信息实体
+ * 存储用户的基本账户信息
  *
- * @author xingchentye
- * @date 2026-01-19
- * @modified xingchentye 2026-01-19 定义用户核心信息字段
+ * @author WiseDepot
+ * @version 0.0.23
+ * @since 2026-03-03
  */
+@Entity
+@Table(name = "user_core", indexes = {
+    @Index(name = "uk_username", columnList = "username", unique = true),
+    @Index(name = "uk_owner_device_id", columnList = "owner_device_id", unique = true),
+    @Index(name = "idx_create_time", columnList = "create_time"),
+    @Index(name = "idx_status", columnList = "status"),
+    @Index(name = "idx_user_type", columnList = "user_type")
+})
 public class UserCore {
 
     /**
-     * 方法功能描述：用户主键ID
+     * 用户主键ID
      */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long userId;
 
     /**
-     * 方法功能描述：登录名
+     * 用户名
      */
+    @NotBlank(message = "用户名不能为空")
+    @Size(max = 16, message = "用户名长度不能超过16个字符")
+    @Column(name = "username", nullable = false, unique = true, length = 16)
     private String username;
 
     /**
-     * 方法功能描述：邮箱地址
+     * 用户类型：0：人工用户 1：设备用户
      */
-    private String email;
+    @NotNull(message = "用户类型不能为空")
+    @Column(name = "user_type", nullable = false, columnDefinition = "tinyint unsigned")
+    private Short userType;
 
     /**
-     * 方法功能描述：密码摘要
+     * 所属设备id
      */
-    private String passwordHash;
+    @Column(name = "owner_device_id", unique = true)
+    private Long ownerDeviceId;
 
     /**
-     * 方法功能描述：是否启用
+     * 用户状态：0：封禁 1：正常
      */
-    private Boolean enabled;
+    @NotNull(message = "用户状态不能为空")
+    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
+    private Short status = 1;
 
     /**
-     * 方法功能描述：创建时间
+     * 是否删除：0：未删除 1：已删除
      */
-    private LocalDateTime createdAt;
+    @NotNull(message = "是否删除不能为空")
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint unsigned")
+    private Short isDeleted = 0;
 
     /**
-     * 方法功能描述：最后更新时间
+     * 创建者ID
      */
-    private LocalDateTime updatedAt;
-
-    private String nfcId;
-
-    private String pinHash;
-
-    private Integer loginFailCount;
-
-    private LocalDateTime lockedUntil;
+    @NotNull(message = "创建者ID不能为空")
+    @Column(name = "create_by", nullable = false)
+    private Long createBy;
 
     /**
-     * 方法功能描述：获取用户主键ID
+     * 创建时间
+     */
+    @Column(name = "create_time", nullable = false, updatable = false)
+    private LocalDateTime createTime;
+
+    /**
+     * 更新者ID
+     */
+    @NotNull(message = "更新者ID不能为空")
+    @Column(name = "update_by", nullable = false)
+    private Long updateBy;
+
+    /**
+     * 更新时间
+     */
+    @Column(name = "update_time", nullable = false)
+    private LocalDateTime updateTime;
+
+    /**
+     * 获取用户主键ID
      *
      * @return 用户主键ID
      */
@@ -64,158 +104,173 @@ public class UserCore {
     }
 
     /**
-     * 方法功能描述：设置用户主键ID
+     * 设置用户主键ID
      *
      * @param userId 用户主键ID
-     * @return 无
      */
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
     /**
-     * 方法功能描述：获取登录名
+     * 获取用户名
      *
-     * @return 登录名
+     * @return 用户名
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * 方法功能描述：设置登录名
+     * 设置用户名
      *
-     * @param username 登录名
-     * @return 无
+     * @param username 用户名
      */
     public void setUsername(String username) {
         this.username = username;
     }
 
     /**
-     * 方法功能描述：获取邮箱地址
+     * 获取用户类型
      *
-     * @return 邮箱地址
+     * @return 用户类型
      */
-    public String getEmail() {
-        return email;
+    public Short getUserType() {
+        return userType;
     }
 
     /**
-     * 方法功能描述：设置邮箱地址
+     * 设置用户类型
      *
-     * @param email 邮箱地址
-     * @return 无
+     * @param userType 用户类型
      */
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUserType(Short userType) {
+        this.userType = userType;
     }
 
     /**
-     * 方法功能描述：获取密码摘要
+     * 获取所属设备id
      *
-     * @return 密码摘要
+     * @return 所属设备id
      */
-    public String getPasswordHash() {
-        return passwordHash;
+    public Long getOwnerDeviceId() {
+        return ownerDeviceId;
     }
 
     /**
-     * 方法功能描述：设置密码摘要
+     * 设置所属设备id
      *
-     * @param passwordHash 密码摘要
-     * @return 无
+     * @param ownerDeviceId 所属设备id
      */
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public String getNfcId() {
-        return nfcId;
-    }
-
-    public void setNfcId(String nfcId) {
-        this.nfcId = nfcId;
-    }
-
-    public String getPinHash() {
-        return pinHash;
-    }
-
-    public void setPinHash(String pinHash) {
-        this.pinHash = pinHash;
-    }
-
-    public Integer getLoginFailCount() {
-        return loginFailCount;
-    }
-
-    public void setLoginFailCount(Integer loginFailCount) {
-        this.loginFailCount = loginFailCount;
-    }
-
-    public LocalDateTime getLockedUntil() {
-        return lockedUntil;
-    }
-
-    public void setLockedUntil(LocalDateTime lockedUntil) {
-        this.lockedUntil = lockedUntil;
+    public void setOwnerDeviceId(Long ownerDeviceId) {
+        this.ownerDeviceId = ownerDeviceId;
     }
 
     /**
-     * 方法功能描述：获取是否启用
+     * 获取用户状态
      *
-     * @return 是否启用
+     * @return 用户状态
      */
-    public Boolean getEnabled() {
-        return enabled;
+    public Short getStatus() {
+        return status;
     }
 
     /**
-     * 方法功能描述：设置是否启用
+     * 设置用户状态
      *
-     * @param enabled 是否启用
-     * @return 无
+     * @param status 用户状态
      */
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
+    public void setStatus(Short status) {
+        this.status = status;
     }
 
     /**
-     * 方法功能描述：获取创建时间
+     * 获取是否删除
+     *
+     * @return 是否删除
+     */
+    public Short getIsDeleted() {
+        return isDeleted;
+    }
+
+    /**
+     * 设置是否删除
+     *
+     * @param isDeleted 是否删除
+     */
+    public void setIsDeleted(Short isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    /**
+     * 获取创建者ID
+     *
+     * @return 创建者ID
+     */
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    /**
+     * 设置创建者ID
+     *
+     * @param createBy 创建者ID
+     */
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    /**
+     * 获取创建时间
      *
      * @return 创建时间
      */
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getCreateTime() {
+        return createTime;
     }
 
     /**
-     * 方法功能描述：设置创建时间
+     * 设置创建时间
      *
-     * @param createdAt 创建时间
-     * @return 无
+     * @param createTime 创建时间
      */
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
     }
 
     /**
-     * 方法功能描述：获取最后更新时间
+     * 获取更新者ID
      *
-     * @return 最后更新时间
+     * @return 更新者ID
      */
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public Long getUpdateBy() {
+        return updateBy;
     }
 
     /**
-     * 方法功能描述：设置最后更新时间
+     * 设置更新者ID
      *
-     * @param updatedAt 最后更新时间
-     * @return 无
+     * @param updateBy 更新者ID
      */
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
+    }
+
+    /**
+     * 获取更新时间
+     *
+     * @return 更新时间
+     */
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    /**
+     * 设置更新时间
+     *
+     * @param updateTime 更新时间
+     */
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
     }
 }

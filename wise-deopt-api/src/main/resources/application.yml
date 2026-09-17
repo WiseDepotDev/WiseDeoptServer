@@ -13,10 +13,17 @@ spring:
         ansi:
             enabled: ALWAYS
     datasource:
-        url: jdbc:mysql://10.0.0.22:3306/wise_deopt?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
-        username: ${WISE_DEOPT_DB_USERNAME:root}
-        password: ${WISE_DEOPT_DB_PASSWORD:password}
+        url: jdbc:mysql://10.0.0.4:3306/wise_depot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+        username: root
+        password: Key-1122
         driver-class-name: com.mysql.cj.jdbc.Driver
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 5
+            connection-timeout: 30000
+            idle-timeout: 600000
+            max-lifetime: 1800000
+            connection-test-query: SELECT 1
     jpa:
         database-platform: org.hibernate.dialect.MySQLDialect
         hibernate:
@@ -24,17 +31,104 @@ spring:
         show-sql: false
     data:
         redis:
-            host: ${WISE_DEOPT_REDIS_HOST:10.0.0.22}
-            port: ${WISE_DEOPT_REDIS_PORT:6379}
-            password: ${WISE_DEOPT_REDIS_PASSWORD:}
-
-wise:
+            host: 10.0.0.4
+            port: 6379
+            password: Key-1122
+            timeout: 5000
+            lettuce:
+                pool:
+                    max-active: 8
+                    max-idle: 8
+                    min-idle: 0
+                    max-wait: -1ms
     minio:
-        endpoint: ${WISE_DEOPT_MINIO_ENDPOINT:http://10.0.0.22:9000}
-        access-key: ${WISE_DEOPT_MINIO_ACCESS_KEY:minioadmin}
-        secret-key: ${WISE_DEOPT_MINIO_SECRET_KEY:minioadmin}
+        endpoint: http://10.0.0.4:9000
+        access-key: root
+        secret-key: Key-1122
         secure: false
+        bucket-name: wise-depot
+        presigned-url-expiry: 3600
+        max-file-size: 104857600
+    api:
+        version: v1
+        base-path: /api/v1
+    auth:
+        admin:
+            username: admin
+            password: admin123
+            reset-password: false
 
 logging:
+    level:
+        root: INFO
+        org.springframework: INFO
+        org.hibernate: INFO
+        com.huicang.wise: INFO
+        com.huicang.wise.infrastructure.rfid: DEBUG
+        com.huicang.wise.application.rfid: DEBUG
     pattern:
         console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
+
+security:
+    headers:
+        x-frame-options: DENY
+        x-content-type-options: nosniff
+        x-xss-protection: "1; mode=block"
+        content-security-policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; form-action 'self';"
+        strict-transport-security: "max-age=31536000; includeSubDomains; preload"
+        referrer-policy: "no-referrer-when-downgrade"
+        permissions-policy: "geolocation=(), microphone=(), camera=()"
+
+cors:
+    allowed-origins: "http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080"
+    allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+    allowed-headers: "*"
+    exposed-headers: "Authorization,Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers"
+    allow-credentials: true
+    max-age: 3600
+
+jwt:
+    secret: '.U''x9H''wt]+w&|fY>vjR)xdE\kr~2A2kuX1{jr_d*P\6H0;cAHTyW*0,70*v+?e~'
+    expiration:
+        access: 7200
+        refresh: 604800
+
+rfid:
+    server:
+        port: 6606
+
+# 登录失败节流与账户锁定（计数存 Redis，多实例一致）
+wise:
+    login-attempt:
+        # 同一账号连续失败多少次后锁定
+        max-failures: 5
+        # 计数与锁定的时间窗口（秒），900 = 15 分钟
+        window-seconds: 900
+        # 同一 IP 累计失败多少次后封禁（防撞库）
+        max-failures-per-ip: 50
+
+mqtt:
+    broker:
+        url: tcp://10.0.0.4:1883
+        username: root
+        password: Key-1122
+        client-id: wise-server
+        clean-session: true
+        completion-timeout: 5000
+        qos: 1
+        inbound-topic: wise/device/+/report
+        outbound-topic: wise/device/default/task
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info
+            base-path: /actuator
+    endpoint:
+        health:
+            show-details: always
+            show-components: always
+    health:
+        defaults:
+            enabled: true

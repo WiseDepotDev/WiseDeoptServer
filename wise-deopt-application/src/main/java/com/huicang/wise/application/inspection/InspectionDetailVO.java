@@ -1,7 +1,6 @@
 package com.huicang.wise.application.inspection;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,27 +13,28 @@ import java.time.LocalDateTime;
  * @since 2024-04-20
  */
 @Data
-@ApiModel(description = "巡检明细VO")
+@Schema(description = "巡检明细VO")
 public class InspectionDetailVO {
 
-    @ApiModelProperty("明细ID")
+    @Schema(description = "明细ID")
     private Long detailId;
 
-    @ApiModelProperty("任务ID")
+    @Schema(description = "任务ID")
     private Long taskId;
 
-    @ApiModelProperty("标签ID")
+    @Schema(description = "标签ID")
     private Long tagId;
 
-    @ApiModelProperty("RFID")
+    @Schema(description = "RFID")
     private String rfid;
 
-    @ApiModelProperty("扫描时间")
+    @Schema(description = "扫描时间")
     private LocalDateTime scanTime;
 
-    @ApiModelProperty("是否匹配：0-不匹配 1-匹配")
-    private Integer matched;
+    @Schema(description = "是否匹配：0-不匹配 1-匹配")
+    private Short matched;
 
-    @ApiModelProperty("备注")
+    @Schema(description = "备注")
     private String remark;
 }
+

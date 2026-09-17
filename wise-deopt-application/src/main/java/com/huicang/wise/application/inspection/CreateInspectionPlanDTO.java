@@ -1,7 +1,6 @@
 package com.huicang.wise.application.inspection;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -12,21 +11,22 @@ import lombok.Data;
  * @since 2024-04-20
  */
 @Data
-@ApiModel(description = "创建巡检计划DTO")
+@Schema(description = "创建巡检计划DTO")
 public class CreateInspectionPlanDTO {
 
-    @ApiModelProperty(value = "计划名称", required = true)
+    @Schema(description = "计划名称", required = true)
     private String planName;
 
-    @ApiModelProperty(value = "执行巡检设备id", required = true)
+    @Schema(description = "执行巡检设备id", required = true)
     private Long deviceId;
 
-    @ApiModelProperty(value = "定时表达式", required = true)
+    @Schema(description = "定时表达式", required = true)
     private String cronExpression;
 
-    @ApiModelProperty(value = "巡检路线ID")
+    @Schema(description = "巡检路线ID")
     private Long routeId;
 
-    @ApiModelProperty(value = "巡检路线数据（若指定routeId则优先使用路线中的数据）")
+    @Schema(description = "巡检路线数据（若指定routeId则优先使用路线中的数据）")
     private String routeData;
 }
+

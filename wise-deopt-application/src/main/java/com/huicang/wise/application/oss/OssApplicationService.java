@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.infrastructure.repository.oss.MinioFileJpaEntity;
-import com.huicang.wise.infrastructure.repository.oss.MinioFileRepository;
+import com.huicang.wise.domain.repository.oss.MinioFileRepository;
+import com.huicang.wise.domain.oss.MinioFile;
 
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
@@ -42,20 +42,18 @@ public class OssApplicationService {
      */
     @Transactional
     public MinioFileDTO createFileRecord(MinioFileCreateRequest request) throws BusinessException {
-        if (request.getBucket() == null || request.getBucket().isBlank()) {
+        if (request.getBucketName() == null || request.getBucketName().isBlank()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "Bucket不能为空");
         }
-        if (request.getObjectKey() == null || request.getObjectKey().isBlank()) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR, "对象Key不能为空");
+        if (request.getFilePath() == null || request.getFilePath().isBlank()) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "文件路径不能为空");
         }
-        MinioFileJpaEntity entity = new MinioFileJpaEntity();
-        entity.setFileId(System.currentTimeMillis());
-        entity.setBucket(request.getBucket());
-        entity.setObjectKey(request.getObjectKey());
-        entity.setSize(request.getSize());
-        entity.setContentType(request.getContentType());
-        entity.setCreatedAt(LocalDateTime.now());
-        MinioFileJpaEntity saved = minioFileRepository.save(entity);
+        MinioFile entity = new MinioFile();
+        entity.setBucketName(request.getBucketName());
+        entity.setFilePath(request.getFilePath());
+        entity.setFileSize(request.getFileSize());
+        entity.setUploadTime(LocalDateTime.now());
+        MinioFile saved = minioFileRepository.save(entity);
         return toMinioFileDTO(saved);
     }
 
@@ -77,10 +75,10 @@ public class OssApplicationService {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "对象Key不能为空");
         }
         if (expiresIn == null || expiresIn <= 0 || expiresIn > 604800) {
-            throw new BusinessException(ErrorCode.OSS_EXPIRES_OUT_OF_RANGE, ErrorCode.OSS_EXPIRES_OUT_OF_RANGE.getMessage());
+            throw new BusinessException(ErrorCode.VAL_RANGE_OSS_EXPIRES_OUT_OF_RANGE, ErrorCode.VAL_RANGE_OSS_EXPIRES_OUT_OF_RANGE.getMessage());
         }
         if (minioClient == null) {
-            throw new BusinessException(ErrorCode.OSS_SERVICE_UNAVAILABLE, "MinIO服务未启用");
+            throw new BusinessException(ErrorCode.SYS_IO_OSS_SERVICE_UNAVAILABLE, "MinIO服务未启用");
         }
         try {
             String url = minioClient.getPresignedObjectUrl(
@@ -95,18 +93,17 @@ public class OssApplicationService {
             response.setExpiresIn(expiresIn);
             return response;
         } catch (Exception ex) {
-            throw new BusinessException(ErrorCode.OSS_PRESIGN_ERROR, ErrorCode.OSS_PRESIGN_ERROR.getMessage());
+            throw new BusinessException(ErrorCode.SYS_IO_OSS_PRESIGN_ERROR, ErrorCode.SYS_IO_OSS_PRESIGN_ERROR.getMessage());
         }
     }
 
-    private MinioFileDTO toMinioFileDTO(MinioFileJpaEntity entity) {
+    private MinioFileDTO toMinioFileDTO(MinioFile entity) {
         MinioFileDTO dto = new MinioFileDTO();
         dto.setFileId(entity.getFileId());
-        dto.setBucket(entity.getBucket());
-        dto.setObjectKey(entity.getObjectKey());
-        dto.setSize(entity.getSize());
-        dto.setContentType(entity.getContentType());
-        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setBucketName(entity.getBucketName());
+        dto.setFilePath(entity.getFilePath());
+        dto.setFileSize(entity.getFileSize());
+        dto.setUploadTime(entity.getUploadTime());
         return dto;
     }
 }

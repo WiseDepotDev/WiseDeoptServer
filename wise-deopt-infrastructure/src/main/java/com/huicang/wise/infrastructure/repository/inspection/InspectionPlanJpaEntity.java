@@ -32,30 +32,27 @@ public class InspectionPlanJpaEntity {
     @Column(name = "cron_expression")
     private String cronExpression;
 
-    @Column(name = "route_id")
-    private Long routeId;
-
-    /**
-     * 巡检路线数据（JSON或描述）
-     */
-    @Column(name = "route_data")
-    private String routeData;
-
     /**
      * 状态：0-禁用，1-启用
      */
-    @Column(name = "status")
-    private Integer status;
+    @Column(name = "status", columnDefinition = "tinyint unsigned")
+    private Short status;
 
     @Column(name = "last_execute_time")
     private LocalDateTime lastExecuteTime;
 
-    @Column(name = "next_execute_time")
-    private LocalDateTime nextExecuteTime;
+    @Column(name = "nett_execute_time")
+    private LocalDateTime nettExecuteTime;
 
     @Column(name = "create_time")
     private LocalDateTime createTime;
 
     @Column(name = "create_by")
     private Long createBy;
+
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
+
+    @Column(name = "update_by")
+    private Long updateBy;
 }

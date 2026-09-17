@@ -46,7 +46,14 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
         // 获取Authorization头
         String authHeader = request.getHeader("Authorization");
+        String signatureHeader = request.getHeader("X-Signature");
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            // 如果没有Token，检查是否有签名头（设备端请求）
+            // 假设RequestSignatureFilter已经验证了签名
+            if (signatureHeader != null) {
+                return true;
+            }
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "缺少有效的身份认证信息");
         }
 

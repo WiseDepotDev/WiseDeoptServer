@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "device_rfid_reader")
@@ -13,14 +14,23 @@ public class DeviceRfidReaderJpaEntity {
     @Column(name = "device_id")
     private Long deviceId;
 
-    @Column(name = "rfid_location")
-    private String rfidLocation;
+    @Column(name = "location")
+    private String location;
 
-    @Column(name = "rfid_read_range")
-    private Integer rfidReadRange;
+    @Column(name = "read_range")
+    private Integer readRange;
 
-    @Column(name = "camera_location")
-    private String cameraLocation;
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
+
+    @Column(name = "create_by")
+    private Long createBy;
+
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
+
+    @Column(name = "update_by")
+    private Long updateBy;
 
     public Long getDeviceId() {
         return deviceId;
@@ -30,28 +40,52 @@ public class DeviceRfidReaderJpaEntity {
         this.deviceId = deviceId;
     }
 
-    public String getRfidLocation() {
-        return rfidLocation;
+    public String getLocation() {
+        return location;
     }
 
-    public void setRfidLocation(String rfidLocation) {
-        this.rfidLocation = rfidLocation;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
-    public Integer getRfidReadRange() {
-        return rfidReadRange;
+    public Integer getReadRange() {
+        return readRange;
     }
 
-    public void setRfidReadRange(Integer rfidReadRange) {
-        this.rfidReadRange = rfidReadRange;
+    public void setReadRange(Integer readRange) {
+        this.readRange = readRange;
     }
 
-    public String getCameraLocation() {
-        return cameraLocation;
+    public LocalDateTime getCreateTime() {
+        return createTime;
     }
 
-    public void setCameraLocation(String cameraLocation) {
-        this.cameraLocation = cameraLocation;
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
     }
 }
 

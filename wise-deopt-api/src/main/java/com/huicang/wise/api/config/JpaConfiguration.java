@@ -5,13 +5,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * 类功能描述：JPA配置类
+ * JPA配置类
+ * 配置实体扫描路径和仓储扫描路径
  *
- * @author xingchentye
- * @date 2026-01-22
+ * @author WiseDepot
+ * @version 0.0.21
+ * @since 2026-01-22
  */
 @Configuration
-@EntityScan(basePackages = "com.huicang.wise.infrastructure.repository")
-@EnableJpaRepositories(basePackages = "com.huicang.wise.infrastructure.repository")
+@EntityScan(basePackages = {"com.huicang.wise.infrastructure.repository", "com.huicang.wise.domain"})
+@EnableJpaRepositories(basePackages = {"com.huicang.wise.infrastructure.repository", "com.huicang.wise.domain.request", "com.huicang.wise.domain.repository"})
 public class JpaConfiguration {
 }

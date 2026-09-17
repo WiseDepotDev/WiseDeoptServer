@@ -16,29 +16,63 @@ public class NfcBadgeJpaEntity {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "nfc_code")
-    private String nfcCode;
+    @Column(name = "nfc_uid")
+    private String nfcUid;
 
-    @Column(name = "status")
-    private String status;
+    @Column(name = "rfid")
+    private String rfid;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "pin_salt", columnDefinition = "char(16)")
+    private String pinSalt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "pin_hash", columnDefinition = "char(64)")
+    private String pinHash;
 
-    // Getters and Setters
+    @Column(name = "status", columnDefinition = "tinyint unsigned")
+    private Short status;
+
+    @Column(name = "status_reason")
+    private String statusReason;
+
+    @Column(name = "last_success_use_time")
+    private LocalDateTime lastSuccessUseTime;
+
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
+
+    @Column(name = "create_by")
+    private Long createBy;
+
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
+
+    @Column(name = "update_by")
+    private Long updateBy;
+
     public Long getBadgeId() { return badgeId; }
     public void setBadgeId(Long badgeId) { this.badgeId = badgeId; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
-    public String getNfcCode() { return nfcCode; }
-    public void setNfcCode(String nfcCode) { this.nfcCode = nfcCode; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getNfcUid() { return nfcUid; }
+    public void setNfcUid(String nfcUid) { this.nfcUid = nfcUid; }
+    public String getRfid() { return rfid; }
+    public void setRfid(String rfid) { this.rfid = rfid; }
+    public String getPinSalt() { return pinSalt; }
+    public void setPinSalt(String pinSalt) { this.pinSalt = pinSalt; }
+    public String getPinHash() { return pinHash; }
+    public void setPinHash(String pinHash) { this.pinHash = pinHash; }
+    public Short getStatus() { return status; }
+    public void setStatus(Short status) { this.status = status; }
+    public String getStatusReason() { return statusReason; }
+    public void setStatusReason(String statusReason) { this.statusReason = statusReason; }
+    public LocalDateTime getLastSuccessUseTime() { return lastSuccessUseTime; }
+    public void setLastSuccessUseTime(LocalDateTime lastSuccessUseTime) { this.lastSuccessUseTime = lastSuccessUseTime; }
+    public LocalDateTime getCreateTime() { return createTime; }
+    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    public Long getCreateBy() { return createBy; }
+    public void setCreateBy(Long createBy) { this.createBy = createBy; }
+    public LocalDateTime getUpdateTime() { return updateTime; }
+    public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
+    public Long getUpdateBy() { return updateBy; }
+    public void setUpdateBy(Long updateBy) { this.updateBy = updateBy; }
 }

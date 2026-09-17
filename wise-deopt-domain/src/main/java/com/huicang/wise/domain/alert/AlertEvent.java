@@ -1,133 +1,306 @@
 package com.huicang.wise.domain.alert;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * 类功能描述：告警事件实体
+ * 告警事件实体
+ * 对应alert_event表，存储系统告警事件信息
  *
- * @author xingchentye
- * @date 2026-01-19
- * @modified xingchentye 2026-01-19 定义告警事件字段
+ * @author WiseDepot
+ * @version 0.0.24
+ * @since 2026-02-27
  */
+@Entity
+@Table(name = "alert_event", indexes = {
+    @Index(name = "idx_source_module", columnList = "source_module"),
+    @Index(name = "idx_level", columnList = "level"),
+    @Index(name = "idx_status", columnList = "status"),
+    @Index(name = "idx_is_active", columnList = "is_active"),
+    @Index(name = "idx_create_time", columnList = "create_time"),
+    @Index(name = "idx_resolved_time", columnList = "resolved_time"),
+    @Index(name = "resolved_by", columnList = "resolved_by")
+})
 public class AlertEvent {
 
     /**
-     * 方法功能描述：告警事件ID
+     * 告警事件主键ID
      */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "event_id")
     private Long eventId;
 
     /**
-     * 方法功能描述：告警类型
+     * 来源模块
      */
-    private String alertType;
+    @NotBlank(message = "来源模块不能为空")
+    @Size(max = 50, message = "来源模块长度不能超过50个字符")
+    @Column(name = "source_module", nullable = false, length = 50)
+    private String sourceModule;
 
     /**
-     * 方法功能描述：告警级别
+     * 告警等级
+     * 1：提示 2：一般 3：严重 4：紧急
      */
-    private String alertLevel;
+    @NotNull(message = "告警等级不能为空")
+    @Column(name = "level", nullable = false, columnDefinition = "tinyint unsigned")
+    private Short level;
 
     /**
-     * 方法功能描述：告警描述
+     * 告警标题
      */
-    private String description;
+    @NotBlank(message = "告警标题不能为空")
+    @Size(max = 100, message = "告警标题长度不能超过100个字符")
+    @Column(name = "title", nullable = false, length = 100)
+    private String title;
 
     /**
-     * 方法功能描述：告警时间
+     * 告警内容
      */
-    private LocalDateTime alertTime;
+    @NotBlank(message = "告警内容不能为空")
+    @Size(max = 255, message = "告警内容长度不能超过255个字符")
+    @Column(name = "message", nullable = false, length = 255)
+    private String message;
 
     /**
-     * 方法功能描述：获取告警事件ID
+     * 告警状态
+     * 0：未处理 1：处理中 2：已处理 3：已忽略
+     */
+    @NotNull(message = "告警状态不能为空")
+    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
+    private Short status = 0;
+
+    /**
+     * 是否仍处于活跃状态
+     */
+    @NotNull(message = "活跃状态不能为空")
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    /**
+     * 产生时间
+     */
+    @NotNull(message = "产生时间不能为空")
+    @Column(name = "create_time", nullable = false)
+    private LocalDateTime createTime;
+
+    /**
+     * 解除时间
+     */
+    @Column(name = "resolved_time")
+    private LocalDateTime resolvedTime;
+
+    /**
+     * 解除者id
+     */
+    @Column(name = "resolved_by")
+    private Long resolvedBy;
+
+    /**
+     * 扩展信息
+     */
+    @Column(name = "extended_data", columnDefinition = "json")
+    private String extendedData;
+
+    /**
+     * 获取告警事件主键ID
      *
-     * @return 告警事件ID
+     * @return 告警事件主键ID
      */
     public Long getEventId() {
         return eventId;
     }
 
     /**
-     * 方法功能描述：设置告警事件ID
+     * 设置告警事件主键ID
      *
-     * @param eventId 告警事件ID
-     * @return 无
+     * @param eventId 告警事件主键ID
      */
     public void setEventId(Long eventId) {
         this.eventId = eventId;
     }
 
     /**
-     * 方法功能描述：获取告警类型
+     * 获取来源模块
      *
-     * @return 告警类型
+     * @return 来源模块
      */
-    public String getAlertType() {
-        return alertType;
+    public String getSourceModule() {
+        return sourceModule;
     }
 
     /**
-     * 方法功能描述：设置告警类型
+     * 设置来源模块
      *
-     * @param alertType 告警类型
-     * @return 无
+     * @param sourceModule 来源模块
      */
-    public void setAlertType(String alertType) {
-        this.alertType = alertType;
+    public void setSourceModule(String sourceModule) {
+        this.sourceModule = sourceModule;
     }
 
     /**
-     * 方法功能描述：获取告警级别
+     * 获取告警等级
      *
-     * @return 告警级别
+     * @return 告警等级
      */
-    public String getAlertLevel() {
-        return alertLevel;
+    public Short getLevel() {
+        return level;
     }
 
     /**
-     * 方法功能描述：设置告警级别
+     * 设置告警等级
      *
-     * @param alertLevel 告警级别
-     * @return 无
+     * @param level 告警等级
      */
-    public void setAlertLevel(String alertLevel) {
-        this.alertLevel = alertLevel;
+    public void setLevel(Short level) {
+        this.level = level;
     }
 
     /**
-     * 方法功能描述：获取告警描述
+     * 获取告警标题
      *
-     * @return 告警描述
+     * @return 告警标题
      */
-    public String getDescription() {
-        return description;
+    public String getTitle() {
+        return title;
     }
 
     /**
-     * 方法功能描述：设置告警描述
+     * 设置告警标题
      *
-     * @param description 告警描述
-     * @return 无
+     * @param title 告警标题
      */
-    public void setDescription(String description) {
-        this.description = description;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     /**
-     * 方法功能描述：获取告警时间
+     * 获取告警内容
      *
-     * @return 告警时间
+     * @return 告警内容
      */
-    public LocalDateTime getAlertTime() {
-        return alertTime;
+    public String getMessage() {
+        return message;
     }
 
     /**
-     * 方法功能描述：设置告警时间
+     * 设置告警内容
      *
-     * @param alertTime 告警时间
-     * @return 无
+     * @param message 告警内容
      */
-    public void setAlertTime(LocalDateTime alertTime) {
-        this.alertTime = alertTime;
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    /**
+     * 获取告警状态
+     *
+     * @return 告警状态
+     */
+    public Short getStatus() {
+        return status;
+    }
+
+    /**
+     * 设置告警状态
+     *
+     * @param status 告警状态
+     */
+    public void setStatus(Short status) {
+        this.status = status;
+    }
+
+    /**
+     * 获取是否仍处于活跃状态
+     *
+     * @return 是否仍处于活跃状态
+     */
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    /**
+     * 设置是否仍处于活跃状态
+     *
+     * @param isActive 是否仍处于活跃状态
+     */
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    /**
+     * 获取产生时间
+     *
+     * @return 产生时间
+     */
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    /**
+     * 设置产生时间
+     *
+     * @param createTime 产生时间
+     */
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    /**
+     * 获取解除时间
+     *
+     * @return 解除时间
+     */
+    public LocalDateTime getResolvedTime() {
+        return resolvedTime;
+    }
+
+    /**
+     * 设置解除时间
+     *
+     * @param resolvedTime 解除时间
+     */
+    public void setResolvedTime(LocalDateTime resolvedTime) {
+        this.resolvedTime = resolvedTime;
+    }
+
+    /**
+     * 获取解除者id
+     *
+     * @return 解除者id
+     */
+    public Long getResolvedBy() {
+        return resolvedBy;
+    }
+
+    /**
+     * 设置解除者id
+     *
+     * @param resolvedBy 解除者id
+     */
+    public void setResolvedBy(Long resolvedBy) {
+        this.resolvedBy = resolvedBy;
+    }
+
+    /**
+     * 获取扩展信息
+     *
+     * @return 扩展信息
+     */
+    public String getExtendedData() {
+        return extendedData;
+    }
+
+    /**
+     * 设置扩展信息
+     *
+     * @param extendedData 扩展信息
+     */
+    public void setExtendedData(String extendedData) {
+        this.extendedData = extendedData;
     }
 }

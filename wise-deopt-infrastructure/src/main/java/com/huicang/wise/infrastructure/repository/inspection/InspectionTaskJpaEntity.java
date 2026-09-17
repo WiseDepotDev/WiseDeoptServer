@@ -29,8 +29,8 @@ public class InspectionTaskJpaEntity {
     /**
      * 任务类型：0-定时任务，1-手动任务
      */
-    @Column(name = "task_type")
-    private Integer taskType;
+    @Column(name = "task_type", columnDefinition = "tinyint unsigned")
+    private Short taskType;
 
     @Column(name = "device_id")
     private Long deviceId;
@@ -38,8 +38,8 @@ public class InspectionTaskJpaEntity {
     /**
      * 状态：0-待执行，1-执行中，2-已完成，3-异常终止
      */
-    @Column(name = "status")
-    private Integer status;
+    @Column(name = "status", columnDefinition = "tinyint unsigned")
+    private Short status;
 
     @Column(name = "start_time")
     private LocalDateTime startTime;
@@ -49,4 +49,7 @@ public class InspectionTaskJpaEntity {
 
     @Column(name = "create_time")
     private LocalDateTime createTime;
+
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
 }

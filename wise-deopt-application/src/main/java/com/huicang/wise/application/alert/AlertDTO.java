@@ -12,34 +12,59 @@ import java.time.LocalDateTime;
 public class AlertDTO {
 
     /**
-     * 方法功能描述：告警事件ID
+     * 告警事件ID
      */
     private Long eventId;
 
     /**
-     * 方法功能描述：告警类型
+     * 来源模块
      */
-    private String alertType;
+    private String sourceModule;
 
     /**
-     * 方法功能描述：告警级别
+     * 告警等级
      */
-    private String alertLevel;
-
-    /**
-     * 方法功能描述：告警描述
-     */
-    private String description;
-
-    /**
-     * 方法功能描述：告警时间
-     */
-    private LocalDateTime alertTime;
+    private Integer level;
 
     /**
      * 告警标题
      */
     private String title;
+
+    /**
+     * 告警内容
+     */
+    private String message;
+
+    /**
+     * 告警状态
+     */
+    private Integer status;
+
+    /**
+     * 是否仍处于活跃状态
+     */
+    private Boolean isActive;
+
+    /**
+     * 产生时间
+     */
+    private LocalDateTime createTime;
+
+    /**
+     * 解除时间
+     */
+    private LocalDateTime resolvedTime;
+
+    /**
+     * 解除者id
+     */
+    private Long resolvedBy;
+
+    /**
+     * 扩展信息
+     */
+    private String extendedData;
 
     /**
      * 告警快照URL
@@ -54,6 +79,22 @@ public class AlertDTO {
         this.eventId = eventId;
     }
 
+    public String getSourceModule() {
+        return sourceModule;
+    }
+
+    public void setSourceModule(String sourceModule) {
+        this.sourceModule = sourceModule;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -62,44 +103,68 @@ public class AlertDTO {
         this.title = title;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getResolvedTime() {
+        return resolvedTime;
+    }
+
+    public void setResolvedTime(LocalDateTime resolvedTime) {
+        this.resolvedTime = resolvedTime;
+    }
+
+    public Long getResolvedBy() {
+        return resolvedBy;
+    }
+
+    public void setResolvedBy(Long resolvedBy) {
+        this.resolvedBy = resolvedBy;
+    }
+
+    public String getExtendedData() {
+        return extendedData;
+    }
+
+    public void setExtendedData(String extendedData) {
+        this.extendedData = extendedData;
+    }
+
     public String getSnapshotUrl() {
         return snapshotUrl;
     }
 
     public void setSnapshotUrl(String snapshotUrl) {
         this.snapshotUrl = snapshotUrl;
-    }
-
-    public String getAlertType() {
-        return alertType;
-    }
-
-    public void setAlertType(String alertType) {
-        this.alertType = alertType;
-    }
-
-    public String getAlertLevel() {
-        return alertLevel;
-    }
-
-    public void setAlertLevel(String alertLevel) {
-        this.alertLevel = alertLevel;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LocalDateTime getAlertTime() {
-        return alertTime;
-    }
-
-    public void setAlertTime(LocalDateTime alertTime) {
-        this.alertTime = alertTime;
     }
 }
 

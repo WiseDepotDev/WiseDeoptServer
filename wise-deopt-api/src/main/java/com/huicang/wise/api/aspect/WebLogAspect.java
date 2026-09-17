@@ -1,16 +1,23 @@
 package com.huicang.wise.api.aspect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 类功能描述：Web请求日志切面
@@ -20,10 +27,16 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 @Aspect
 @Component
-@Slf4j
 public class WebLogAspect {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger log = LoggerFactory.getLogger(WebLogAspect.class);
+
+    /**
+     * 使用 Spring 管理的 ObjectMapper（包含 JavaTimeModule 等配置），避免日志序列化时频繁出现
+     * “Unable to serialize result” 的误报。
+     */
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * 定义切入点，拦截 controller 包下的所有方法
@@ -53,6 +66,11 @@ public class WebLogAspect {
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String methodName = joinPoint.getSignature().getName();
 
+        // 排除心跳接口日志
+        if ("receiveHeartbeat".equals(methodName) && "com.huicang.wise.api.controller.DeviceController".equals(className)) {
+            return joinPoint.proceed();
+        }
+
         // 打印请求日志
         log.info("========================================== Start ==========================================");
         log.info("URL          : {}", url);
@@ -64,10 +82,24 @@ public class WebLogAspect {
             // 尝试打印请求参数，忽略过长或无法序列化的参数
             Object[] args = joinPoint.getArgs();
             if (args != null && args.length > 0) {
-                 // 简单处理，只打印第一个参数作为 body 参考，实际生产可能需要更复杂的判断
-                 // 防止打印 HttpServletRequest 等对象导致异常
                  try {
-                     log.info("Request Args : {}", objectMapper.writeValueAsString(args));
+                     List<Object> logArgs = Arrays.stream(args)
+                         .map(arg -> {
+                             if (arg instanceof MultipartFile) {
+                                 MultipartFile file = (MultipartFile) arg;
+                                 return "File: " + file.getOriginalFilename() + " (" + file.getSize() + " bytes)";
+                             } else if (arg instanceof HttpServletRequest) {
+                                 return "HttpServletRequest";
+                             } else if (arg instanceof HttpServletResponse) {
+                                 return "HttpServletResponse";
+                             } else if (arg instanceof byte[]) {
+                                 return "byte[" + ((byte[]) arg).length + "]";
+                             }
+                             return arg;
+                         })
+                         .collect(Collectors.toList());
+                     
+                     log.info("Request Args : {}", objectMapper.writeValueAsString(logArgs));
                  } catch (Exception e) {
                      log.warn("Request Args : Unable to serialize args");
                  }
@@ -90,7 +122,15 @@ public class WebLogAspect {
         
         // 打印响应日志
         try {
-            log.info("Response     : {}", objectMapper.writeValueAsString(result));
+            if (result == null) {
+                log.info("Response     : null (void or empty)");
+            } else if (result instanceof byte[]) {
+                log.info("Response     : byte[{}]", ((byte[]) result).length);
+            } else if (result instanceof MultipartFile) {
+                log.info("Response     : MultipartFile");
+            } else {
+                log.info("Response     : {}", objectMapper.writeValueAsString(result));
+            }
         } catch (Exception e) {
             log.warn("Response     : Unable to serialize result");
         }

@@ -1,5 +1,11 @@
 package com.huicang.wise.application.tag;
 
+/**
+ * 类功能描述：产品标签创建请求
+ *
+ * @author xingchentye
+ * @date 2026-02-27
+ */
 public class ProductTagCreateRequest {
 
     private Long productId;
@@ -9,6 +15,8 @@ public class ProductTagCreateRequest {
     private String nfcUid;
 
     private String rfid;
+
+    private Short status;
 
     public Long getProductId() {
         return productId;
@@ -41,5 +49,12 @@ public class ProductTagCreateRequest {
     public void setRfid(String rfid) {
         this.rfid = rfid;
     }
-}
 
+    public Short getStatus() {
+        return status;
+    }
+
+    public void setStatus(Short status) {
+        this.status = status;
+    }
+}

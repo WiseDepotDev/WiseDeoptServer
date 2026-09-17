@@ -1,132 +1,152 @@
 package com.huicang.wise.infrastructure.repository.inout;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/**
- * 类功能描述：出入库单JPA实体
- *
- * @author xingchentye
- * @date 2026-01-19
- * @modified xingchentye 2026-01-19 映射stock_order表
- */
 @Entity
-@Table(name = "stock_order")
+@Table(name = "stock_order", indexes = {
+    @Index(name = "uk_order_no", columnList = "order_no", unique = true),
+    @Index(name = "idx_type", columnList = "type"),
+    @Index(name = "idx_status", columnList = "status"),
+    @Index(name = "idx_create_time", columnList = "create_time"),
+    @Index(name = "idx_submit_time", columnList = "submit_time"),
+    @Index(name = "create_by", columnList = "create_by"),
+    @Index(name = "update_by", columnList = "update_by"),
+    @Index(name = "submit_by", columnList = "submit_by")
+})
 public class StockOrderJpaEntity {
-
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
     private Long orderId;
 
-    @Column(name = "order_no")
+    @Column(name = "order_no", nullable = false, length = 64)
     private String orderNo;
 
-    @Column(name = "order_type")
-    private String orderType;
+    @Column(name = "type", nullable = false, columnDefinition = "tinyint unsigned")
+    private Short type;
 
-    @Column(name = "order_status")
-    private String orderStatus;
+    @Column(name = "total_items", nullable = false)
+    private Integer totalItems;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
+    private Short status;
 
-    /**
-     * 方法功能描述：获取出入库单ID
-     *
-     * @return 出入库单ID
-     */
+    @Column(name = "remark", length = 255)
+    private String remark;
+
+    @Column(name = "create_time", nullable = false, updatable = false)
+    private LocalDateTime createTime;
+
+    @Column(name = "create_by", nullable = false)
+    private Long createBy;
+
+    @Column(name = "update_time", nullable = false)
+    private LocalDateTime updateTime;
+
+    @Column(name = "update_by", nullable = false)
+    private Long updateBy;
+
+    @Column(name = "submit_time")
+    private LocalDateTime submitTime;
+
+    @Column(name = "submit_by")
+    private Long submitBy;
+
     public Long getOrderId() {
         return orderId;
     }
 
-    /**
-     * 方法功能描述：设置出入库单ID
-     *
-     * @param orderId 出入库单ID
-     * @return 无
-     */
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
     }
 
-    /**
-     * 方法功能描述：获取出入库单号
-     *
-     * @return 出入库单号
-     */
     public String getOrderNo() {
         return orderNo;
     }
 
-    /**
-     * 方法功能描述：设置出入库单号
-     *
-     * @param orderNo 出入库单号
-     * @return 无
-     */
     public void setOrderNo(String orderNo) {
         this.orderNo = orderNo;
     }
 
-    /**
-     * 方法功能描述：获取单据类型
-     *
-     * @return 单据类型
-     */
-    public String getOrderType() {
-        return orderType;
+    public Short getType() {
+        return type;
     }
 
-    /**
-     * 方法功能描述：设置单据类型
-     *
-     * @param orderType 单据类型
-     * @return 无
-     */
-    public void setOrderType(String orderType) {
-        this.orderType = orderType;
+    public void setType(Short type) {
+        this.type = type;
     }
 
-    /**
-     * 方法功能描述：获取单据状态
-     *
-     * @return 单据状态
-     */
-    public String getOrderStatus() {
-        return orderStatus;
+    public Integer getTotalItems() {
+        return totalItems;
     }
 
-    /**
-     * 方法功能描述：设置单据状态
-     *
-     * @param orderStatus 单据状态
-     * @return 无
-     */
-    public void setOrderStatus(String orderStatus) {
-        this.orderStatus = orderStatus;
+    public void setTotalItems(Integer totalItems) {
+        this.totalItems = totalItems;
     }
 
-    /**
-     * 方法功能描述：获取创建时间
-     *
-     * @return 创建时间
-     */
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public Short getStatus() {
+        return status;
     }
 
-    /**
-     * 方法功能描述：设置创建时间
-     *
-     * @param createdAt 创建时间
-     * @return 无
-     */
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setStatus(Short status) {
+        this.status = status;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
+    }
+
+    public LocalDateTime getSubmitTime() {
+        return submitTime;
+    }
+
+    public void setSubmitTime(LocalDateTime submitTime) {
+        this.submitTime = submitTime;
+    }
+
+    public Long getSubmitBy() {
+        return submitBy;
+    }
+
+    public void setSubmitBy(Long submitBy) {
+        this.submitBy = submitBy;
     }
 }
-

@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.protocol.ApiPacketType;
 import com.huicang.wise.common.protocol.Packet;
-import com.huicang.wise.common.protocol.PacketBody;
 import com.huicang.wise.common.protocol.PacketHeader;
 import com.huicang.wise.common.protocol.PacketType;
 
@@ -27,7 +26,8 @@ import com.huicang.wise.common.protocol.PacketType;
  * 全局响应包装处理器
  *
  * @author xingchentye
- * @version 1.0
+ * @version 1.1
+ * @since 2026-02-27
  */
 @RestControllerAdvice
 public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
@@ -37,9 +37,13 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
 
     private final Map<Method, String> packetTypeCache = new ConcurrentHashMap<>();
 
+    private static final String REQUEST_ID_ATTRIBUTE = "REQUEST_ID";
+    private static final String PACKET_TYPE_ATTRIBUTE = "PACKET_TYPE";
+    private static final String TIMESTAMP_ATTRIBUTE = "TIMESTAMP";
+    private static final String REQUEST_START_TIME_ATTRIBUTE = "REQUEST_START_TIME";
+
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        // 排除Swagger相关的接口，避免影响文档生成
         String className = returnType.getDeclaringClass().getName();
         return !className.contains("springdoc") && !className.contains("swagger");
     }
@@ -48,36 +52,34 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request, ServerHttpResponse response) {
-        // 如果已经是Packet类型，不再包装
         if (body instanceof Packet) {
             return body;
         }
 
-        // 获取PacketType
-        String packetTypeCode = getPacketTypeCode(returnType);
-        
-        // 如果是未知类型且响应体是失败的ApiResponse，尝试使用SYSTEM_ERROR
-        if (PacketType.UNKNOWN.getCode().equals(packetTypeCode) && body instanceof ApiResponse) {
-            ApiResponse<?> apiResponse = (ApiResponse<?>) body;
-            if (!apiResponse.isSuccess()) {
-                packetTypeCode = PacketType.SYSTEM_ERROR.getCode();
-            }
+        String requestId = (String) request.getHeaders().getFirst(REQUEST_ID_ATTRIBUTE);
+        String packetTypeCode = (String) request.getHeaders().getFirst(PACKET_TYPE_ATTRIBUTE);
+        Long timestamp = request.getHeaders().getFirst(TIMESTAMP_ATTRIBUTE) != null 
+            ? Long.parseLong(request.getHeaders().getFirst(TIMESTAMP_ATTRIBUTE)) 
+            : System.currentTimeMillis();
+        Long requestStartTime = request.getHeaders().getFirst(REQUEST_START_TIME_ATTRIBUTE) != null
+            ? Long.parseLong(request.getHeaders().getFirst(REQUEST_START_TIME_ATTRIBUTE))
+            : System.currentTimeMillis();
+
+        if (requestId == null) {
+            requestId = UUID.randomUUID().toString();
         }
 
-        // 构造Header
+        if (packetTypeCode == null) {
+            packetTypeCode = getPacketTypeCode(returnType);
+        }
+
         PacketHeader header = new PacketHeader();
-        header.setPacketId(UUID.randomUUID().toString());
+        header.setRequestId(requestId);
         header.setPacketType(packetTypeCode);
-        header.setDirection("RESPONSE");
-        header.setTimestamp(System.currentTimeMillis());
-        header.setVersion("1.0");
+        header.setTimestamp(timestamp);
 
-        // 构造Body
-        String action = request.getURI().getPath();
-        PacketBody<Object> packetBody = new PacketBody<>(action, body);
-        Packet<Object> packet = new Packet<>(header, packetBody);
+        Packet<Object> packet = new Packet<>(header, body);
 
-        // 处理String类型返回值
         if (body instanceof String) {
             try {
                 return objectMapper.writeValueAsString(packet);
@@ -100,7 +102,6 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
             if (apiPacketType != null) {
                 return apiPacketType.value().getCode();
             }
-            // 尝试从类上获取
             apiPacketType = m.getDeclaringClass().getAnnotation(ApiPacketType.class);
             if (apiPacketType != null) {
                 return apiPacketType.value().getCode();

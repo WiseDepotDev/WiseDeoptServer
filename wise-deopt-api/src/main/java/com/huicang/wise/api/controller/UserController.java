@@ -1,5 +1,17 @@
 package com.huicang.wise.api.controller;
 
+import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.application.common.DeleteWithCaptchaRequest;
+import com.huicang.wise.application.user.UserApplicationService;
+import com.huicang.wise.application.user.UserCreateRequest;
+import com.huicang.wise.application.user.UserDTO;
+import com.huicang.wise.application.user.UserPageDTO;
+import com.huicang.wise.application.user.UserPasswordChangeRequest;
+import com.huicang.wise.application.user.UserUpdateRequest;
+import com.huicang.wise.common.annotation.RequiresPermission;
+import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.protocol.ApiPacketType;
+import com.huicang.wise.common.protocol.PacketType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,21 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.huicang.wise.application.auth.AuthApplicationService;
-import com.huicang.wise.application.user.UserApplicationService;
-import com.huicang.wise.application.user.UserCreateRequest;
-import com.huicang.wise.application.user.UserDTO;
-import com.huicang.wise.application.user.UserPageDTO;
-import com.huicang.wise.application.user.UserPasswordChangeRequest;
-import com.huicang.wise.application.user.UserUpdateRequest;
-import com.huicang.wise.common.annotation.RequiresPermission;
-import com.huicang.wise.common.api.ApiResponse;
-import com.huicang.wise.common.protocol.ApiPacketType;
-import com.huicang.wise.common.protocol.PacketType;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 /**
  * 类功能描述：用户管理控制层
@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiParam;
  * @author xingchentye
  * @date 2026-01-22
  */
-@Api(tags = "用户管理接口")
+@Tag(name = "用户管理接口")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -46,7 +46,7 @@ public class UserController {
         this.authApplicationService = authApplicationService;
     }
 
-    @ApiOperation(value = "获取当前用户信息", notes = "获取当前登录用户信息。成功返回200；未登录或Token无效返回401；服务器异常返回500。")
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户信息。成功返回200；未登录或Token无效返回401；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_CURRENT)
     @GetMapping("/current")
     public ApiResponse<UserDTO> getCurrentUser(@RequestHeader("Authorization") String token) {
@@ -57,7 +57,7 @@ public class UserController {
         return ApiResponse.success(userApplicationService.getUserByUsername(username));
     }
 
-    @ApiOperation(value = "创建用户", notes = "创建用户。成功返回200；用户名已存在返回400；服务器异常返回500。")
+    @Operation(summary = "创建用户", description = "创建用户。成功返回200；用户名已存在返回400；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_CREATE)
     @RequiresPermission("user:create")
     @PostMapping
@@ -65,58 +65,88 @@ public class UserController {
         return ApiResponse.success(userApplicationService.createUser(request));
     }
 
-    @ApiOperation(value = "更新用户", notes = "更新用户信息。成功返回200；用户不存在返回404；服务器异常返回500。")
+    @Operation(summary = "更新用户", description = "更新用户信息。成功返回200；用户不存在返回404；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_UPDATE)
     @RequiresPermission("user:edit")
     @PutMapping("/{userId}")
     public ApiResponse<UserDTO> updateUser(
-            @ApiParam(value = "用户ID", required = true)
+            @Parameter(description = "用户ID", required = true)
             @PathVariable("userId") Long userId,
             @RequestBody UserUpdateRequest request) {
         request.setUserId(userId);
         return ApiResponse.success(userApplicationService.updateUser(request));
     }
 
-    @ApiOperation(value = "查询用户详情", notes = "根据ID查询用户详情。成功返回200；用户不存在返回404；服务器异常返回500。")
+    @Operation(summary = "查询用户详情", description = "根据ID查询用户详情。成功返回200；用户不存在返回404；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_DETAIL)
     @RequiresPermission("user:view")
     @GetMapping("/{userId}")
     public ApiResponse<UserDTO> getUser(
-            @ApiParam(value = "用户ID", required = true)
+            @Parameter(description = "用户ID", required = true)
             @PathVariable("userId") Long userId) {
         return ApiResponse.success(userApplicationService.getUser(userId));
     }
 
-    @ApiOperation(value = "查询用户列表", notes = "分页查询用户列表。成功返回200；服务器异常返回500。")
+    @Operation(summary = "查询用户列表", description = "分页查询用户列表。成功返回200；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_LIST)
     @RequiresPermission("user:view")
     @GetMapping
     public ApiResponse<UserPageDTO> listUsers(
-            @ApiParam(value = "页码", required = false)
+            @Parameter(description = "页码", required = false)
             @RequestParam(value = "page", required = false) Integer page,
-            @ApiParam(value = "每页数量", required = false)
+            @Parameter(description = "每页数量", required = false)
             @RequestParam(value = "size", required = false) Integer size) {
         return ApiResponse.success(userApplicationService.listUsers(page, size));
     }
 
-    @ApiOperation(value = "删除用户", notes = "根据ID删除用户。成功返回200；用户不存在返回404；服务器异常返回500。")
+    @Operation(summary = "删除用户", description = "根据ID删除用户。成功返回200；用户不存在返回404；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_DELETE)
     @RequiresPermission("user:delete")
     @DeleteMapping("/{userId}")
     public ApiResponse<Void> deleteUser(
-            @ApiParam(value = "用户ID", required = true)
+            @Parameter(description = "用户ID", required = true)
             @PathVariable("userId") Long userId) {
         userApplicationService.deleteUser(userId);
         return ApiResponse.success(null);
     }
 
-    @ApiOperation(value = "修改密码", notes = "修改用户登录密码。成功返回200；旧密码错误返回400；服务器异常返回500。")
+    @Operation(summary = "删除用户（带验证码）", description = "根据ID删除用户，需要验证码验证。成功返回200；用户不存在返回404；验证码错误返回400；服务器异常返回500。")
+    @ApiPacketType(PacketType.USER_DELETE)
+    @RequiresPermission("user:delete")
+    @PostMapping("/{userId}/delete-with-captcha")
+    public ApiResponse<Void> deleteUserWithCaptcha(
+            @Parameter(description = "用户ID", required = true)
+            @PathVariable("userId") Long userId,
+            @Parameter(description = "删除请求参数", required = true)
+            @RequestBody DeleteWithCaptchaRequest request) {
+        request.setId(userId);
+        userApplicationService.deleteUserWithCaptcha(request);
+        return ApiResponse.success(null);
+    }
+
+    @Operation(summary = "修改密码", description = "修改用户登录密码。成功返回200；旧密码错误返回400；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_CHANGE_PASSWORD)
     @PostMapping("/{userId}/password")
     public ApiResponse<Void> changePassword(
-            @ApiParam(value = "用户ID", required = true) @PathVariable("userId") Long userId,
+            @Parameter(description = "用户ID", required = true) @PathVariable("userId") Long userId,
             @RequestBody UserPasswordChangeRequest request) {
         userApplicationService.changePassword(userId, request);
         return ApiResponse.success(null);
     }
+
+    @Operation(summary = "修改当前用户密码", description = "修改当前登录用户的登录密码。成功返回200；旧密码错误返回400；服务器异常返回500。")
+    @ApiPacketType(PacketType.USER_CHANGE_PASSWORD)
+    @PostMapping("/current/password")
+    public ApiResponse<Void> changeCurrentUserPassword(
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserPasswordChangeRequest request) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        String username = authApplicationService.validateToken(token);
+        UserDTO user = userApplicationService.getUserByUsername(username);
+        userApplicationService.changePassword(user.getUserId(), request);
+        return ApiResponse.success(null);
+    }
 }
+

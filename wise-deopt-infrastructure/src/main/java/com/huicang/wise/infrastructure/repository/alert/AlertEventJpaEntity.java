@@ -22,23 +22,11 @@ public class AlertEventJpaEntity {
     @Column(name = "event_id")
     private Long eventId;
 
-    @Column(name = "alert_type")
-    private String alertType;
-
-    @Column(name = "alert_level")
-    private String alertLevel;
-
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "alert_time")
-    private LocalDateTime alertTime;
-
     @Column(name = "source_module")
     private String sourceModule;
 
-    @Column(name = "level")
-    private Integer level;
+    @Column(name = "level", columnDefinition = "tinyint unsigned")
+    private Short level;
 
     @Column(name = "title")
     private String title;
@@ -46,11 +34,14 @@ public class AlertEventJpaEntity {
     @Column(name = "message")
     private String message;
 
-    @Column(name = "status")
-    private Integer status;
+    @Column(name = "status", columnDefinition = "tinyint unsigned")
+    private Short status;
 
     @Column(name = "is_active")
     private Boolean isActive;
+
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
 
     @Column(name = "resolved_time")
     private LocalDateTime resolvedTime;
@@ -70,90 +61,8 @@ public class AlertEventJpaEntity {
         return eventId;
     }
 
-    /**
-     * 方法功能描述：设置告警事件ID
-     *
-     * @param eventId 告警事件ID
-     * @return 无
-     */
     public void setEventId(Long eventId) {
         this.eventId = eventId;
-    }
-
-    /**
-     * 方法功能描述：获取告警类型
-     *
-     * @return 告警类型
-     */
-    public String getAlertType() {
-        return alertType;
-    }
-
-    /**
-     * 方法功能描述：设置告警类型
-     *
-     * @param alertType 告警类型
-     * @return 无
-     */
-    public void setAlertType(String alertType) {
-        this.alertType = alertType;
-    }
-
-    /**
-     * 方法功能描述：获取告警级别
-     *
-     * @return 告警级别
-     */
-    public String getAlertLevel() {
-        return alertLevel;
-    }
-
-    /**
-     * 方法功能描述：设置告警级别
-     *
-     * @param alertLevel 告警级别
-     * @return 无
-     */
-    public void setAlertLevel(String alertLevel) {
-        this.alertLevel = alertLevel;
-    }
-
-    /**
-     * 方法功能描述：获取告警描述
-     *
-     * @return 告警描述
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * 方法功能描述：设置告警描述
-     *
-     * @param description 告警描述
-     * @return 无
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /**
-     * 方法功能描述：获取告警时间
-     *
-     * @return 告警时间
-     */
-    public LocalDateTime getAlertTime() {
-        return alertTime;
-    }
-
-    /**
-     * 方法功能描述：设置告警时间
-     *
-     * @param alertTime 告警时间
-     * @return 无
-     */
-    public void setAlertTime(LocalDateTime alertTime) {
-        this.alertTime = alertTime;
     }
 
     public String getSourceModule() {
@@ -164,11 +73,11 @@ public class AlertEventJpaEntity {
         this.sourceModule = sourceModule;
     }
 
-    public Integer getLevel() {
+    public Short getLevel() {
         return level;
     }
 
-    public void setLevel(Integer level) {
+    public void setLevel(Short level) {
         this.level = level;
     }
 
@@ -188,11 +97,11 @@ public class AlertEventJpaEntity {
         this.message = message;
     }
 
-    public Integer getStatus() {
+    public Short getStatus() {
         return status;
     }
 
-    public void setStatus(Integer status) {
+    public void setStatus(Short status) {
         this.status = status;
     }
 
@@ -202,6 +111,14 @@ public class AlertEventJpaEntity {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
     }
 
     public LocalDateTime getResolvedTime() {
@@ -220,22 +137,11 @@ public class AlertEventJpaEntity {
         this.resolvedBy = resolvedBy;
     }
 
-    @Column(name = "snapshot_url")
-    private String snapshotUrl;
-
     public String getExtendedData() {
         return extendedData;
     }
 
     public void setExtendedData(String extendedData) {
         this.extendedData = extendedData;
-    }
-
-    public String getSnapshotUrl() {
-        return snapshotUrl;
-    }
-
-    public void setSnapshotUrl(String snapshotUrl) {
-        this.snapshotUrl = snapshotUrl;
     }
 }

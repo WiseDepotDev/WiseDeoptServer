@@ -1,92 +1,176 @@
 package com.huicang.wise.domain.oss;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * 类功能描述：MinIO文件元数据实体
+ * MinIO文件元数据实体
+ * 对应minio_file表，存储文件元数据信息
  *
- * @author xingchentye
- * @date 2026-01-19
- * @modified xingchentye 2026-01-19 定义MinIO文件字段
+ * @author WiseDepot
+ * @version 0.0.23
+ * @since 2026-02-27
  */
+@Entity
+@Table(name = "minio_file", indexes = {
+    @Index(name = "uk_bucket_path", columnList = "bucket_name,file_path", unique = true),
+    @Index(name = "idx_upload_time", columnList = "upload_time"),
+    @Index(name = "idx_upload_by", columnList = "upload_by")
+})
 public class MinioFile {
 
     /**
-     * 方法功能描述：文件主键ID
+     * 文件主键ID
      */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "file_id")
     private Long fileId;
 
     /**
-     * 方法功能描述：Bucket名称
+     * 存储桶名称
      */
-    private String bucket;
+    @NotBlank(message = "存储桶名称不能为空")
+    @Size(max = 64, message = "存储桶名称长度不能超过64个字符")
+    @Column(name = "bucket_name", nullable = false, length = 64)
+    private String bucketName;
 
     /**
-     * 方法功能描述：对象Key
+     * 文件路径
      */
-    private String objectKey;
+    @NotBlank(message = "文件路径不能为空")
+    @Size(max = 255, message = "文件路径长度不能超过255个字符")
+    @Column(name = "file_path", nullable = false, length = 255)
+    private String filePath;
 
     /**
-     * 方法功能描述：文件大小
+     * 文件大小（字节）
      */
-    private Long size;
+    @NotNull(message = "文件大小不能为空")
+    @Column(name = "file_size", nullable = false)
+    private Long fileSize;
 
     /**
-     * 方法功能描述：内容类型
+     * 上传时间
      */
-    private String contentType;
+    @Column(name = "upload_time", nullable = false, updatable = false)
+    private LocalDateTime uploadTime;
 
     /**
-     * 方法功能描述：创建时间
+     * 上传者ID
      */
-    private LocalDateTime createdAt;
+    @NotNull(message = "上传者ID不能为空")
+    @Column(name = "upload_by", nullable = false)
+    private Long uploadBy;
 
+    /**
+     * 获取文件主键ID
+     *
+     * @return 文件主键ID
+     */
     public Long getFileId() {
         return fileId;
     }
 
+    /**
+     * 设置文件主键ID
+     *
+     * @param fileId 文件主键ID
+     */
     public void setFileId(Long fileId) {
         this.fileId = fileId;
     }
 
-    public String getBucket() {
-        return bucket;
+    /**
+     * 获取存储桶名称
+     *
+     * @return 存储桶名称
+     */
+    public String getBucketName() {
+        return bucketName;
     }
 
-    public void setBucket(String bucket) {
-        this.bucket = bucket;
+    /**
+     * 设置存储桶名称
+     *
+     * @param bucketName 存储桶名称
+     */
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
     }
 
-    public String getObjectKey() {
-        return objectKey;
+    /**
+     * 获取文件路径
+     *
+     * @return 文件路径
+     */
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setObjectKey(String objectKey) {
-        this.objectKey = objectKey;
+    /**
+     * 设置文件路径
+     *
+     * @param filePath 文件路径
+     */
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
-    public Long getSize() {
-        return size;
+    /**
+     * 获取文件大小
+     *
+     * @return 文件大小
+     */
+    public Long getFileSize() {
+        return fileSize;
     }
 
-    public void setSize(Long size) {
-        this.size = size;
+    /**
+     * 设置文件大小
+     *
+     * @param fileSize 文件大小
+     */
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
     }
 
-    public String getContentType() {
-        return contentType;
+    /**
+     * 获取上传时间
+     *
+     * @return 上传时间
+     */
+    public LocalDateTime getUploadTime() {
+        return uploadTime;
     }
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
+    /**
+     * 设置上传时间
+     *
+     * @param uploadTime 上传时间
+     */
+    public void setUploadTime(LocalDateTime uploadTime) {
+        this.uploadTime = uploadTime;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    /**
+     * 获取上传者ID
+     *
+     * @return 上传者ID
+     */
+    public Long getUploadBy() {
+        return uploadBy;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    /**
+     * 设置上传者ID
+     *
+     * @param uploadBy 上传者ID
+     */
+    public void setUploadBy(Long uploadBy) {
+        this.uploadBy = uploadBy;
     }
 }
-

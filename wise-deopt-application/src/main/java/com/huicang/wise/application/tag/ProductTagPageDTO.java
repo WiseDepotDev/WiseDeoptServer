@@ -2,6 +2,12 @@ package com.huicang.wise.application.tag;
 
 import java.util.List;
 
+/**
+ * 类功能描述：产品标签分页数据传输对象
+ *
+ * @author xingchentye
+ * @date 2026-02-27
+ */
 public class ProductTagPageDTO {
 
     private Long total;
@@ -24,4 +30,3 @@ public class ProductTagPageDTO {
         this.rows = rows;
     }
 }
-
