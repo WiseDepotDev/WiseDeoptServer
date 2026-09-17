@@ -1,14 +1,30 @@
 package com.huicang.wise.common.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 统一API响应结构
+ * 统一 API 响应结构（信封 payload 部分）。
+ *
+ * <p>与 {@link com.huicang.wise.common.protocol.Packet} 配合，构成对外统一报文：
+ * <pre>
+ * {
+ *   "header":  { "request_id": "...", "packet_type": "...", "timestamp": 0 },
+ *   "payload": { "code": "RES-0000", "message": "处理成功", "data": {}, "errorCode": null }
+ * }
+ * </pre>
+ *
+ * <p>契约要点（STD-CONTRACT-01）：
+ * <ul>
+ *   <li>{@code request_id} 由 header 唯一承载，本类不再提供 requestId 字段，避免同一语义两处存在；</li>
+ *   <li>{@code code} 为业务码字符串，成功固定 {@code RES-0000}，业务成败只看该字段；</li>
+ *   <li>{@code errorCode} 仅在失败时出现，值与《后端异常码对照表》一致；失败工厂方法统一写入该字段。</li>
+ * </ul>
  *
  * @author WiseDepot
- * @version 0.0.29
+ * @version 0.0.30
  * @since 2026-02-27
  */
 public class ApiResponse<T> implements Serializable {
@@ -32,18 +48,13 @@ public class ApiResponse<T> implements Serializable {
     private T data;
 
     /**
-     * 请求ID
-     */
-    private String requestId;
-
-    /**
-     * HTTP状态码
+     * HTTP 状态码（不参与 JSON 序列化，仅用于设置响应状态）
      */
     @JsonIgnore
     private int httpStatus;
 
     /**
-     * 错误码(异常时)
+     * 错误码（仅失败时出现，取自《后端异常码对照表》）
      */
     private String errorCode;
 
@@ -59,19 +70,20 @@ public class ApiResponse<T> implements Serializable {
      * @param code      业务状态码
      * @param message   提示信息
      * @param data      数据内容
-     * @param requestId 请求ID
+     * @param errorCode 错误码（成功时为 null）
      */
-    public ApiResponse(String code, String message, T data, String requestId) {
+    public ApiResponse(String code, String message, T data, String errorCode) {
         this.code = code;
         this.message = message;
         this.data = data;
-        this.requestId = requestId;
+        this.errorCode = errorCode;
     }
 
     /**
-     * 创建成功响应
+     * 创建成功响应。
      *
      * @param data 数据内容
+     * @param <T>  数据类型
      * @return 成功响应对象
      */
     public static <T> ApiResponse<T> success(T data) {
@@ -79,19 +91,9 @@ public class ApiResponse<T> implements Serializable {
     }
 
     /**
-     * 创建成功响应（带请求ID）
+     * 创建无数据成功响应。
      *
-     * @param data      数据内容
-     * @param requestId 请求ID
-     * @return 成功响应对象
-     */
-    public static <T> ApiResponse<T> success(T data, String requestId) {
-        return new ApiResponse<>(ErrorCode.SUCCESS.getCode(), ErrorCode.SUCCESS.getMessage(), data, requestId);
-    }
-
-    /**
-     * 创建无数据成功响应
-     *
+     * @param <T> 数据类型
      * @return 成功响应对象
      */
     public static <T> ApiResponse<T> success() {
@@ -99,102 +101,51 @@ public class ApiResponse<T> implements Serializable {
     }
 
     /**
-     * 创建无数据成功响应（带请求ID）
-     *
-     * @param requestId 请求ID
-     * @return 成功响应对象
-     */
-    public static <T> ApiResponse<T> success(String requestId) {
-        return new ApiResponse<>(ErrorCode.SUCCESS.getCode(), ErrorCode.SUCCESS.getMessage(), null, requestId);
-    }
-
-    /**
-     * 根据错误码创建失败响应
+     * 根据错误码创建失败响应。
      *
      * @param errorCode 错误码枚举
+     * @param <T>       数据类型
      * @return 失败响应对象
      */
     public static <T> ApiResponse<T> failure(ErrorCode errorCode) {
-        return new ApiResponse<>(errorCode.getCode(), errorCode.getMessage(), null, null);
+        return failure(errorCode, errorCode.getMessage());
     }
 
     /**
-     * 根据错误码和自定义消息创建失败响应
+     * 根据错误码与自定义消息创建失败响应。
      *
      * @param errorCode 错误码枚举
      * @param message   自定义错误信息
+     * @param <T>       数据类型
      * @return 失败响应对象
      */
     public static <T> ApiResponse<T> failure(ErrorCode errorCode, String message) {
-        return new ApiResponse<>(errorCode.getCode(), message, null, null);
-    }
-
-    /**
-     * 根据错误码和自定义消息创建失败响应（带请求ID）
-     *
-     * @param errorCode 错误码枚举
-     * @param message   自定义错误信息
-     * @param requestId 请求ID
-     * @return 失败响应对象
-     */
-    public static <T> ApiResponse<T> failure(ErrorCode errorCode, String message, String requestId) {
-        ApiResponse<T> response = new ApiResponse<>(errorCode.getCode(), message, null, requestId);
-        response.setErrorCode(errorCode.getCode());
+        ApiResponse<T> response = new ApiResponse<>(errorCode.getCode(), message, null, errorCode.getCode());
+        response.setHttpStatus(errorCode.getHttpStatus());
         return response;
     }
 
     /**
-     * 根据错误码创建失败响应（带错误码字段）
+     * 根据错误码创建失败响应（语义与 {@link #failure(ErrorCode)} 一致，保留旧方法名兼容）。
      *
      * @param errorCode 错误码枚举
+     * @param <T>       数据类型
      * @return 失败响应对象
      */
     public static <T> ApiResponse<T> error(ErrorCode errorCode) {
-        ApiResponse<T> response = new ApiResponse<>(errorCode.getCode(), errorCode.getMessage(), null, null);
-        response.setErrorCode(errorCode.getCode());
-        return response;
+        return failure(errorCode);
     }
 
     /**
-     * 根据错误码和自定义消息创建失败响应（带错误码字段）
+     * 根据错误码与自定义消息创建失败响应（语义与 {@link #failure(ErrorCode, String)} 一致）。
      *
      * @param errorCode 错误码枚举
      * @param message   自定义错误信息
+     * @param <T>       数据类型
      * @return 失败响应对象
      */
     public static <T> ApiResponse<T> error(ErrorCode errorCode, String message) {
-        ApiResponse<T> response = new ApiResponse<>(errorCode.getCode(), message, null, null);
-        response.setErrorCode(errorCode.getCode());
-        return response;
-    }
-
-    /**
-     * 根据错误码和自定义消息创建失败响应（带错误码字段和请求ID）
-     *
-     * @param errorCode 错误码枚举
-     * @param message   自定义错误信息
-     * @param requestId 请求ID
-     * @return 失败响应对象
-     */
-    public static <T> ApiResponse<T> error(ErrorCode errorCode, String message, String requestId) {
-        ApiResponse<T> response = new ApiResponse<>(errorCode.getCode(), message, null, requestId);
-        response.setErrorCode(errorCode.getCode());
-        return response;
-    }
-
-    /**
-     * 根据HTTP状态码和自定义消息创建失败响应
-     *
-     * @param httpStatus HTTP状态码
-     * @param message   自定义错误信息
-     * @return 失败响应对象
-     */
-    public static <T> ApiResponse<T> error(int httpStatus, String message) {
-        String code = String.valueOf(httpStatus);
-        ApiResponse<T> response = new ApiResponse<>(code, message, null, null);
-        response.setErrorCode(code);
-        response.setHttpStatus(httpStatus);
-        return response;
+        return failure(errorCode, message);
     }
 
     public String getCode() {
@@ -221,14 +172,6 @@ public class ApiResponse<T> implements Serializable {
         this.data = data;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
     public int getHttpStatus() {
         return httpStatus;
     }
@@ -246,9 +189,9 @@ public class ApiResponse<T> implements Serializable {
     }
 
     /**
-     * 判断是否成功
+     * 判断是否成功。
      *
-     * @return true表示成功
+     * @return true 表示成功
      */
     @JsonIgnore
     public boolean isSuccess() {

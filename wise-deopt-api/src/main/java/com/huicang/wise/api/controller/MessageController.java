@@ -3,6 +3,7 @@ package com.huicang.wise.api.controller;
 import com.huicang.wise.application.message.MessageApplicationService;
 import com.huicang.wise.application.message.MessageCreateRequest;
 import com.huicang.wise.application.message.MessageQueryRequest;
+import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.domain.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class MessageController {
     public ApiResponse<Message> getMessage(@PathVariable String messageId) {
         Message message = messageApplicationService.getMessageById(messageId);
         if (message == null) {
-            return ApiResponse.error(404, "消息不存在");
+            return ApiResponse.failure(ErrorCode.NOT_FOUND, "消息不存在");
         }
         return ApiResponse.success(message);
     }
@@ -48,7 +49,7 @@ public class MessageController {
     public ApiResponse<Message> markAsRead(@PathVariable String messageId) {
         Message message = messageApplicationService.markAsRead(messageId);
         if (message == null) {
-            return ApiResponse.error(404, "消息不存在");
+            return ApiResponse.failure(ErrorCode.NOT_FOUND, "消息不存在");
         }
         return ApiResponse.success(message);
     }

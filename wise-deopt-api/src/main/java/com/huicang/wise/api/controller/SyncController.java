@@ -3,6 +3,7 @@ package com.huicang.wise.api.controller;
 import com.huicang.wise.application.sync.SyncApplicationService;
 import com.huicang.wise.application.sync.SyncRequest;
 import com.huicang.wise.application.sync.SyncResponse;
+import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.api.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +24,7 @@ public class SyncController {
         if (response.isSuccess()) {
             return ApiResponse.success(response);
         } else {
-            return ApiResponse.error(500, response.getMessage());
+            return ApiResponse.failure(ErrorCode.SYSTEM_ERROR, response.getMessage());
         }
     }
 }

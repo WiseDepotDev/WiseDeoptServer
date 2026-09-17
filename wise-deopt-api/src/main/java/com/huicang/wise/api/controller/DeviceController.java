@@ -5,6 +5,7 @@ import com.huicang.wise.application.device.DeviceCreateRequest;
 import com.huicang.wise.application.device.DeviceHeartbeatRequest;
 import com.huicang.wise.application.device.DeviceDTO;
 import com.huicang.wise.application.device.DeviceUpdateRequest;
+import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.protocol.ApiPacketType;
 import com.huicang.wise.common.protocol.PacketType;
@@ -122,7 +123,7 @@ public class DeviceController {
         }
 
         if (deviceCode == null) {
-            return ApiResponse.error(400, "Device code is required");
+            return ApiResponse.failure(ErrorCode.PARAM_ERROR, "Device code is required");
         }
 
         deviceApplicationService.receiveHeartbeat(deviceCode);
