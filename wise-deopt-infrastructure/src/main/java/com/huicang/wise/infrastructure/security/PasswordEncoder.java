@@ -1,5 +1,6 @@
 package com.huicang.wise.infrastructure.security;
 
+import com.huicang.wise.domain.auth.port.PasswordHasher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
  * @since 2026-02-27
  */
 @Component
-public class PasswordEncoder {
+public class PasswordEncoder implements PasswordHasher {
 
     private final BCryptPasswordEncoder encoder;
 

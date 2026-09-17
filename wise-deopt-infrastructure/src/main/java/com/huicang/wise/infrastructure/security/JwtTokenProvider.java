@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+
+import com.huicang.wise.domain.auth.port.TokenVerifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +19,7 @@ import java.util.Map;
 
 @Component
 @Slf4j
-public class JwtTokenProvider {
+public class JwtTokenProvider implements TokenVerifier {
 
     @Value("${jwt.secret:wise-depot-secret-key-for-jwt-token-generation-2024}")
     private String jwtSecret;

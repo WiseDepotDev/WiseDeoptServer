@@ -24,7 +24,7 @@ import com.huicang.wise.domain.inventory.Product;
 import com.huicang.wise.domain.warehouse.Warehouse;
 import com.huicang.wise.domain.tag.ProductTag;
 import com.huicang.wise.domain.alert.AlertEvent;
-import com.huicang.wise.infrastructure.security.PasswordEncoder;
+import com.huicang.wise.domain.auth.port.PasswordHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,7 +70,7 @@ public class DataInitializer {
                                       PermissionRepository permissionRepository,
                                       RolePermissionRepository rolePermissionRepository,
                                       AlertEventRepository alertEventRepository,
-                                      PasswordEncoder passwordEncoder) {
+                                      PasswordHasher passwordHasher) {
         return args -> {
             logger.info("开始检查并初始化系统基础数据...");
 
@@ -97,7 +97,7 @@ public class DataInitializer {
                 // 生成随机盐值
                 String salt = UUID.randomUUID().toString().replace("-", "");
                 security.setSalt(salt);
-                security.setPasswordHash(passwordEncoder.encode(adminPassword));
+                security.setPasswordHash(passwordHasher.encode(adminPassword));
                 security.setCreateTime(LocalDateTime.now());
                 security.setUpdateTime(LocalDateTime.now());
                 userSecurityRepository.save(security);
@@ -123,7 +123,7 @@ public class DataInitializer {
                     security.setSalt(salt);
                     security.setCreateTime(LocalDateTime.now());
                 }
-                security.setPasswordHash(passwordEncoder.encode(adminPassword));
+                security.setPasswordHash(passwordHasher.encode(adminPassword));
                 security.setUpdateTime(LocalDateTime.now());
                 userSecurityRepository.save(security);
                 logger.info("管理员密码已重置");
@@ -176,7 +176,7 @@ public class DataInitializer {
                 operatorSecurity.setUserId(2L);
                 String operatorSalt = UUID.randomUUID().toString().replace("-", "");
                 operatorSecurity.setSalt(operatorSalt);
-                operatorSecurity.setPasswordHash(passwordEncoder.encode(operatorPassword));
+                operatorSecurity.setPasswordHash(passwordHasher.encode(operatorPassword));
                 operatorSecurity.setCreateTime(LocalDateTime.now());
                 operatorSecurity.setUpdateTime(LocalDateTime.now());
                 userSecurityRepository.save(operatorSecurity);

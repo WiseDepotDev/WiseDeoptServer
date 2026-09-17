@@ -1,6 +1,6 @@
 package com.huicang.wise.api.security;
 
-import com.huicang.wise.infrastructure.security.JwtTokenProvider;
+import com.huicang.wise.domain.auth.port.TokenVerifier;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,11 +22,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenVerifier tokenVerifier;
 
     public JwtAuthenticationFilter(
-            JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
+            TokenVerifier tokenVerifier) {
+        this.tokenVerifier = tokenVerifier;
     }
 
     @Override
@@ -37,10 +37,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = extractToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        if (token != null && tokenVerifier.validateToken(token)) {
             try {
-                String username = jwtTokenProvider.getUsernameFromToken(token);
-                Long userId = jwtTokenProvider.getUserIdFromToken(token);
+                String username = tokenVerifier.getUsernameFromToken(token);
+                Long userId = tokenVerifier.getUserIdFromToken(token);
 
                 log.debug("JWT认证成功 - username: {}, userId: {}", username, userId);
 
@@ -79,7 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Long getUserIdFromToken(String token) {
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        return jwtTokenProvider.getUserIdFromToken(token);
+        String username = tokenVerifier.getUsernameFromToken(token);
+        return tokenVerifier.getUserIdFromToken(token);
     }
 }
