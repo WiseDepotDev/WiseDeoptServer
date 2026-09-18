@@ -36,9 +36,11 @@ spring:
         show-sql: false
     data:
         redis:
-            host: ${WISE_REDIS_HOST:localhost}
-            port: ${WISE_REDIS_PORT:6379}
-            password: ${WISE_REDIS_PASSWORD}
+            # 单一来源：wise.redis.*（RedisConfig 用 RedisProperties 构建连接工厂），
+            # spring.data.redis.* 由它派生，避免两处配置漂移。
+            host: ${wise.redis.host}
+            port: ${wise.redis.port}
+            password: ${wise.redis.password}
             timeout: 5000
             lettuce:
                 pool:
@@ -111,6 +113,19 @@ rfid:
 
 # 登录失败节流与账户锁定（计数存 Redis，多实例一致）
 wise:
+    # Redis 连接：RedisConfig 通过 RedisProperties(prefix=wise.redis) 构建连接工厂，
+    # 因此这里是 Redis 配置的**唯一来源**，spring.data.redis.* 由本块派生。
+    # 口令无默认值：未注入 WISE_REDIS_PASSWORD 时启动即失败。
+    redis:
+        host: ${WISE_REDIS_HOST:localhost}
+        port: ${WISE_REDIS_PORT:6379}
+        password: ${WISE_REDIS_PASSWORD}
+        database: ${WISE_REDIS_DATABASE:0}
+        timeout: 5
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1
     login-attempt:
         # 同一账号连续失败多少次后锁定
         max-failures: 5

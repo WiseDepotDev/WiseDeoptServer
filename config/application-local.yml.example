@@ -26,6 +26,7 @@ spring:
         password: DB_PASSWORD
     data:
         redis:
+            # 实际生效的是下方 wise.redis.*（RedisConfig 的唯一来源）
             host: REDIS_HOST
             port: 6379
             password: REDIS_PASSWORD
@@ -47,6 +48,14 @@ api:
     # 请求签名 HMAC-SHA256 密钥，长度必须 ≥ 32 字节
     signature:
         secret: API_SIGNATURE_SECRET_AT_LEAST_32_BYTES
+
+# Redis 配置的唯一来源（RedisConfig 通过 wise.redis.* 构建连接工厂；
+# spring.data.redis.* 由 application.yml 派生自本块，无需在此重复）
+wise:
+    redis:
+        host: REDIS_HOST
+        port: 6379
+        password: REDIS_PASSWORD
 
 mqtt:
     broker:
