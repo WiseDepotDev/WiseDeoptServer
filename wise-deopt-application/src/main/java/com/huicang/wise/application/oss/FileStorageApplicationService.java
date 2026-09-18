@@ -3,7 +3,7 @@ package com.huicang.wise.application.oss;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.oss.MinioFile;
-import com.huicang.wise.domain.repository.oss.MinioFileRepository;
+import com.huicang.wise.infrastructure.persistence.repository.oss.MinioFileRepository;
 import io.minio.*;
 import io.minio.http.Method;
 import java.time.LocalDateTime;

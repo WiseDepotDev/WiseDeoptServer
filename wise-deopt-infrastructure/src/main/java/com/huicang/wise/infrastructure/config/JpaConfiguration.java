@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * infrastructure 层；原先放在 api 层会让入口层直接持有仓储与领域实体的扫描知识， 违反 STD-ARCH-02「依赖只能由外层指向内层」。
  *
  * <p>**扫描范围刻意收窄（2026-02-27，P2-05 准备）**：只托管 {@code com.huicang.wise.domain}（实体）与 {@code
- * com.huicang.wise.domain.repository}（仓储）。
+ * com.huicang.wise.infrastructure.persistence.repository}（仓储）。
  *
  * <p>不再包含 {@code com.huicang.wise.infrastructure.repository}。该包内有上一轮 P2-05「先加 PO」留下的 27 个 {@code
  * XxxJpaEntity} 与 5 个仓储，实测在全部模块中**零外部引用**（仅包内自引用）， 但它们的 {@code @Entity} 与 domain 实体映射了**同一批 26
@@ -26,5 +26,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Configuration
 @EntityScan(basePackages = {"com.huicang.wise.domain"})
-@EnableJpaRepositories(basePackages = {"com.huicang.wise.domain.repository"})
+@EnableJpaRepositories(basePackages = {"com.huicang.wise.infrastructure.persistence.repository"})
 public class JpaConfiguration {}

@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.huicang.wise.domain.inventory.Inventory;
 import com.huicang.wise.domain.inventory.Product;
-import com.huicang.wise.domain.repository.inventory.InventoryRepository;
-import com.huicang.wise.domain.repository.inventory.ProductRepository;
-import com.huicang.wise.domain.repository.tag.TagRepository;
-import com.huicang.wise.domain.repository.user.UserRepository;
 import com.huicang.wise.domain.tag.ProductTag;
 import com.huicang.wise.domain.user.UserCore;
+import com.huicang.wise.infrastructure.persistence.repository.inventory.InventoryRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inventory.ProductRepository;
+import com.huicang.wise.infrastructure.persistence.repository.tag.TagRepository;
+import com.huicang.wise.infrastructure.persistence.repository.user.UserRepository;
 import java.util.List;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

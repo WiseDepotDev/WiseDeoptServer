@@ -1,6 +1,6 @@
 package com.huicang.wise.infrastructure.rfid;
 
-import com.huicang.wise.domain.repository.device.DeviceRepository;
+import com.huicang.wise.infrastructure.persistence.repository.device.DeviceRepository;
 import jakarta.annotation.PreDestroy;
 import java.io.BufferedReader;
 import java.io.IOException;

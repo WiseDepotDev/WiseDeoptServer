@@ -3,7 +3,7 @@ package com.huicang.wise.application.alert;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
-import com.huicang.wise.domain.repository.alert.AlertRepository;
+import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;

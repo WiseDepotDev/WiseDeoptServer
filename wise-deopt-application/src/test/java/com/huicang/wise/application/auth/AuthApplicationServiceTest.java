@@ -7,10 +7,10 @@ import static org.mockito.Mockito.*;
 
 import com.huicang.wise.application.captcha.CaptchaApplicationService;
 import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.repository.user.NfcBadgeRepository;
-import com.huicang.wise.domain.repository.user.UserCoreRepository;
 import com.huicang.wise.domain.user.NfcBadge;
 import com.huicang.wise.domain.user.UserCore;
+import com.huicang.wise.infrastructure.persistence.repository.user.NfcBadgeRepository;
+import com.huicang.wise.infrastructure.persistence.repository.user.UserCoreRepository;
 import com.huicang.wise.infrastructure.security.JwtTokenProvider;
 import com.huicang.wise.infrastructure.security.LoginAttemptGuard;
 import com.huicang.wise.infrastructure.security.PasswordEncoder;

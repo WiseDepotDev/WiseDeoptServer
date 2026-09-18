@@ -1,17 +1,16 @@
 package com.huicang.wise.application.warehouse;
 
-import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.warehouse.Warehouse;
+import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.common.api.ErrorCode;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 仓库应用服务
@@ -38,9 +37,7 @@ public class WarehouseApplicationService {
      */
     public List<WarehouseDTO> listWarehouses(String keyword) {
         List<Warehouse> warehouses = warehouseRepository.findByKeyword(keyword);
-        return warehouses.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        return warehouses.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     /**
@@ -58,7 +55,7 @@ public class WarehouseApplicationService {
         warehouse.setAddress(request.getAddress());
         warehouse.setCreateTime(LocalDateTime.now());
         warehouse.setUpdateTime(LocalDateTime.now());
-        
+
         Warehouse savedWarehouse = warehouseRepository.save(warehouse);
         return toDTO(savedWarehouse);
     }
@@ -71,8 +68,14 @@ public class WarehouseApplicationService {
      * @return 仓库DTO
      */
     public WarehouseDTO updateWarehouse(Long id, WarehouseUpdateRequest request) {
-        Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Warehouse not found with id: " + id));
+        Warehouse warehouse =
+                warehouseRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new BusinessException(
+                                                ErrorCode.NOT_FOUND,
+                                                "Warehouse not found with id: " + id));
 
         if (request.getWarehouseName() != null) {
             warehouse.setWarehouseName(request.getWarehouseName());
@@ -112,8 +115,14 @@ public class WarehouseApplicationService {
      */
     @Cacheable(prefix = "warehouse", key = "#id", timeout = 3600)
     public WarehouseDTO getWarehouse(Long id) {
-        Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Warehouse not found with id: " + id));
+        Warehouse warehouse =
+                warehouseRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new BusinessException(
+                                                ErrorCode.NOT_FOUND,
+                                                "Warehouse not found with id: " + id));
         return toDTO(warehouse);
     }
 

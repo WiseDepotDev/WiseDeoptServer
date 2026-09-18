@@ -105,26 +105,25 @@ class ArchitectureTest {
     /**
      * 入口层不得直接访问仓储（必须经应用服务）。
      *
-     * <p>已知存量债务以「显式例外 + 任务号」记录，新代码不得再引入：
+     * <p>**本规则现已无例外**（2026-02-27）：
      *
      * <ul>
-     *   <li>{@code DataInitializer}：启动期数据播种，直接使用 12 个仓储（P2-04b 迁移）。
+     *   <li>原例外 {@code JpaConfiguration} 已于 P2-10 迁至 {@code
+     *       com.huicang.wise.infrastructure.config}；
+     *   <li>原例外 {@code DataInitializer} 已迁至 {@code com.huicang.wise.infrastructure.bootstrap}
+     *       （P2-04b 完成）；仓储接口本身也已从 {@code domain.repository} 迁至 {@code
+     *       infrastructure.persistence.repository}（P2-05 方案 B）。
      * </ul>
-     *
-     * <p>原例外 {@code JpaConfiguration} 已于 P2-10 迁至 {@code
-     * com.huicang.wise.infrastructure.config}，例外同步移除。
      */
     @ArchTest
     static final ArchRule api_不应直接访问仓储 =
             noClasses()
                     .that()
                     .resideInAPackage("com.huicang.wise.api..")
-                    .and()
-                    .haveSimpleNameNotContaining("DataInitializer")
                     .should()
                     .dependOnClassesThat()
-                    .resideInAPackage("com.huicang.wise.domain.repository..")
-                    .because("入口层只做参数适配与转发，持久化访问必须经应用服务（STD-ARCH-02；存量债务见 P2-04b）");
+                    .resideInAPackage("com.huicang.wise.infrastructure.persistence.repository..")
+                    .because("入口层只做参数适配与转发，持久化访问必须经应用服务（STD-ARCH-02）");
 
     /**
      * 业务代码不得直接构造 {@link RuntimeException}（STD-ERR-01）。
@@ -151,16 +150,14 @@ class ArchitectureTest {
      * <p>领域实体（{@code @Entity}）不得出现在控制器签名或实现中，对外必须使用 DTO； 该规则以「是否标注 JPA
      * {@code @Entity}」作为实体的判定依据，避免误伤领域枚举与值对象。
      *
-     * <p>已知存量债务以显式例外记录：{@code DataInitializer}（启动期数据播种需直接构造实体， 共 146 处调用点，随 P2-04b 迁移至
-     * infrastructure 或改为应用服务调用）。
+     * <p>**本规则现已无例外**（2026-02-27）：原唯一的存量债务 {@code DataInitializer}（启动期数据播种， 直接构造实体共 146 处）已从 api 迁至
+     * {@code com.huicang.wise.infrastructure.bootstrap}，P2-04b 完成。
      */
     @ArchTest
     static final ArchRule api_不应依赖领域实体 =
             noClasses()
                     .that()
                     .resideInAPackage("com.huicang.wise.api..")
-                    .and()
-                    .haveSimpleNameNotContaining("DataInitializer")
                     .should()
                     .dependOnClassesThat()
                     .areAnnotatedWith(jakarta.persistence.Entity.class)
@@ -228,9 +225,26 @@ class ArchitectureTest {
      * <p>当前存量违规：`domain` 有 35 个 `@Entity`、36 处 `jakarta.persistence` 与 142 处 `org.springframework`
      * 依赖，需按 P2-05「domain 去 ORM（两步走）」迁移后再启用本规则。 保留规则本身是为了记录约束与迁移目标。
      */
+    /**
+     * 领域层不得依赖 Spring 技术框架（STD-ARCH-05）。
+     *
+     * <p>P2-05 方案 B 的落地门禁：35 个 Spring Data 仓储接口（`@Repository` / `JpaRepository` / `@Query` /
+     * `Pageable`）已从 `domain.repository` 迁至 `infrastructure.persistence.repository`，实测使 domain 的
+     * `org.springframework` 依赖由 **140 处降为 0 处**。本规则把该结果固定下来，防止仓储或其它 Spring 类型 再被放回领域层。
+     */
+    @ArchTest
+    static final ArchRule domain_不应依赖_spring =
+            noClasses()
+                    .that()
+                    .resideInAPackage("com.huicang.wise.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage("org.springframework..", "org.springframework.boot..")
+                    .because("领域层必须与框架解耦，技术实现放 infrastructure（STD-ARCH-05）");
+
     @Test
-    @Disabled("存量违规待 P2-05（domain 去 ORM）完成后启用；当前 domain 仍有 35 个 @Entity / 36 处 JPA import")
-    void domain_不应依赖_orm_与技术框架() {
+    @Disabled("存量违规待 P2-05 方案 A 完成后启用；当前 domain 仍有 35 个 @Entity / 36 处 jakarta.persistence import")
+    void domain_不应依赖_orm() {
         noClasses()
                 .that()
                 .resideInAPackage("com.huicang.wise.domain..")

@@ -13,8 +13,8 @@ import static org.mockito.Mockito.when;
 
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.domain.warehouse.Warehouse;
+import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

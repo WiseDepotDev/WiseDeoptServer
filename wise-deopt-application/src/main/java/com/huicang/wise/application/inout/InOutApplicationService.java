@@ -7,12 +7,12 @@ import com.huicang.wise.domain.inout.StockOrderDetail;
 import com.huicang.wise.domain.inout.StockOrderStatus;
 import com.huicang.wise.domain.inout.StockOrderType;
 import com.huicang.wise.domain.inventory.Inventory;
-import com.huicang.wise.domain.repository.inout.StockOrderDetailRepository;
-import com.huicang.wise.domain.repository.inout.StockOrderRepository;
-import com.huicang.wise.domain.repository.inventory.InventoryRepository;
-import com.huicang.wise.domain.repository.tag.ProductTagRepository;
-import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.domain.tag.ProductTag;
+import com.huicang.wise.infrastructure.persistence.repository.inout.StockOrderDetailRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inout.StockOrderRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inventory.InventoryRepository;
+import com.huicang.wise.infrastructure.persistence.repository.tag.ProductTagRepository;
+import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -30,8 +30,10 @@ public class InOutApplicationService {
     private final StockOrderDetailRepository stockOrderDetailRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductTagRepository productTagRepository;
-    private final com.huicang.wise.domain.repository.inventory.ProductRepository productRepository;
-    private final com.huicang.wise.domain.repository.user.UserRepository userRepository;
+    private final com.huicang.wise.infrastructure.persistence.repository.inventory.ProductRepository
+            productRepository;
+    private final com.huicang.wise.infrastructure.persistence.repository.user.UserRepository
+            userRepository;
     private final WarehouseRepository warehouseRepository;
 
     public InOutApplicationService(
@@ -39,8 +41,10 @@ public class InOutApplicationService {
             StockOrderDetailRepository stockOrderDetailRepository,
             InventoryRepository inventoryRepository,
             ProductTagRepository productTagRepository,
-            com.huicang.wise.domain.repository.inventory.ProductRepository productRepository,
-            com.huicang.wise.domain.repository.user.UserRepository userRepository,
+            com.huicang.wise.infrastructure.persistence.repository.inventory.ProductRepository
+                    productRepository,
+            com.huicang.wise.infrastructure.persistence.repository.user.UserRepository
+                    userRepository,
             WarehouseRepository warehouseRepository) {
         this.stockOrderRepository = stockOrderRepository;
         this.stockOrderDetailRepository = stockOrderDetailRepository;

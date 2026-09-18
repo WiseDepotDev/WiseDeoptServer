@@ -14,17 +14,17 @@ import com.huicang.wise.domain.inspection.InspectionTask;
 import com.huicang.wise.domain.inspection.TaskMessage;
 import com.huicang.wise.domain.inventory.Inventory;
 import com.huicang.wise.domain.message.MessageType;
-import com.huicang.wise.domain.repository.device.DeviceRepository;
-import com.huicang.wise.domain.repository.inspection.InspectionDetailRepository;
-import com.huicang.wise.domain.repository.inspection.InspectionPlanRepository;
-import com.huicang.wise.domain.repository.inspection.InspectionResultSummaryRepository;
-import com.huicang.wise.domain.repository.inspection.InspectionTaskRepository;
-import com.huicang.wise.domain.repository.inventory.InventoryRepository;
-import com.huicang.wise.domain.repository.inventory.ProductRepository;
-import com.huicang.wise.domain.repository.tag.ProductTagRepository;
-import com.huicang.wise.domain.repository.user.UserRepository;
-import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.domain.tag.ProductTag;
+import com.huicang.wise.infrastructure.persistence.repository.device.DeviceRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionDetailRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionPlanRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionResultSummaryRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inventory.InventoryRepository;
+import com.huicang.wise.infrastructure.persistence.repository.inventory.ProductRepository;
+import com.huicang.wise.infrastructure.persistence.repository.tag.ProductTagRepository;
+import com.huicang.wise.infrastructure.persistence.repository.user.UserRepository;
+import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 import java.time.Instant;
@@ -51,7 +51,8 @@ public class InspectionApplicationService {
     @Autowired private InspectionDetailRepository inspectionDetailRepository;
 
     @Autowired
-    private com.huicang.wise.domain.repository.inspection.InspectionDifferenceRepository
+    private com.huicang.wise.infrastructure.persistence.repository.inspection
+                    .InspectionDifferenceRepository
             inspectionDifferenceRepository;
 
     @Autowired private WarehouseRepository warehouseRepository;

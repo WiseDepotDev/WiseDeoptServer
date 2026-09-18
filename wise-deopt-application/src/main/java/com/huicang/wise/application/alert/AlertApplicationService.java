@@ -1,5 +1,11 @@
 package com.huicang.wise.application.alert;
 
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.domain.alert.AlertEvent;
+import com.huicang.wise.domain.alert.AlertHandleLog;
+import com.huicang.wise.infrastructure.persistence.repository.alert.AlertHandleLogRepository;
+import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -7,17 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.huicang.wise.common.api.ErrorCode;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.alert.AlertEvent;
-import com.huicang.wise.domain.alert.AlertHandleLog;
-import com.huicang.wise.domain.repository.alert.AlertRepository;
-import com.huicang.wise.domain.repository.alert.AlertHandleLogRepository;
 
 /**
  * 类功能描述：告警应用服务
@@ -33,9 +31,10 @@ public class AlertApplicationService {
     private final AlertHandleLogRepository alertHandleLogRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
-    public AlertApplicationService(AlertRepository alertRepository,
-                                   AlertHandleLogRepository alertHandleLogRepository,
-                                   StringRedisTemplate stringRedisTemplate) {
+    public AlertApplicationService(
+            AlertRepository alertRepository,
+            AlertHandleLogRepository alertHandleLogRepository,
+            StringRedisTemplate stringRedisTemplate) {
         this.alertRepository = alertRepository;
         this.alertHandleLogRepository = alertHandleLogRepository;
         this.stringRedisTemplate = stringRedisTemplate;
@@ -54,7 +53,8 @@ public class AlertApplicationService {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "告警类型不能为空");
         }
         AlertEvent entity = new AlertEvent();
-        entity.setSourceModule(request.getSourceModule() != null ? request.getSourceModule() : "MANUAL");
+        entity.setSourceModule(
+                request.getSourceModule() != null ? request.getSourceModule() : "MANUAL");
         entity.setLevel(Short.parseShort(request.getAlertLevel()));
         entity.setTitle("手动告警");
         entity.setMessage(request.getDescription());
@@ -63,10 +63,10 @@ public class AlertApplicationService {
         entity.setCreateTime(LocalDateTime.now());
         AlertEvent saved = alertRepository.save(entity);
         cacheUnhandledAlert(saved);
-        
+
         // Clear dashboard KPI cache to ensure data overview updates
         stringRedisTemplate.delete("dashboard:kpi");
-        
+
         return toAlertDTO(saved);
     }
 
@@ -89,21 +89,26 @@ public class AlertApplicationService {
         return entities.stream().map(this::toAlertDTO).collect(Collectors.toList());
     }
 
-    public AlertEventPageDTO listAlertEvents(Integer page,
-                                             Integer size,
-                                             String sourceModule,
-                                             Integer level,
-                                             Integer status,
-                                             Boolean isActive) {
+    public AlertEventPageDTO listAlertEvents(
+            Integer page,
+            Integer size,
+            String sourceModule,
+            Integer level,
+            Integer status,
+            Boolean isActive) {
         int pageIndex = page == null || page < 1 ? 0 : page - 1;
         int pageSize = size == null || size < 1 ? 10 : size;
-        List<AlertEvent> filtered = alertRepository.findAll().stream()
-                .filter(entity -> sourceModule == null || sourceModule.isBlank()
-                        || sourceModule.equals(entity.getSourceModule()))
-                .filter(entity -> level == null || level.equals(entity.getLevel()))
-                .filter(entity -> status == null || status.equals(entity.getStatus()))
-                .filter(entity -> isActive == null || isActive.equals(entity.getIsActive()))
-                .collect(Collectors.toList());
+        List<AlertEvent> filtered =
+                alertRepository.findAll().stream()
+                        .filter(
+                                entity ->
+                                        sourceModule == null
+                                                || sourceModule.isBlank()
+                                                || sourceModule.equals(entity.getSourceModule()))
+                        .filter(entity -> level == null || level.equals(entity.getLevel()))
+                        .filter(entity -> status == null || status.equals(entity.getStatus()))
+                        .filter(entity -> isActive == null || isActive.equals(entity.getIsActive()))
+                        .collect(Collectors.toList());
         int total = filtered.size();
         int fromIndex = pageIndex * pageSize;
         if (fromIndex >= total) {
@@ -113,9 +118,10 @@ public class AlertApplicationService {
             return empty;
         }
         int toIndex = Math.min(fromIndex + pageSize, total);
-        List<AlertEventSummaryDTO> rows = filtered.subList(fromIndex, toIndex).stream()
-                .map(this::toAlertEventSummaryDTO)
-                .collect(Collectors.toList());
+        List<AlertEventSummaryDTO> rows =
+                filtered.subList(fromIndex, toIndex).stream()
+                        .map(this::toAlertEventSummaryDTO)
+                        .collect(Collectors.toList());
         AlertEventPageDTO dto = new AlertEventPageDTO();
         dto.setTotal((long) total);
         dto.setRows(rows);
@@ -130,30 +136,34 @@ public class AlertApplicationService {
      * @throws BusinessException 当告警不存在时抛出异常
      */
     public AlertDTO getAlert(Long eventId) throws BusinessException {
-        AlertEvent entity = alertRepository.findById(eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "告警不存在"));
+        AlertEvent entity =
+                alertRepository
+                        .findById(eventId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "告警不存在"));
         return toAlertDTO(entity);
     }
 
     @Transactional
     public void acknowledgeAlert(Long eventId) throws BusinessException {
-        AlertEvent entity = alertRepository.findById(eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "告警不存在"));
-        
+        AlertEvent entity =
+                alertRepository
+                        .findById(eventId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "告警不存在"));
+
         // 如果已经是处理状态，则无需重复ACK
         if (entity.getStatus() != null && entity.getStatus() != 0) {
             return;
         }
 
         entity.setStatus((short) 1); // 1: Acknowledged
-        // ACK usually means someone is looking at it, but it's not necessarily resolved. 
-        // However, based on existing logic, non-zero status sets isActive=false. 
-        // We might want to keep it active or follow existing logic. 
+        // ACK usually means someone is looking at it, but it's not necessarily resolved.
+        // However, based on existing logic, non-zero status sets isActive=false.
+        // We might want to keep it active or follow existing logic.
         // Let's assume ACK means "handled" in the sense of "checked".
         // If we want to keep it active, we should change the logic in updateAlertStatus or here.
         // For now, let's follow updateAlertStatus logic style:
         // ACK implies it is still an issue, just known.
-        
+
         alertRepository.save(entity);
 
         AlertHandleLog log = new AlertHandleLog();
@@ -163,18 +173,21 @@ public class AlertApplicationService {
         log.setRemark("快速确认");
         log.setHandleTime(LocalDateTime.now());
         alertHandleLogRepository.save(log);
-        
+
         // Clear dashboard KPI cache to ensure data overview updates
         stringRedisTemplate.delete("dashboard:kpi");
     }
 
     @Transactional
-    public void updateAlertStatus(Long eventId, UpdateAlertStatusRequest request) throws BusinessException {
+    public void updateAlertStatus(Long eventId, UpdateAlertStatusRequest request)
+            throws BusinessException {
         if (request == null || request.getStatus() == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "告警状态不能为空");
         }
-        AlertEvent entity = alertRepository.findById(eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "告警不存在"));
+        AlertEvent entity =
+                alertRepository
+                        .findById(eventId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "告警不存在"));
         Integer status = request.getStatus();
         entity.setStatus(status.shortValue());
         if (status == 2) {
@@ -194,9 +207,10 @@ public class AlertApplicationService {
     }
 
     public AlertHandleLogPageDTO listAlertHandleLogs(Long eventId) {
-        List<AlertHandleLogDTO> rows = alertHandleLogRepository.findByEventId(eventId).stream()
-                .map(this::toAlertHandleLogDTO)
-                .collect(Collectors.toList());
+        List<AlertHandleLogDTO> rows =
+                alertHandleLogRepository.findByEventId(eventId).stream()
+                        .map(this::toAlertHandleLogDTO)
+                        .collect(Collectors.toList());
         AlertHandleLogPageDTO dto = new AlertHandleLogPageDTO();
         dto.setTotal((long) rows.size());
         dto.setRows(rows);
@@ -243,7 +257,8 @@ public class AlertApplicationService {
         dto.setEventId(entity.getEventId());
         dto.setHandlerId(entity.getHandlerId());
         dto.setHandlerName("");
-        dto.setGoalStatus(entity.getGoalStatus() != null ? entity.getGoalStatus().intValue() : null);
+        dto.setGoalStatus(
+                entity.getGoalStatus() != null ? entity.getGoalStatus().intValue() : null);
         dto.setGoalStatusDescription("");
         dto.setRemark(entity.getRemark());
         dto.setHandleTime(entity.getHandleTime());
@@ -252,7 +267,8 @@ public class AlertApplicationService {
 
     private void cacheUnhandledAlert(AlertEvent entity) {
         String key = "alert:unhandled:list";
-        String value = entity.getEventId() + "|" + entity.getSourceModule() + "|" + entity.getLevel();
+        String value =
+                entity.getEventId() + "|" + entity.getSourceModule() + "|" + entity.getLevel();
         stringRedisTemplate.opsForList().leftPush(key, value);
         stringRedisTemplate.expire(key, Duration.ofHours(6));
     }
@@ -264,46 +280,90 @@ public class AlertApplicationService {
      */
     public Map<String, Object> getAlertStatistics() {
         List<AlertEvent> allAlerts = alertRepository.findAll();
-        
+
         Map<String, Object> statistics = new HashMap<>();
-        
+
         long totalAlerts = allAlerts.size();
-        long unhandledAlerts = allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 0).count();
-        long handlingAlerts = allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 1).count();
-        long handledAlerts = allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 2).count();
-        long ignoredAlerts = allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 3).count();
-        
+        long unhandledAlerts =
+                allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 0).count();
+        long handlingAlerts =
+                allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 1).count();
+        long handledAlerts =
+                allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 2).count();
+        long ignoredAlerts =
+                allAlerts.stream().filter(a -> a.getStatus() != null && a.getStatus() == 3).count();
+
         // 统计待处理告警（未处理 + 处理中），排除已处理和已忽略的告警
-        List<AlertEvent> pendingAlerts = allAlerts.stream()
-                .filter(a -> a.getStatus() != null && (a.getStatus() == 0 || a.getStatus() == 1))
-                .collect(Collectors.toList());
-        
-        long criticalAlerts = pendingAlerts.stream().filter(a -> a.getLevel() != null && a.getLevel() == 3).count();
-        long severeAlerts = pendingAlerts.stream().filter(a -> a.getLevel() != null && a.getLevel() == 2).count();
-        long warningAlerts = pendingAlerts.stream().filter(a -> a.getLevel() != null && a.getLevel() == 1).count();
-        long infoAlerts = pendingAlerts.stream().filter(a -> a.getLevel() != null && a.getLevel() == 0).count();
-        
-        long deviceAlerts = pendingAlerts.stream().filter(a -> a.getSourceModule() != null && a.getSourceModule().equals("DEVICE")).count();
-        long inventoryAlerts = pendingAlerts.stream().filter(a -> a.getSourceModule() != null && a.getSourceModule().equals("INVENTORY")).count();
-        long securityAlerts = pendingAlerts.stream().filter(a -> a.getSourceModule() != null && a.getSourceModule().equals("RFID_VIDEO")).count();
-        long systemAlerts = pendingAlerts.stream().filter(a -> a.getSourceModule() != null && a.getSourceModule().equals("SYSTEM")).count();
-        
+        List<AlertEvent> pendingAlerts =
+                allAlerts.stream()
+                        .filter(
+                                a ->
+                                        a.getStatus() != null
+                                                && (a.getStatus() == 0 || a.getStatus() == 1))
+                        .collect(Collectors.toList());
+
+        long criticalAlerts =
+                pendingAlerts.stream()
+                        .filter(a -> a.getLevel() != null && a.getLevel() == 3)
+                        .count();
+        long severeAlerts =
+                pendingAlerts.stream()
+                        .filter(a -> a.getLevel() != null && a.getLevel() == 2)
+                        .count();
+        long warningAlerts =
+                pendingAlerts.stream()
+                        .filter(a -> a.getLevel() != null && a.getLevel() == 1)
+                        .count();
+        long infoAlerts =
+                pendingAlerts.stream()
+                        .filter(a -> a.getLevel() != null && a.getLevel() == 0)
+                        .count();
+
+        long deviceAlerts =
+                pendingAlerts.stream()
+                        .filter(
+                                a ->
+                                        a.getSourceModule() != null
+                                                && a.getSourceModule().equals("DEVICE"))
+                        .count();
+        long inventoryAlerts =
+                pendingAlerts.stream()
+                        .filter(
+                                a ->
+                                        a.getSourceModule() != null
+                                                && a.getSourceModule().equals("INVENTORY"))
+                        .count();
+        long securityAlerts =
+                pendingAlerts.stream()
+                        .filter(
+                                a ->
+                                        a.getSourceModule() != null
+                                                && a.getSourceModule().equals("RFID_VIDEO"))
+                        .count();
+        long systemAlerts =
+                pendingAlerts.stream()
+                        .filter(
+                                a ->
+                                        a.getSourceModule() != null
+                                                && a.getSourceModule().equals("SYSTEM"))
+                        .count();
+
         statistics.put("totalAlerts", totalAlerts);
         statistics.put("unhandledAlerts", unhandledAlerts);
         statistics.put("handlingAlerts", handlingAlerts);
         statistics.put("handledAlerts", handledAlerts);
         statistics.put("ignoredAlerts", ignoredAlerts);
-        
+
         statistics.put("criticalAlerts", criticalAlerts);
         statistics.put("severeAlerts", severeAlerts);
         statistics.put("warningAlerts", warningAlerts);
         statistics.put("infoAlerts", infoAlerts);
-        
+
         statistics.put("deviceAlerts", deviceAlerts);
         statistics.put("inventoryAlerts", inventoryAlerts);
         statistics.put("securityAlerts", securityAlerts);
         statistics.put("systemAlerts", systemAlerts);
-        
+
         return statistics;
     }
 }

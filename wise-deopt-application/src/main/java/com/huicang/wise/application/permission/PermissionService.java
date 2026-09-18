@@ -4,16 +4,15 @@ import com.huicang.wise.domain.auth.Permission;
 import com.huicang.wise.domain.auth.Role;
 import com.huicang.wise.domain.auth.RolePermission;
 import com.huicang.wise.domain.auth.UserRole;
-import com.huicang.wise.domain.repository.auth.PermissionRepository;
-import com.huicang.wise.domain.repository.auth.RolePermissionRepository;
-import com.huicang.wise.domain.repository.auth.RoleRepository;
-import com.huicang.wise.domain.repository.auth.UserRoleRepository;
-import org.springframework.stereotype.Service;
-
+import com.huicang.wise.infrastructure.persistence.repository.auth.PermissionRepository;
+import com.huicang.wise.infrastructure.persistence.repository.auth.RolePermissionRepository;
+import com.huicang.wise.infrastructure.persistence.repository.auth.RoleRepository;
+import com.huicang.wise.infrastructure.persistence.repository.auth.UserRoleRepository;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
 @Service
 public class PermissionService {
@@ -23,10 +22,11 @@ public class PermissionService {
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
 
-    public PermissionService(UserRoleRepository userRoleRepository,
-                              RolePermissionRepository rolePermissionRepository,
-                              PermissionRepository permissionRepository,
-                              RoleRepository roleRepository) {
+    public PermissionService(
+            UserRoleRepository userRoleRepository,
+            RolePermissionRepository rolePermissionRepository,
+            PermissionRepository permissionRepository,
+            RoleRepository roleRepository) {
         this.userRoleRepository = userRoleRepository;
         this.rolePermissionRepository = rolePermissionRepository;
         this.permissionRepository = permissionRepository;
@@ -38,7 +38,7 @@ public class PermissionService {
         if (isSuperAdmin(userId)) {
             return true;
         }
-        
+
         // 2. 检查具体权限
         Set<String> userPermissions = getUserPermissions(userId);
         return userPermissions.contains(permissionCode);
@@ -48,7 +48,10 @@ public class PermissionService {
         List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
         for (UserRole userRole : userRoles) {
             Role role = roleRepository.findById(userRole.getRoleId()).orElse(null);
-            if (role != null && ("超级管理员".equals(role.getName()) || "管理员".equals(role.getName()) || "ADMIN".equalsIgnoreCase(role.getName()))) {
+            if (role != null
+                    && ("超级管理员".equals(role.getName())
+                            || "管理员".equals(role.getName())
+                            || "ADMIN".equalsIgnoreCase(role.getName()))) {
                 return true;
             }
         }
@@ -60,9 +63,13 @@ public class PermissionService {
 
         List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
         for (UserRole userRole : userRoles) {
-            List<RolePermission> rolePermissions = rolePermissionRepository.findByRoleId(userRole.getRoleId());
+            List<RolePermission> rolePermissions =
+                    rolePermissionRepository.findByRoleId(userRole.getRoleId());
             for (RolePermission rolePermission : rolePermissions) {
-                Permission permission = permissionRepository.findById(rolePermission.getPermissionId()).orElse(null);
+                Permission permission =
+                        permissionRepository
+                                .findById(rolePermission.getPermissionId())
+                                .orElse(null);
                 if (permission != null) {
                     permissions.add(permission.getCode());
                 }

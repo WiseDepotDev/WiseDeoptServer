@@ -1,7 +1,7 @@
 package com.huicang.wise.infrastructure.rfid;
 
 import com.huicang.wise.domain.device.DeviceCore;
-import com.huicang.wise.domain.repository.device.DeviceRepository;
+import com.huicang.wise.infrastructure.persistence.repository.device.DeviceRepository;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;

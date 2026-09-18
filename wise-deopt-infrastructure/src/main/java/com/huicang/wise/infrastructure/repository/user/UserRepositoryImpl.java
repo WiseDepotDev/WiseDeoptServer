@@ -1,8 +1,8 @@
 package com.huicang.wise.infrastructure.repository.user;
 
-import com.huicang.wise.domain.repository.user.UserCoreRepository;
-import com.huicang.wise.domain.repository.user.UserRepository;
 import com.huicang.wise.domain.user.UserCore;
+import com.huicang.wise.infrastructure.persistence.repository.user.UserCoreRepository;
+import com.huicang.wise.infrastructure.persistence.repository.user.UserRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

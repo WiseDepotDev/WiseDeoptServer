@@ -1,18 +1,15 @@
 package com.huicang.wise.application.oss;
 
-import java.time.LocalDateTime;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.repository.oss.MinioFileRepository;
 import com.huicang.wise.domain.oss.MinioFile;
-
+import com.huicang.wise.infrastructure.persistence.repository.oss.MinioFileRepository;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.http.Method;
+import java.time.LocalDateTime;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 类功能描述：对象存储应用服务
@@ -26,7 +23,7 @@ public class OssApplicationService {
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private MinioClient minioClient;
-    
+
     private final MinioFileRepository minioFileRepository;
 
     public OssApplicationService(MinioFileRepository minioFileRepository) {
@@ -60,14 +57,14 @@ public class OssApplicationService {
     /**
      * 方法功能描述：生成预签名下载链接
      *
-     * @param bucket   Bucket名称
+     * @param bucket Bucket名称
      * @param objectKey 对象Key
      * @param expiresIn 过期秒数
      * @return 预签名链接响应
      * @throws BusinessException 当生成链接失败时抛出异常
      */
-    public PresignedUrlResponse generatePresignedUrl(String bucket, String objectKey, Integer expiresIn)
-            throws BusinessException {
+    public PresignedUrlResponse generatePresignedUrl(
+            String bucket, String objectKey, Integer expiresIn) throws BusinessException {
         if (bucket == null || bucket.isBlank()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "Bucket不能为空");
         }
@@ -75,25 +72,30 @@ public class OssApplicationService {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "对象Key不能为空");
         }
         if (expiresIn == null || expiresIn <= 0 || expiresIn > 604800) {
-            throw new BusinessException(ErrorCode.VAL_RANGE_OSS_EXPIRES_OUT_OF_RANGE, ErrorCode.VAL_RANGE_OSS_EXPIRES_OUT_OF_RANGE.getMessage());
+            throw new BusinessException(
+                    ErrorCode.VAL_RANGE_OSS_EXPIRES_OUT_OF_RANGE,
+                    ErrorCode.VAL_RANGE_OSS_EXPIRES_OUT_OF_RANGE.getMessage());
         }
         if (minioClient == null) {
             throw new BusinessException(ErrorCode.SYS_IO_OSS_SERVICE_UNAVAILABLE, "MinIO服务未启用");
         }
         try {
-            String url = minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucket)
-                            .object(objectKey)
-                            .expiry(expiresIn)
-                            .build());
+            String url =
+                    minioClient.getPresignedObjectUrl(
+                            GetPresignedObjectUrlArgs.builder()
+                                    .method(Method.GET)
+                                    .bucket(bucket)
+                                    .object(objectKey)
+                                    .expiry(expiresIn)
+                                    .build());
             PresignedUrlResponse response = new PresignedUrlResponse();
             response.setUrl(url);
             response.setExpiresIn(expiresIn);
             return response;
         } catch (Exception ex) {
-            throw new BusinessException(ErrorCode.SYS_IO_OSS_PRESIGN_ERROR, ErrorCode.SYS_IO_OSS_PRESIGN_ERROR.getMessage());
+            throw new BusinessException(
+                    ErrorCode.SYS_IO_OSS_PRESIGN_ERROR,
+                    ErrorCode.SYS_IO_OSS_PRESIGN_ERROR.getMessage());
         }
     }
 

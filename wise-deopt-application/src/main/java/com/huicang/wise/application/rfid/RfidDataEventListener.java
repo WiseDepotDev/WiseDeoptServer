@@ -1,7 +1,7 @@
 package com.huicang.wise.application.rfid;
 
 import com.huicang.wise.domain.device.DeviceCore;
-import com.huicang.wise.domain.repository.device.DeviceRepository;
+import com.huicang.wise.infrastructure.persistence.repository.device.DeviceRepository;
 import com.huicang.wise.infrastructure.rfid.RfidDataEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,8 +9,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
- * RFID数据事件监听器
- * 监听RFID数据事件并处理业务逻辑
+ * RFID数据事件监听器 监听RFID数据事件并处理业务逻辑
  *
  * @author WiseDepot
  * @version 0.0.23
@@ -24,8 +23,9 @@ public class RfidDataEventListener {
     private final RfidDataApplicationService rfidDataApplicationService;
     private final DeviceRepository deviceRepository;
 
-    public RfidDataEventListener(RfidDataApplicationService rfidDataApplicationService,
-                                 DeviceRepository deviceRepository) {
+    public RfidDataEventListener(
+            RfidDataApplicationService rfidDataApplicationService,
+            DeviceRepository deviceRepository) {
         this.rfidDataApplicationService = rfidDataApplicationService;
         this.deviceRepository = deviceRepository;
     }
