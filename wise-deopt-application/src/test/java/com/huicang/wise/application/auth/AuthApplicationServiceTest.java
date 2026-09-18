@@ -227,7 +227,7 @@ class AuthApplicationServiceTest {
     void testLoginWithoutCaptchaIdIsRejected() {
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
-        request.setPassword("admin123");
+        request.setPassword("Test-Admin-Passw0rd");
         // captchaId / captchaCode 均为 null
 
         doThrow(
@@ -252,7 +252,7 @@ class AuthApplicationServiceTest {
     void testLoginWithCaptchaIdButNoCodeIsRejected() {
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
-        request.setPassword("admin123");
+        request.setPassword("Test-Admin-Passw0rd");
         request.setCaptchaId("some-captcha-id");
         // captchaCode 仍为 null
 
@@ -276,7 +276,7 @@ class AuthApplicationServiceTest {
     void testLoginWithWrongCaptchaIsRejected() {
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
-        request.setPassword("admin123");
+        request.setPassword("Test-Admin-Passw0rd");
         request.setCaptchaId("cid-1");
         request.setCaptchaCode("ZZZZ");
 
@@ -296,7 +296,7 @@ class AuthApplicationServiceTest {
     void testLoginInvokesCaptchaVerification() {
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
-        request.setPassword("admin123");
+        request.setPassword("Test-Admin-Passw0rd");
         request.setCaptchaId("cid-2");
         request.setCaptchaCode("AB12");
 
@@ -332,7 +332,7 @@ class AuthApplicationServiceTest {
     /** 账号被锁定时必须直接拒绝，且不得查询数据库 */
     @Test
     void testLoginRejectedWhenAccountLocked() {
-        LoginRequest request = buildLoginRequest("admin", "admin123");
+        LoginRequest request = buildLoginRequest("admin", "Test-Admin-Passw0rd");
         doNothing().when(captchaApplicationService).enforceCaptcha("cid-lock", "OK12");
         when(loginAttemptGuard.isLocked("admin")).thenReturn(true);
 
@@ -350,7 +350,7 @@ class AuthApplicationServiceTest {
     /** IP 被封禁时同样拒绝 */
     @Test
     void testLoginRejectedWhenIpBlocked() {
-        LoginRequest request = buildLoginRequest("admin", "admin123");
+        LoginRequest request = buildLoginRequest("admin", "Test-Admin-Passw0rd");
         doNothing().when(captchaApplicationService).enforceCaptcha("cid-lock", "OK12");
         when(loginAttemptGuard.isLocked("admin")).thenReturn(false);
         when(loginAttemptGuard.isIpBlocked(any())).thenReturn(true);
@@ -383,7 +383,7 @@ class AuthApplicationServiceTest {
     /** 验证码校验失败时不应累加失败计数（验证码本身是防重放的） */
     @Test
     void testCaptchaFailureDoesNotCountAttempt() {
-        LoginRequest request = buildLoginRequest("admin", "admin123");
+        LoginRequest request = buildLoginRequest("admin", "Test-Admin-Passw0rd");
         doThrow(new BusinessException(com.huicang.wise.common.api.ErrorCode.PARAM_ERROR, "验证码错误"))
                 .when(captchaApplicationService)
                 .enforceCaptcha("cid-lock", "OK12");

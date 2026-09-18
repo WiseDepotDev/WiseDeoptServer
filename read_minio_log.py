@@ -1,13 +1,22 @@
 from minio import Minio
 import json
+import os
 import sys
 from datetime import datetime
 
-# 配置
-ENDPOINT = "10.0.0.7:9000"
-ACCESS_KEY = "MI1ypseFGQbWvaWDpVcG"
-SECRET_KEY = "ZZcFkqcRXLOw6iGBkcut61n2aNReyQlyT7Nqvliq"
-BUCKET_NAME = "wise-depot-error-logs"
+# 配置：一律从环境变量读取，源码中不得出现真实地址与凭据（STD-SEC-01）
+#   WISE_MINIO_ENDPOINT / WISE_MINIO_ACCESS_KEY / WISE_MINIO_SECRET_KEY
+#   WISE_MINIO_ERROR_BUCKET（可选，默认 wise-depot-error-logs）
+def _required_env(name):
+    value = os.environ.get(name)
+    if not value:
+        sys.exit(f"缺少环境变量 {name}，请先导出后再运行本脚本。")
+    return value
+
+ENDPOINT = _required_env("WISE_MINIO_ENDPOINT")
+ACCESS_KEY = _required_env("WISE_MINIO_ACCESS_KEY")
+SECRET_KEY = _required_env("WISE_MINIO_SECRET_KEY")
+BUCKET_NAME = os.environ.get("WISE_MINIO_ERROR_BUCKET", "wise-depot-error-logs")
 
 def main():
     try:

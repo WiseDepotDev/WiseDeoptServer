@@ -1,27 +1,27 @@
 package com.huicang.wise.infrastructure.security;
 
+import com.huicang.wise.domain.auth.port.TokenVerifier;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
-
-import com.huicang.wise.domain.auth.port.TokenVerifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 public class JwtTokenProvider implements TokenVerifier {
 
-    @Value("${jwt.secret:wise-depot-secret-key-for-jwt-token-generation-2024}")
+    /** JWT 签名密钥。STD-SEC-01：不提供默认值，未配置时启动即失败，避免退化到公开弱密钥。 HS512 要求密钥长度 ≥ 64 字节。 */
+    private static final int MIN_SECRET_BYTES = 64;
+
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.expiration.access:7200}")
@@ -30,8 +30,24 @@ public class JwtTokenProvider implements TokenVerifier {
     @Value("${jwt.expiration.refresh:604800}")
     private long refreshTokenExpiration;
 
+    @jakarta.annotation.PostConstruct
+    void validateSecret() {
+        int length =
+                jwtSecret == null
+                        ? 0
+                        : jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+        if (length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "jwt.secret 长度不足：当前 "
+                            + length
+                            + " 字节，HS512 要求至少 "
+                            + MIN_SECRET_BYTES
+                            + " 字节。请通过环境变量 WISE_JWT_SECRET 或 config/application-local.yml 配置。");
+        }
+    }
+
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     public String generateAccessToken(String username, Long userId) {
@@ -61,23 +77,25 @@ public class JwtTokenProvider implements TokenVerifier {
     }
 
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .setAllowedClockSkewSeconds(60)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims =
+                Jwts.parserBuilder()
+                        .setSigningKey(getSigningKey())
+                        .setAllowedClockSkewSeconds(60)
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody();
 
         return claims.getSubject();
     }
 
     public Long getUserIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .setAllowedClockSkewSeconds(60)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims =
+                Jwts.parserBuilder()
+                        .setSigningKey(getSigningKey())
+                        .setAllowedClockSkewSeconds(60)
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody();
 
         Object userId = claims.get("userId");
         if (userId instanceof Integer) {
@@ -107,12 +125,13 @@ public class JwtTokenProvider implements TokenVerifier {
 
     public boolean isTokenType(String token, String expectedType) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .setAllowedClockSkewSeconds(60)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims =
+                    Jwts.parserBuilder()
+                            .setSigningKey(getSigningKey())
+                            .setAllowedClockSkewSeconds(60)
+                            .build()
+                            .parseClaimsJws(token)
+                            .getBody();
 
             String tokenType = claims.get("type", String.class);
             return expectedType.equals(tokenType);
@@ -123,11 +142,12 @@ public class JwtTokenProvider implements TokenVerifier {
     }
 
     public Date getExpirationDateFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims =
+                Jwts.parserBuilder()
+                        .setSigningKey(getSigningKey())
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody();
 
         return claims.getExpiration();
     }

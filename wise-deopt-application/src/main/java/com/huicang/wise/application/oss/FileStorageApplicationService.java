@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @since 2026-02-27
  */
 @Service
+@Slf4j
 public class FileStorageApplicationService {
 
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
@@ -59,13 +60,13 @@ public class FileStorageApplicationService {
     @Value("${spring.minio.bucket-name:wise-depot}")
     private String defaultBucket;
 
-    @Value("${spring.minio.endpoint:http://10.0.0.4:9000}")
+    @Value("${spring.minio.endpoint}")
     private String minioEndpoint;
 
-    @Value("${spring.minio.access-key:}")
+    @Value("${spring.minio.access-key}")
     private String minioAccessKey;
 
-    @Value("${spring.minio.secret-key:}")
+    @Value("${spring.minio.secret-key}")
     private String minioSecretKey;
 
     private final MinioFileRepository minioFileRepository;
@@ -75,14 +76,16 @@ public class FileStorageApplicationService {
     }
 
     /**
-     * 上传文件
+     * 上传文件。
+     *
+     * <p>事务边界（STD-DATA-01）：本方法包含 MinIO 远程调用，**不得**标注 {@code @Transactional}。
+     * 远程调用耗时不可控，且其失败语义与数据库回滚不一致（对象已落盘而事务回滚会留下孤儿对象）。 顺序为：先写对象存储，再写入一条文件记录（单条语句自带事务）；记录写入失败时尽力回收对象。
      *
      * @param request 文件上传请求
      * @param uploadBy 上传者ID
      * @return 文件上传响应
      * @throws BusinessException 当上传失败时抛出异常
      */
-    @Transactional
     public FileUploadResponse uploadFile(FileUploadRequest request, Long uploadBy)
             throws BusinessException {
         MultipartFile file = request.getFile();
@@ -99,6 +102,7 @@ public class FileStorageApplicationService {
         String objectKey = generateObjectKey(originalFilename);
         String contentType = file.getContentType();
 
+        boolean uploaded = false;
         try {
             ensureBucketExists(bucketName);
 
@@ -107,6 +111,7 @@ public class FileStorageApplicationService {
                                     file.getInputStream(), file.getSize(), -1)
                             .contentType(contentType)
                             .build());
+            uploaded = true;
 
             MinioFile minioFile = new MinioFile();
             minioFile.setBucketName(bucketName);
@@ -127,7 +132,27 @@ public class FileStorageApplicationService {
             return response;
 
         } catch (Exception e) {
+            if (uploaded) {
+                removeObjectQuietly(bucketName, objectKey);
+            }
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 尽力回收对象存储中的对象。
+     *
+     * <p>仅用于失败路径的补偿，回收本身的异常只记录日志，不掩盖原始失败原因。
+     *
+     * @param bucketName 桶名
+     * @param objectKey 对象键
+     */
+    private void removeObjectQuietly(String bucketName, String objectKey) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder().bucket(bucketName).object(objectKey).build());
+        } catch (Exception cleanupError) {
+            log.warn("上传失败后回收对象未成功: bucket={}, object={}", bucketName, objectKey, cleanupError);
         }
     }
 
@@ -242,12 +267,15 @@ public class FileStorageApplicationService {
     }
 
     /**
-     * 删除文件
+     * 删除文件。
+     *
+     * <p>事务边界（STD-DATA-01）：本方法包含 MinIO 远程调用，**不得**标注 {@code @Transactional}。
+     * 顺序为：先删对象存储中的对象，再删除文件记录（单条语句自带事务）；若先删记录而对象删除失败，
+     * 会留下"记录已删、对象仍在"的不可达对象，反之只是残留一条指向失效对象的记录，更易发现与清理。
      *
      * @param fileId 文件ID
      * @throws BusinessException 当删除失败时抛出异常
      */
-    @Transactional
     public void deleteFile(Long fileId) throws BusinessException {
         MinioFile minioFile =
                 minioFileRepository

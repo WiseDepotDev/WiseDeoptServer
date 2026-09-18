@@ -1,30 +1,32 @@
 package com.huicang.wise.api.config;
 
+import com.huicang.wise.domain.alert.AlertEvent;
 import com.huicang.wise.domain.auth.Permission;
 import com.huicang.wise.domain.auth.Role;
 import com.huicang.wise.domain.auth.RolePermission;
 import com.huicang.wise.domain.auth.UserRole;
+import com.huicang.wise.domain.auth.port.PasswordHasher;
+import com.huicang.wise.domain.inventory.Product;
+import com.huicang.wise.domain.repository.alert.AlertEventRepository;
 import com.huicang.wise.domain.repository.auth.PermissionRepository;
 import com.huicang.wise.domain.repository.auth.RolePermissionRepository;
 import com.huicang.wise.domain.repository.auth.RoleRepository;
 import com.huicang.wise.domain.repository.auth.UserRoleRepository;
+import com.huicang.wise.domain.repository.inventory.ProductRepository;
+import com.huicang.wise.domain.repository.tag.TagRepository;
+import com.huicang.wise.domain.repository.user.NfcBadgeRepository;
 import com.huicang.wise.domain.repository.user.UserCoreRepository;
 import com.huicang.wise.domain.repository.user.UserProfileRepository;
 import com.huicang.wise.domain.repository.user.UserSecurityRepository;
-import com.huicang.wise.domain.repository.user.NfcBadgeRepository;
-import com.huicang.wise.domain.repository.inventory.ProductRepository;
 import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
-import com.huicang.wise.domain.repository.tag.TagRepository;
-import com.huicang.wise.domain.repository.alert.AlertEventRepository;
+import com.huicang.wise.domain.tag.ProductTag;
+import com.huicang.wise.domain.user.NfcBadge;
 import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.domain.user.UserProfile;
 import com.huicang.wise.domain.user.UserSecurity;
-import com.huicang.wise.domain.user.NfcBadge;
-import com.huicang.wise.domain.inventory.Product;
 import com.huicang.wise.domain.warehouse.Warehouse;
-import com.huicang.wise.domain.tag.ProductTag;
-import com.huicang.wise.domain.alert.AlertEvent;
-import com.huicang.wise.domain.auth.port.PasswordHasher;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,9 +34,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Configuration
 public class DataInitializer {
@@ -44,7 +43,7 @@ public class DataInitializer {
     @Value("${spring.auth.admin.username:admin}")
     private String adminUsername;
 
-    @Value("${spring.auth.admin.password:admin123}")
+    @Value("${spring.auth.admin.password}")
     private String adminPassword;
 
     @Value("${spring.auth.admin.reset-password:false}")
@@ -53,31 +52,32 @@ public class DataInitializer {
     @Value("${spring.auth.operator.username:operator}")
     private String operatorUsername;
 
-    @Value("${spring.auth.operator.password:operator123}")
+    @Value("${spring.auth.operator.password}")
     private String operatorPassword;
 
     @Bean
     @Transactional
-    public CommandLineRunner initData(UserCoreRepository userCoreRepository,
-                                      UserSecurityRepository userSecurityRepository,
-                                      UserProfileRepository userProfileRepository,
-                                      NfcBadgeRepository nfcBadgeRepository,
-                                      ProductRepository productRepository,
-                                      WarehouseRepository warehouseRepository,
-                                      TagRepository tagRepository,
-                                      RoleRepository roleRepository,
-                                      UserRoleRepository userRoleRepository,
-                                      PermissionRepository permissionRepository,
-                                      RolePermissionRepository rolePermissionRepository,
-                                      AlertEventRepository alertEventRepository,
-                                      PasswordHasher passwordHasher) {
+    public CommandLineRunner initData(
+            UserCoreRepository userCoreRepository,
+            UserSecurityRepository userSecurityRepository,
+            UserProfileRepository userProfileRepository,
+            NfcBadgeRepository nfcBadgeRepository,
+            ProductRepository productRepository,
+            WarehouseRepository warehouseRepository,
+            TagRepository tagRepository,
+            RoleRepository roleRepository,
+            UserRoleRepository userRoleRepository,
+            PermissionRepository permissionRepository,
+            RolePermissionRepository rolePermissionRepository,
+            AlertEventRepository alertEventRepository,
+            PasswordHasher passwordHasher) {
         return args -> {
             logger.info("开始检查并初始化系统基础数据...");
 
             // 1. 初始化管理员用户
             if (!userCoreRepository.existsById(1L)) {
                 logger.info("管理员用户不存在，开始创建...");
-                
+
                 // 创建 UserCore
                 UserCore adminUser = new UserCore();
                 adminUser.setUserId(1L);
@@ -112,11 +112,12 @@ public class DataInitializer {
                 profile.setUpdateTime(LocalDateTime.now());
                 profile.setUpdateBy(1L);
                 userProfileRepository.save(profile);
-                
+
                 logger.info("管理员用户创建完成，用户名: {}", adminUsername);
             } else if (resetAdminPassword) {
                 logger.info("管理员用户已存在，检测到重置密码配置，开始重置密码...");
-                UserSecurity security = userSecurityRepository.findByUserId(1L).orElse(new UserSecurity());
+                UserSecurity security =
+                        userSecurityRepository.findByUserId(1L).orElse(new UserSecurity());
                 if (security.getUserId() == null) {
                     security.setUserId(1L);
                     String salt = UUID.randomUUID().toString().replace("-", "");
@@ -133,21 +134,28 @@ public class DataInitializer {
 
             if (nfcBadgeRepository.findByUserId(1L).isEmpty()) {
                 logger.info("管理员NFC工牌不存在，开始创建...");
-                
+
                 try {
                     NfcBadge nfcBadge = new NfcBadge();
                     nfcBadge.setUserId(1L);
                     nfcBadge.setNfcUid("A3:C8:A1:21");
-                    nfcBadge.setRfid("RFID_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16));
+                    nfcBadge.setRfid(
+                            "RFID_"
+                                    + UUID.randomUUID()
+                                            .toString()
+                                            .replace("-", "")
+                                            .substring(0, 16));
                     nfcBadge.setPinSalt("c892ef7493b841f9");
-                    nfcBadge.setPinHash("$2a$12$3sHM6gdJX20291Q/JyfxGuC.wSO8.IjFjmM3ybfL6ddiROr407z2q");
+                    nfcBadge.setPinHash(
+                            "$2a$12$3sHM6gdJX20291Q/JyfxGuC.wSO8.IjFjmM3ybfL6ddiROr407z2q");
                     nfcBadge.setStatus((short) 1);
                     nfcBadge.setCreateTime(LocalDateTime.now());
                     nfcBadge.setCreateBy(1L);
                     nfcBadge.setUpdateTime(LocalDateTime.now());
                     nfcBadge.setUpdateBy(1L);
                     NfcBadge saved = nfcBadgeRepository.save(nfcBadge);
-                    logger.info("管理员NFC工牌创建完成，NFC UID: A3:C8:A1:21, Badge ID: {}", saved.getBadgeId());
+                    logger.info(
+                            "管理员NFC工牌创建完成，NFC UID: A3:C8:A1:21, Badge ID: {}", saved.getBadgeId());
                 } catch (Exception e) {
                     logger.error("创建管理员NFC工牌失败", e);
                     throw e;
@@ -159,7 +167,7 @@ public class DataInitializer {
             // 1.1 初始化普通用户（操作员）
             if (!userCoreRepository.existsById(2L)) {
                 logger.info("普通用户不存在，开始创建...");
-                
+
                 UserCore operatorUser = new UserCore();
                 operatorUser.setUserId(2L);
                 operatorUser.setUsername(operatorUsername);
@@ -190,7 +198,7 @@ public class DataInitializer {
                 operatorProfile.setUpdateTime(LocalDateTime.now());
                 operatorProfile.setUpdateBy(1L);
                 userProfileRepository.save(operatorProfile);
-                
+
                 logger.info("普通用户创建完成，用户名: {}", operatorUsername);
             } else {
                 logger.info("普通用户已存在，跳过创建");
@@ -198,21 +206,28 @@ public class DataInitializer {
 
             if (nfcBadgeRepository.findByUserId(2L).isEmpty()) {
                 logger.info("普通用户NFC工牌不存在，开始创建...");
-                
+
                 try {
                     NfcBadge nfcBadge = new NfcBadge();
                     nfcBadge.setUserId(2L);
                     nfcBadge.setNfcUid("A3:C8:A1:22");
-                    nfcBadge.setRfid("RFID_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16));
+                    nfcBadge.setRfid(
+                            "RFID_"
+                                    + UUID.randomUUID()
+                                            .toString()
+                                            .replace("-", "")
+                                            .substring(0, 16));
                     nfcBadge.setPinSalt("c892ef7493b841f9");
-                    nfcBadge.setPinHash("$2a$12$3sHM6gdJX20291Q/JyfxGuC.wSO8.IjFjmM3ybfL6ddiROr407z2q");
+                    nfcBadge.setPinHash(
+                            "$2a$12$3sHM6gdJX20291Q/JyfxGuC.wSO8.IjFjmM3ybfL6ddiROr407z2q");
                     nfcBadge.setStatus((short) 1);
                     nfcBadge.setCreateTime(LocalDateTime.now());
                     nfcBadge.setCreateBy(1L);
                     nfcBadge.setUpdateTime(LocalDateTime.now());
                     nfcBadge.setUpdateBy(1L);
                     NfcBadge saved = nfcBadgeRepository.save(nfcBadge);
-                    logger.info("普通用户NFC工牌创建完成，NFC UID: A3:C8:A1:22, Badge ID: {}", saved.getBadgeId());
+                    logger.info(
+                            "普通用户NFC工牌创建完成，NFC UID: A3:C8:A1:22, Badge ID: {}", saved.getBadgeId());
                 } catch (Exception e) {
                     logger.error("创建普通用户NFC工牌失败", e);
                     throw e;
@@ -271,9 +286,10 @@ public class DataInitializer {
         };
     }
 
-    private void initTestWarehouseProductsAndTags(WarehouseRepository warehouseRepository,
-                                                 ProductRepository productRepository,
-                                                 TagRepository tagRepository) {
+    private void initTestWarehouseProductsAndTags(
+            WarehouseRepository warehouseRepository,
+            ProductRepository productRepository,
+            TagRepository tagRepository) {
         logger.info("开始初始化测试仓库、产品和标签...");
 
         try {
@@ -281,13 +297,62 @@ public class DataInitializer {
             Long warehouseId = createWarehouseIfNotExist(warehouseRepository, 1L, "测试仓库1", "WH001");
 
             // 创建产品和标签数据
-            createProductAndTagIfNotExist(productRepository, tagRepository, warehouseId, 1L, "视频分割器", "E28278020000000029D0FD6D", "6950629140189");
-            createProductAndTagIfNotExist(productRepository, tagRepository, warehouseId, 2L, "水晶头", "E28278020000000029D0DFA6", "6970583880105");
-            createProductAndTagIfNotExist(productRepository, tagRepository, warehouseId, 3L, "路由器", "E28068940000503287D66041", "8252674081300");
-            createProductAndTagIfNotExist(productRepository, tagRepository, warehouseId, 4L, "扫描器", "E28278020000000029D0DF96", "6973138764646");
-            createProductAndTagIfNotExist(productRepository, tagRepository, warehouseId, 5L, "无线AP1", "E28068940000403287D66441", "6921168509256");
-            createProductAndTagIfNotExist(productRepository, tagRepository, warehouseId, 6L, "无线AP2", "E28278020000000029D0FD5D", "6921168509257");
-            createProductAndTagIfNotExist(productRepository, tagRepository, warehouseId, 7L, "显示器", "E28278020000000029D17803", "6976570310457");
+            createProductAndTagIfNotExist(
+                    productRepository,
+                    tagRepository,
+                    warehouseId,
+                    1L,
+                    "视频分割器",
+                    "E28278020000000029D0FD6D",
+                    "6950629140189");
+            createProductAndTagIfNotExist(
+                    productRepository,
+                    tagRepository,
+                    warehouseId,
+                    2L,
+                    "水晶头",
+                    "E28278020000000029D0DFA6",
+                    "6970583880105");
+            createProductAndTagIfNotExist(
+                    productRepository,
+                    tagRepository,
+                    warehouseId,
+                    3L,
+                    "路由器",
+                    "E28068940000503287D66041",
+                    "8252674081300");
+            createProductAndTagIfNotExist(
+                    productRepository,
+                    tagRepository,
+                    warehouseId,
+                    4L,
+                    "扫描器",
+                    "E28278020000000029D0DF96",
+                    "6973138764646");
+            createProductAndTagIfNotExist(
+                    productRepository,
+                    tagRepository,
+                    warehouseId,
+                    5L,
+                    "无线AP1",
+                    "E28068940000403287D66441",
+                    "6921168509256");
+            createProductAndTagIfNotExist(
+                    productRepository,
+                    tagRepository,
+                    warehouseId,
+                    6L,
+                    "无线AP2",
+                    "E28278020000000029D0FD5D",
+                    "6921168509257");
+            createProductAndTagIfNotExist(
+                    productRepository,
+                    tagRepository,
+                    warehouseId,
+                    7L,
+                    "显示器",
+                    "E28278020000000029D17803",
+                    "6976570310457");
 
             logger.info("测试仓库、产品和标签初始化完成");
         } catch (Exception e) {
@@ -296,7 +361,8 @@ public class DataInitializer {
         }
     }
 
-    private Long createWarehouseIfNotExist(WarehouseRepository warehouseRepository, Long warehouseId, String name, String code) {
+    private Long createWarehouseIfNotExist(
+            WarehouseRepository warehouseRepository, Long warehouseId, String name, String code) {
         if (!warehouseRepository.existsById(warehouseId)) {
             Warehouse warehouse = new Warehouse();
             warehouse.setWarehouseId(warehouseId);
@@ -311,13 +377,14 @@ public class DataInitializer {
         return warehouseId;
     }
 
-    private void createProductAndTagIfNotExist(ProductRepository productRepository,
-                                          TagRepository tagRepository,
-                                          Long warehouseId,
-                                          Long productId,
-                                          String productName,
-                                          String rfid,
-                                          String barcode) {
+    private void createProductAndTagIfNotExist(
+            ProductRepository productRepository,
+            TagRepository tagRepository,
+            Long warehouseId,
+            Long productId,
+            String productName,
+            String rfid,
+            String barcode) {
         try {
             if (!productRepository.existsById(productId)) {
                 Product product = new Product();
@@ -353,7 +420,8 @@ public class DataInitializer {
         }
     }
 
-    private void createRoleIfNotExist(RoleRepository roleRepository, Long roleId, String name, String description) {
+    private void createRoleIfNotExist(
+            RoleRepository roleRepository, Long roleId, String name, String description) {
         if (!roleRepository.existsById(roleId)) {
             Role role = new Role();
             role.setRoleId(roleId);
@@ -368,7 +436,11 @@ public class DataInitializer {
         }
     }
 
-    private void createPermissionIfNotExist(PermissionRepository permissionRepository, Long permissionId, String name, String code) {
+    private void createPermissionIfNotExist(
+            PermissionRepository permissionRepository,
+            Long permissionId,
+            String name,
+            String code) {
         if (permissionRepository.findById(permissionId).isEmpty()) {
             Permission permission = new Permission();
             permission.setPermissionId(permissionId);
@@ -384,7 +456,8 @@ public class DataInitializer {
         }
     }
 
-    private void createRolePermissionIfNotExist(RolePermissionRepository rolePermissionRepository, Long roleId, Long permissionId) {
+    private void createRolePermissionIfNotExist(
+            RolePermissionRepository rolePermissionRepository, Long roleId, Long permissionId) {
         if (rolePermissionRepository.findByRoleId(roleId).stream()
                 .noneMatch(rp -> rp.getPermissionId().equals(permissionId))) {
             RolePermission rolePermission = new RolePermission();
@@ -408,7 +481,8 @@ public class DataInitializer {
                 alert1.setSourceModule("RFID");
                 alert1.setLevel((short) 3);
                 alert1.setTitle("违规移动告警");
-                alert1.setMessage("检测到违规移动！设备：RFID固定读写器(RFID-10-0-0-70)，RFID：E28278020000000029D0FD6D，产品ID：1");
+                alert1.setMessage(
+                        "检测到违规移动！设备：RFID固定读写器(RFID-10-0-0-70)，RFID：E28278020000000029D0FD6D，产品ID：1");
                 alert1.setStatus((short) 0);
                 alert1.setIsActive(true);
                 alert1.setCreateTime(LocalDateTime.now().minusHours(1));

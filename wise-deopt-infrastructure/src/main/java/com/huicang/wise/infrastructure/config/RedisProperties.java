@@ -12,49 +12,31 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "wise.redis")
 public class RedisProperties {
 
-    /**
-     * Redis主机地址
-     */
-    private String host = "10.0.0.4";
+    /** Redis主机地址（由 wise.redis.host 注入，无硬编码默认值） */
+    private String host;
 
-    /**
-     * Redis端口
-     */
+    /** Redis端口 */
     private int port = 6379;
 
-    /**
-     * Redis密码
-     */
-    private String password = "Key-1122";
+    /** Redis密码（由 wise.redis.password 注入，无硬编码默认值） */
+    private String password;
 
-    /**
-     * Redis数据库索引
-     */
+    /** Redis数据库索引 */
     private int database = 0;
 
-    /**
-     * 连接超时时间（秒）
-     */
+    /** 连接超时时间（秒） */
     private int timeout = 5;
 
-    /**
-     * 连接池最大连接数
-     */
+    /** 连接池最大连接数 */
     private int maxActive = 8;
 
-    /**
-     * 连接池最大空闲连接数
-     */
+    /** 连接池最大空闲连接数 */
     private int maxIdle = 8;
 
-    /**
-     * 连接池最小空闲连接数
-     */
+    /** 连接池最小空闲连接数 */
     private int minIdle = 0;
 
-    /**
-     * 连接池最大等待时间（毫秒）
-     */
+    /** 连接池最大等待时间（毫秒） */
     private long maxWait = -1;
 
     public String getHost() {

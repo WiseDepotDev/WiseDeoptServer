@@ -3,49 +3,40 @@ package com.huicang.wise.test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
- * 密码哈希生成工具
- * 用于生成测试用户的BCrypt密码哈希
+ * 密码哈希生成工具。
+ *
+ * <p>用于为测试/初始化数据生成 BCrypt 密码哈希。源码中不得出现真实口令（STD-SEC-01）， 需要真实口令时通过命令行参数传入：
+ *
+ * <pre>java PasswordHashGenerator &lt;password&gt; [&lt;password&gt; ...]</pre>
+ *
+ * <p>不带参数运行时使用示例占位口令，仅供本地验证算法可用性。
  */
 public class PasswordHashGenerator {
+
+    /** 示例占位口令，非任何环境的真实口令。 */
+    private static final String[] EXAMPLE_PASSWORDS = {
+        "Example-Admin-Passw0rd", "Example-Operator-Passw0rd", "Example-Visitor-Passw0rd"
+    };
+
     public static void main(String[] args) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
-
-        // 生成测试密码的哈希值
-        String adminPassword = "admin123";
-        String operatorPassword = "operator123";
-        String visitorPassword = "visitor123";
-
-        String adminHash = encoder.encode(adminPassword);
-        String operatorHash = encoder.encode(operatorPassword);
-        String visitorHash = encoder.encode(visitorPassword);
+        String[] passwords = args.length > 0 ? args : EXAMPLE_PASSWORDS;
 
         System.out.println("=================================");
         System.out.println("BCrypt Password Hashes (cost=12)");
-        System.out.println("=================================\n");
-
-        System.out.println("Admin User:");
-        System.out.println("  Username: admin");
-        System.out.println("  Password: " + adminPassword);
-        System.out.println("  Hash: " + adminHash);
+        System.out.println("=================================");
+        if (args.length == 0) {
+            System.out.println("（未传入口令参数，使用示例占位口令）");
+        }
         System.out.println();
 
-        System.out.println("Operator User:");
-        System.out.println("  Username: operator");
-        System.out.println("  Password: " + operatorPassword);
-        System.out.println("  Hash: " + operatorHash);
-        System.out.println();
-
-        System.out.println("Visitor User:");
-        System.out.println("  Username: visitor");
-        System.out.println("  Password: " + visitorPassword);
-        System.out.println("  Hash: " + visitorHash);
-        System.out.println();
-
-        // 验证生成的哈希
-        System.out.println("Verification:");
-        System.out.println("============");
-        System.out.println("Verify admin123: " + encoder.matches(adminPassword, adminHash));
-        System.out.println("Verify operator123: " + encoder.matches(operatorPassword, operatorHash));
-        System.out.println("Verify visitor123: " + encoder.matches(visitorPassword, visitorHash));
+        for (int i = 0; i < passwords.length; i++) {
+            String password = passwords[i];
+            String hash = encoder.encode(password);
+            System.out.println("Entry " + (i + 1) + ":");
+            System.out.println("  Hash: " + hash);
+            System.out.println("  Verify: " + encoder.matches(password, hash));
+            System.out.println();
+        }
     }
 }

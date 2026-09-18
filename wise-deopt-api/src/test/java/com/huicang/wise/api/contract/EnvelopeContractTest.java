@@ -14,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.huicang.wise.api.config.JpaConfiguration;
 import com.huicang.wise.api.controller.UserController;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.AuthApplicationService;
@@ -22,6 +21,7 @@ import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
 import com.huicang.wise.application.user.UserDTO;
 import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.infrastructure.config.JpaConfiguration;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

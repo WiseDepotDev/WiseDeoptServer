@@ -2,6 +2,9 @@ package com.huicang.wise.infrastructure.datasource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.util.HashMap;
+import java.util.Map;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,32 +16,30 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * 多数据源配置类
- * 配置动态路由数据源和各模块独立数据源
+ * 多数据源配置类 配置动态路由数据源和各模块独立数据源
  *
  * @author WiseDepot
  * @version 0.0.27
  * @since 2026-02-27
  */
 @Configuration
-@ConditionalOnProperty(name = "wise.datasource.multi.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(
+        name = "wise.datasource.multi.enabled",
+        havingValue = "true",
+        matchIfMissing = false)
 @EnableConfigurationProperties(MultiDataSourceProperties.class)
 public class MultiDataSourceConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(MultiDataSourceConfiguration.class);
 
-    @Value("${spring.datasource.url:jdbc:mysql://10.0.0.4:3306/wise_depot}")
+    @Value("${spring.datasource.url}")
     private String defaultUrl;
 
     @Value("${spring.datasource.username:root}")
     private String defaultUsername;
 
-    @Value("${spring.datasource.password:password}")
+    @Value("${spring.datasource.password}")
     private String defaultPassword;
 
     @Value("${spring.datasource.driver-class-name:com.mysql.cj.jdbc.Driver}")
@@ -63,8 +64,7 @@ public class MultiDataSourceConfiguration {
     private String connectionTestQuery;
 
     /**
-     * 创建动态路由数据源
-     * 作为主数据源，根据上下文路由到具体的数据库
+     * 创建动态路由数据源 作为主数据源，根据上下文路由到具体的数据库
      *
      * @param properties 多数据源配置属性
      * @return 动态路由数据源
@@ -93,12 +93,14 @@ public class MultiDataSourceConfiguration {
     /**
      * 为指定数据库类型创建数据源
      *
-     * @param dbType    数据库类型
+     * @param dbType 数据库类型
      * @param properties 多数据源配置属性
      * @return 数据源对象
      */
-    private DataSource createDataSourceForDatabase(DatabaseType dbType, MultiDataSourceProperties properties) {
-        MultiDataSourceProperties.DataSourceConfig dbConfig = properties.getDatabases().get(dbType.getCode());
+    private DataSource createDataSourceForDatabase(
+            DatabaseType dbType, MultiDataSourceProperties properties) {
+        MultiDataSourceProperties.DataSourceConfig dbConfig =
+                properties.getDatabases().get(dbType.getCode());
 
         String url;
         String username;
@@ -114,12 +116,12 @@ public class MultiDataSourceConfiguration {
             password = defaultPassword;
         }
 
-        return createHikariDataSource(url, username, password, defaultDriverClassName, dbType.getCode());
+        return createHikariDataSource(
+                url, username, password, defaultDriverClassName, dbType.getCode());
     }
 
     /**
-     * 构建数据库URL
-     * 将原始URL中的数据库名替换为指定的数据库名
+     * 构建数据库URL 将原始URL中的数据库名替换为指定的数据库名
      *
      * @param originalUrl 原始URL
      * @param databaseName 数据库名
@@ -130,7 +132,9 @@ public class MultiDataSourceConfiguration {
         int questionMarkIndex = originalUrl.indexOf('?', lastSlashIndex);
 
         if (questionMarkIndex > 0) {
-            return originalUrl.substring(0, lastSlashIndex + 1) + databaseName + originalUrl.substring(questionMarkIndex);
+            return originalUrl.substring(0, lastSlashIndex + 1)
+                    + databaseName
+                    + originalUrl.substring(questionMarkIndex);
         } else {
             return originalUrl.substring(0, lastSlashIndex + 1) + databaseName;
         }
@@ -139,15 +143,15 @@ public class MultiDataSourceConfiguration {
     /**
      * 创建HikariCP数据源
      *
-     * @param url      数据库URL
+     * @param url 数据库URL
      * @param username 用户名
      * @param password 密码
      * @param driverClassName 驱动类名
      * @param poolName 连接池名称
      * @return HikariCP数据源
      */
-    private HikariDataSource createHikariDataSource(String url, String username, String password,
-                                                     String driverClassName, String poolName) {
+    private HikariDataSource createHikariDataSource(
+            String url, String username, String password, String driverClassName, String poolName) {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
         config.setUsername(username);
@@ -163,11 +167,11 @@ public class MultiDataSourceConfiguration {
         config.setConnectionTestQuery(connectionTestQuery);
 
         config.setAutoCommit(false);
-        
+
         if (driverClassName != null && driverClassName.contains("mysql")) {
             config.setConnectionInitSql("SET NAMES utf8mb4");
         }
-        
+
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -183,8 +187,7 @@ public class MultiDataSourceConfiguration {
     }
 
     /**
-     * 配置事务管理器
-     * 使用动态路由数据源作为事务管理的数据源
+     * 配置事务管理器 使用动态路由数据源作为事务管理的数据源
      *
      * @param dynamicDataSource 动态路由数据源
      * @return 事务管理器

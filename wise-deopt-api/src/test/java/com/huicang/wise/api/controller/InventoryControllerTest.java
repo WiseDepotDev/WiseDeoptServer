@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huicang.wise.api.config.JpaConfiguration;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.inventory.InventoryCreateRequest;
@@ -19,6 +18,7 @@ import com.huicang.wise.application.inventory.InventoryPageDTO;
 import com.huicang.wise.application.inventory.ProductCreateRequest;
 import com.huicang.wise.application.inventory.ProductDTO;
 import com.huicang.wise.application.inventory.ProductUpdateRequest;
+import com.huicang.wise.infrastructure.config.JpaConfiguration;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

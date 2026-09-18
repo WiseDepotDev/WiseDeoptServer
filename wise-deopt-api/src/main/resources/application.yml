@@ -9,13 +9,18 @@ server:
 spring:
     application:
         name: wise-deopt-server
+    # 本地敏感配置覆盖文件：config/application-local.yml（未入库，见 config/application-local.yml.example）。
+    # 该文件不存在时 Spring 自动跳过，不会报错。
+    profiles:
+        include: local
     output:
         ansi:
             enabled: ALWAYS
     datasource:
-        url: jdbc:mysql://10.0.0.4:3306/wise_depot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
-        username: root
-        password: Key-1122
+        # 连接串本身不含凭据，保留本地默认值；服务器地址与账号口令由环境变量注入。
+        url: ${WISE_DB_URL:jdbc:mysql://localhost:3306/wise_depot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10}
+        username: ${WISE_DB_USERNAME:root}
+        password: ${WISE_DB_PASSWORD}
         driver-class-name: com.mysql.cj.jdbc.Driver
         hikari:
             maximum-pool-size: 10
@@ -31,9 +36,9 @@ spring:
         show-sql: false
     data:
         redis:
-            host: 10.0.0.4
-            port: 6379
-            password: Key-1122
+            host: ${WISE_REDIS_HOST:localhost}
+            port: ${WISE_REDIS_PORT:6379}
+            password: ${WISE_REDIS_PASSWORD}
             timeout: 5000
             lettuce:
                 pool:
@@ -42,11 +47,11 @@ spring:
                     min-idle: 0
                     max-wait: -1ms
     minio:
-        endpoint: http://10.0.0.4:9000
-        access-key: root
-        secret-key: Key-1122
+        endpoint: ${WISE_MINIO_ENDPOINT:http://localhost:9000}
+        access-key: ${WISE_MINIO_ACCESS_KEY}
+        secret-key: ${WISE_MINIO_SECRET_KEY}
         secure: false
-        bucket-name: wise-depot
+        bucket-name: ${WISE_MINIO_BUCKET:wise-depot}
         presigned-url-expiry: 3600
         max-file-size: 104857600
     api:
@@ -54,9 +59,12 @@ spring:
         base-path: /api/v1
     auth:
         admin:
-            username: admin
-            password: admin123
-            reset-password: false
+            username: ${WISE_ADMIN_USERNAME:admin}
+            password: ${WISE_ADMIN_PASSWORD}
+            reset-password: ${WISE_ADMIN_RESET_PASSWORD:false}
+        operator:
+            username: ${WISE_OPERATOR_USERNAME:operator}
+            password: ${WISE_OPERATOR_PASSWORD}
 
 logging:
     level:
@@ -80,7 +88,7 @@ security:
         permissions-policy: "geolocation=(), microphone=(), camera=()"
 
 cors:
-    allowed-origins: "http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080"
+    allowed-origins: ${WISE_CORS_ALLOWED_ORIGINS:http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080}
     allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
     allowed-headers: "*"
     exposed-headers: "Authorization,Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers"
@@ -88,10 +96,14 @@ cors:
     max-age: 3600
 
 jwt:
-    secret: '.U''x9H''wt]+w&|fY>vjR)xdE\kr~2A2kuX1{jr_d*P\6H0;cAHTyW*0,70*v+?e~'
+    secret: ${WISE_JWT_SECRET}
     expiration:
         access: 7200
         refresh: 604800
+
+api:
+    signature:
+        secret: ${WISE_API_SIGNATURE_SECRET}
 
 rfid:
     server:
@@ -109,9 +121,9 @@ wise:
 
 mqtt:
     broker:
-        url: tcp://10.0.0.4:1883
-        username: root
-        password: Key-1122
+        url: ${WISE_MQTT_URL:tcp://localhost:1883}
+        username: ${WISE_MQTT_USERNAME:}
+        password: ${WISE_MQTT_PASSWORD:}
         client-id: wise-server
         clean-session: true
         completion-timeout: 5000

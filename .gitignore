@@ -32,3 +32,8 @@ target
 *~
 
 set-env.ps1
+
+# 本地敏感配置覆盖（真实地址与凭据），模板见 config/application-local.yml.example
+/config/application-local.yml
+application-local.yml
+*.local.yml
