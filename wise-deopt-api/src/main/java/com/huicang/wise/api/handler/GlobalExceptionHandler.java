@@ -291,7 +291,8 @@ public class GlobalExceptionHandler {
     }
 
     private ServerErrorLogDTO buildErrorLog(Exception ex, HttpServletRequest request) {
-        // 提取堆栈信息
+        // 提取堆栈信息（转字符串用于错误上报载荷，并非向控制台打印：
+        // 标准禁止的是 System.out/System.err 直出与静默吞异常，见 STD-LOG-02）
         StringWriter sw = new StringWriter();
         ex.printStackTrace(new PrintWriter(sw));
         String stackTrace = sw.toString();

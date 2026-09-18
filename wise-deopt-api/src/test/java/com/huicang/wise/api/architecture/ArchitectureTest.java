@@ -108,6 +108,22 @@ class ArchitectureTest {
             .because("业务失败必须用 BusinessException + ErrorCode（STD-ERR-01；否则被兜底映射为 500）");
 
     /**
+     * 业务代码不得直接使用 {@code System.out} / {@code System.err}（STD-LOG-02）。
+     *
+     * <p>日志必须走日志门面（含链路标识与级别控制）；直出标准流无法被日志系统采集与脱敏。
+     */
+    @ArchTest
+    static final ArchRule 业务代码不应直出标准流 = noClasses()
+            .that().resideInAnyPackage(
+                    "com.huicang.wise.application..",
+                    "com.huicang.wise.domain..",
+                    "com.huicang.wise.infrastructure..",
+                    "com.huicang.wise.api..")
+            .should().accessField(System.class, "out")
+            .orShould().accessField(System.class, "err")
+            .because("业务日志必须走日志门面（STD-LOG-02）");
+
+    /**
      * 领域层不得出现 ORM / Spring 技术细节（STD-ARCH-05）。
      *
      * <p>当前存量违规：`domain` 有 35 个 `@Entity`、36 处 `jakarta.persistence` 与 142 处

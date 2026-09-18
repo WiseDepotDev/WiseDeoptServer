@@ -178,7 +178,8 @@ public class RfidDataApplicationService {
                 messageApplicationService.sendPushNotification(message);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // 告警消息为旁路动作：失败不影响盘点主流程，但必须留痕（禁止静默吞异常，STD-ERR-02）
+            logger.error("发送告警消息失败: {}", e.getMessage(), e);
         }
     }
 }

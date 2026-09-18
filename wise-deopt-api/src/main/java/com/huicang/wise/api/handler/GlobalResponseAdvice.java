@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
@@ -42,6 +43,8 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
     private static final String REQUEST_ID_HEADER = "REQUEST-ID";
     /** 历史下划线写法，仅作兼容读取（标准要求 REQUEST-ID） */
     private static final String REQUEST_ID_HEADER_LEGACY = "REQUEST_ID";
+    /** 请求属性名：由 RequestLoggingFilter 写入的已解析链路标识 */
+    private static final String REQUEST_ID_ATTRIBUTE = "REQUEST_ID_RESOLVED";
     private static final String PACKET_TYPE_ATTRIBUTE = "PACKET_TYPE";
     private static final String TIMESTAMP_ATTRIBUTE = "TIMESTAMP";
     private static final String REQUEST_START_TIME_ATTRIBUTE = "REQUEST_START_TIME";
@@ -96,15 +99,23 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
     }
 
     /**
-     * 解析链路标识：标准要求请求头 {@code REQUEST-ID}，同时兼容历史下划线写法 {@code REQUEST_ID}。
+     * 解析链路标识：优先请求头（标准 {@code REQUEST-ID}，兼容历史 {@code REQUEST_ID}），
+     * 其次复用 {@code RequestLoggingFilter} 已生成并写入请求属性的标识，
+     * 均缺失时才由调用方生成——使「响应中的 request_id」与「日志中的 request_id」保持一致。
      *
      * @param request 当前请求
-     * @return 请求头中的链路标识；均未携带时返回 null（由调用方生成）
+     * @return 链路标识；均未携带时返回 null（由调用方生成）
      */
     private String resolveRequestId(ServerHttpRequest request) {
         String requestId = request.getHeaders().getFirst(REQUEST_ID_HEADER);
         if (requestId == null || requestId.isBlank()) {
             requestId = request.getHeaders().getFirst(REQUEST_ID_HEADER_LEGACY);
+        }
+        if ((requestId == null || requestId.isBlank()) && request instanceof ServletServerHttpRequest servletRequest) {
+            Object attribute = servletRequest.getServletRequest().getAttribute(REQUEST_ID_ATTRIBUTE);
+            if (attribute instanceof String value && !value.isBlank()) {
+                requestId = value;
+            }
         }
         return requestId;
     }
