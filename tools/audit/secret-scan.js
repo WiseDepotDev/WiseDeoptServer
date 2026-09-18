@@ -55,6 +55,7 @@ const ALLOWLIST = [
     // 文档/规划材料：允许出现环境拓扑与历史反例（不含可用于登录的凭据文件）
     { path: 'docs/**', rule: 'INTERNAL_IP', reason: '文档记录环境拓扑与网段规划' },
     { path: 'docs/**', rule: 'KNOWN_DEMO_SECRET', reason: '文档与任务清单引用历史反例' },
+    { path: 'docs/**', rule: 'PIN_LITERAL', reason: '文档引用规则反例（该规则正是为捕获此写法而设）' },
     // 测试源码：允许私有网段样例地址（真实部署地址不在此列）
     { path: '**/src/test/**', rule: 'INTERNAL_IP', reason: '测试用私有网段样例，非真实地址' },
     {
@@ -93,7 +94,13 @@ function valueLooksSafe(raw) {
     if (v.startsWith('*')) return true;
     if (/^[<>{}\[\]()]*$/.test(v)) return true;
     if (/^(true|false|null|none|nil|~|-\d+|\d+)$/i.test(v)) return true;
-    if (/^(your|my|the|some|dummy|fake|test|example|sample|placeholder|changeme|change-me|redacted|masked|todo|tbd|xxx+)/i.test(v))
+    // 占位词必须是"整个值"：占位词 [+ 分隔符] [+ 凭据类词] [+ 数字]。
+    // 早期写法用 ^(your|test|...) 前缀匹配，导致 Test-Admin-Passw0rd 这类真口令被放过（自测暴露）。
+    if (
+        /^(your|my|the|some|dummy|fake|test|example|sample|placeholder|changeme|change-me|redacted|masked|todo|tbd)[-_]?(password|passwd|secret|token|pin|pwd|key|value|credential)?[-_]?\d{0,6}$/i.test(
+            v
+        )
+    )
         return true;
     if (/^(value|string|list|map|object|class|file|path|name|type|enabled)$/i.test(v)) return true;
     // 尖括号占位符，如 <PIN_SALT> / <NFC_UID>
@@ -106,8 +113,10 @@ function valueLooksSafe(raw) {
 /** 字面量是否"像"一个真凭据（用于源码赋值，压低噪声）。 */
 function literalLooksLikeSecret(v) {
     if (valueLooksSafe(v)) return false;
-    // 标识符 / HTTP 头名 / 键名，如 X-Access-Key、access_key（不是凭据）
-    if (/^[A-Za-z][A-Za-z0-9]*([-_][A-Za-z0-9]+)+$/.test(v)) return false;
+    // 标识符 / HTTP 头名 / 键名，如 X-Access-Key、access_key（不是凭据）。
+    // 必须同时"不含数字"才排除：否则 Zx9-Kf21Qm 这类带连字符的口令会被误当作标识符放过
+    // （实证漏洞：该排除曾导致植入的 `api_password = "Zx9-Kf21Qm"` 漏检）。
+    if (!/\d/.test(v) && /^[A-Za-z][A-Za-z0-9]*([-_][A-Za-z0-9]+)+$/.test(v)) return false;
     if (/\d/.test(v) && v.length >= 6) return true;
     if (/[-_!@#$%^&*+=]/.test(v) && /[A-Za-z]/.test(v) && v.length >= 8) return true;
     if (v.length >= 16 && /[a-z]/.test(v) && /[A-Z]/.test(v)) return true;
@@ -116,8 +125,10 @@ function literalLooksLikeSecret(v) {
 
 const PLACEHOLDER = /\$\{([^}:]+):([^}]*)\}/g;
 const YAML_LINE = /^\s*(?:-\s*)?["']?([A-Za-z0-9_.\-]+)["']?\s*[:=]\s*(.*)$/;
-// 字段名大小写不敏感，覆盖 SECRET_KEY / access-key 等常见写法（但不含 token，避免 token=xxx 噪声）
-const CODE_ASSIGN = /(?<![\w.])([A-Za-z0-9_$]*(?:password|passwd|secret[-_]?key|secretkey|secret|access[-_]?key|accesskey|api[-_]?key|apikey|private[-_]?key|privatekey|credential|salt)[A-Za-z0-9_$]*)\s*[:=]\s*(["'])((?:(?!\2)[^\n]){3,160}?)\2/gi;
+// 字段名大小写不敏感，覆盖 SECRET_KEY / access-key / token 等常见写法。
+// token 此前被排除以降低噪声；但当前规则要求"带引号的字面量"，`token = token.substring(7)`
+// 一类赋值不会命中，故可安全纳入（自测用例：String token = "9f2a-Kd81";）。
+const CODE_ASSIGN = /(?<![\w.])([A-Za-z0-9_$]*(?:password|passwd|secret[-_]?key|secretkey|secret|access[-_]?key|accesskey|api[-_]?key|apikey|private[-_]?key|privatekey|token|credential|salt)[A-Za-z0-9_$]*)\s*[:=]\s*(["'])((?:(?!\2)[^\n]){3,160}?)\2/gi;
 const INTERNAL_IP = /\b(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b/g;
 const KNOWN_SECRET = /(Key-1122|admin123|operator123|visitor123|qq18742489354|wise-depot-secret-key-for-jwt-token-generation-2024|wise-depot-secret-key-2026|wise-depot-secret)/g;
 // PIN 是纯数字凭据，会被"数字视为安全值"的通用判断放过，因此单独设规则：
@@ -273,9 +284,59 @@ function scan(text, file, ext, findings) {
     }
 }
 
+/**
+ * 规则自测：`--self-test`。
+ *
+ * 每条用例声明的规则必须命中（或必须不命中）。门禁的"规则判断逻辑"本身需要回归防护——
+ * 实证教训：一次为消除 `X-Access-Key` 误报而加的排除规则过宽，导致
+ * `api_password = "Zx9-Kf21Qm"` 这类带连字符口令**漏检**，而门禁仍显示 PASS。
+ */
+const SELF_TEST_CASES = [
+    { text: 'api_password = "Zx9-Kf21Qm"\n', expect: 'CRED_CODE_LITERAL', ext: '.py' },
+    { text: 'String token = "9f2a-Kd81";\n', expect: 'CRED_CODE_LITERAL', ext: '.java' },
+    { text: 'ACCESS_KEY_HEADER = "X-Access-Key"\n', expect: null, ext: '.java' },
+    { text: 'password = "Test-Admin-Passw0rd";\n', expect: 'CRED_CODE_LITERAL', ext: '.java' },
+    { text: 'pin = "123456"\n', expect: 'PIN_LITERAL', ext: '.py' },
+    { text: 'String pin = args[0];\n', expect: null, ext: '.java' },
+    { text: 'secret = "changeme"\n', expect: null, ext: '.py' },
+    { text: 'jwt:\n    secret: ${WISE_JWT_SECRET}\n', expect: null, ext: '.yml' },
+    { text: 'jwt:\n    secret: hardcoded-jwt-secret-2024\n', expect: 'CRED_CONFIG_VALUE', ext: '.yml' },
+    { text: '@Value("${jwt.secret:wise-depot-secret-key-2024}")\n', expect: 'PLACEHOLDER_DEFAULT', ext: '.java' },
+    { text: 'url: ${WD_HOST:?missing}\n', expect: null, ext: '.yml' },
+    { text: 'host: 10.0.0.4\n', expect: 'INTERNAL_IP', ext: '.yml' },
+    { text: 'pin_salt = "<PIN_SALT>"\n', expect: null, ext: '.py' },
+];
+
+function runSelfTest() {
+    let failed = 0;
+    for (const testCase of SELF_TEST_CASES) {
+        const findings = [];
+        scan(testCase.text, 'selftest/fixture' + testCase.ext, testCase.ext, findings);
+        const rules = new Set(findings.map((f) => f.rule));
+        const label = JSON.stringify(testCase.text.trim());
+        if (testCase.expect === null) {
+            if (rules.size > 0) {
+                failed++;
+                console.log('  ✘ 期望无命中，实际命中 ' + [...rules].join(',') + ' —— ' + label);
+            }
+        } else if (!rules.has(testCase.expect)) {
+            failed++;
+            console.log('  ✘ 期望命中 ' + testCase.expect + '，实际 ' + ([...rules].join(',') || '无命中') + ' —— ' + label);
+        }
+    }
+    const total = SELF_TEST_CASES.length;
+    if (failed === 0) {
+        console.log('secret-scan 自测: PASS —— ' + total + '/' + total + ' 条用例通过');
+        process.exit(0);
+    }
+    console.log('secret-scan 自测: FAIL —— ' + failed + '/' + total + ' 条用例未通过');
+    process.exit(1);
+}
+
 function main() {
     const listSkipped = process.argv.includes('--list');
     const workspaceMode = process.argv.includes('--workspace');
+    if (process.argv.includes('--self-test')) runSelfTest();
     const baseDir = workspaceMode ? path.resolve(REPO_ROOT, '..') : REPO_ROOT;
 
     let files;
