@@ -52,7 +52,14 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
     public boolean supports(
             MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
         String className = returnType.getDeclaringClass().getName();
-        return !className.contains("springdoc") && !className.contains("swagger");
+        if (className.contains("springdoc") || className.contains("swagger")) {
+            return false;
+        }
+        // 运维端点（/actuator/**）必须保持 Spring Boot 原生格式。
+        // Health/Info 是容器 HEALTHCHECK、k8s 探针、Prometheus 等**按既定 schema** 解析的接口，
+        // 包一层业务信封会让它们取不到顶层 status（实测：/actuator/health 曾返回
+        // {"header":...,"payload":{"status":"UP",...}}，见基线记录 19.3）。
+        return !className.startsWith("org.springframework.boot.actuate");
     }
 
     @Override
