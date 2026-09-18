@@ -13,8 +13,9 @@
     <name>wise-deopt-domain</name>
 
     <properties>
-        <jacoco.min.line>0.0</jacoco.min.line>
-        <jacoco.check.skip>true</jacoco.check.skip>
+        <!-- 域模块此前为 jacoco.check.skip=true（无门槛）。先补测试到 13.2%，再按实测设防回退门槛。 -->
+        <jacoco.min.line>0.10</jacoco.min.line>
+        <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
     <dependencies>
@@ -30,6 +31,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.30</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
