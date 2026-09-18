@@ -24,7 +24,7 @@ public class MessageApplicationService {
     private PushService pushService;
 
     @Transactional
-    public Message createMessage(MessageCreateRequest request) {
+    public MessageDTO createMessage(MessageCreateRequest request) {
         String messageId = UUID.randomUUID().toString();
         Message message = new Message(
             messageId,
@@ -40,16 +40,16 @@ public class MessageApplicationService {
         
         messageStore.put(messageId, message);
         
-        return message;
+        return toDto(message);
     }
 
     @Cacheable(prefix = "message", key = "#messageId", timeout = 1800)
-    public Message getMessageById(String messageId) {
-        return messageStore.get(messageId);
+    public MessageDTO getMessageById(String messageId) {
+        return toDto(messageStore.get(messageId));
     }
 
-    public List<Message> queryMessages(MessageQueryRequest request) {
-        List<Message> result = new ArrayList<>();
+    public List<MessageDTO> queryMessages(MessageQueryRequest request) {
+        List<Message> matched = new ArrayList<>();
         
         for (Message message : messageStore.values()) {
             if (request.getReceiverId() != null && 
@@ -67,17 +67,17 @@ public class MessageApplicationService {
                 continue;
             }
             
-            result.add(message);
+            matched.add(message);
         }
         
         int start = request.getPage() * request.getSize();
-        int end = Math.min(start + request.getSize(), result.size());
+        int end = Math.min(start + request.getSize(), matched.size());
         
-        if (start >= result.size()) {
+        if (start >= matched.size()) {
             return new ArrayList<>();
         }
         
-        return result.subList(start, end);
+        return matched.subList(start, end).stream().map(MessageApplicationService::toDto).collect(java.util.stream.Collectors.toList());
     }
 
     public int getUnreadCount(Long receiverId) {
@@ -92,13 +92,13 @@ public class MessageApplicationService {
     }
 
     @Transactional
-    public Message markAsRead(String messageId) {
+    public MessageDTO markAsRead(String messageId) {
         Message message = messageStore.get(messageId);
         if (message != null && !message.getIsRead()) {
             message.setIsRead(true);
             message.setReadTime(LocalDateTime.now());
         }
-        return message;
+        return toDto(message);
     }
 
     @Transactional
@@ -124,7 +124,7 @@ public class MessageApplicationService {
         );
     }
 
-    public void sendPushNotification(Message message) {
+    public void sendPushNotification(MessageDTO message) {
         if (pushService.isAvailable()) {
             pushService.sendPushNotificationToUser(
                 message.getReceiverId(),
@@ -133,4 +133,31 @@ public class MessageApplicationService {
             );
         }
     }
+    /**
+     * 领域实体转 DTO（避免实体出现在接口签名，STD-NAME-02）。
+     *
+     * @param message 消息实体，可为 null
+     * @return 消息 DTO；入参为 null 时返回 null
+     */
+    private static MessageDTO toDto(Message message) {
+        if (message == null) {
+            return null;
+        }
+        MessageDTO dto = new MessageDTO();
+        dto.setId(message.getId());
+        dto.setTitle(message.getTitle());
+        dto.setContent(message.getContent());
+        dto.setType(message.getType());
+        dto.setReceiverId(message.getReceiverId());
+        dto.setReceiverName(message.getReceiverName());
+        dto.setRelatedEntityType(message.getRelatedEntityType());
+        dto.setRelatedEntityId(message.getRelatedEntityId());
+        dto.setIsRead(message.getIsRead());
+        dto.setReadTime(message.getReadTime());
+        dto.setCreateTime(message.getCreateTime());
+        dto.setStatus(message.getStatus());
+        dto.setPriority(message.getPriority());
+        return dto;
+    }
+
 }

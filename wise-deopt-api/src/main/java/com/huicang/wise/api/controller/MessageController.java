@@ -5,7 +5,7 @@ import com.huicang.wise.application.message.MessageCreateRequest;
 import com.huicang.wise.application.message.MessageQueryRequest;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.api.ApiResponse;
-import com.huicang.wise.domain.message.Message;
+import com.huicang.wise.application.message.MessageDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +19,14 @@ public class MessageController {
     private MessageApplicationService messageApplicationService;
 
     @PostMapping
-    public ApiResponse<Message> createMessage(@RequestBody MessageCreateRequest request) {
-        Message message = messageApplicationService.createMessage(request);
+    public ApiResponse<MessageDTO> createMessage(@RequestBody MessageCreateRequest request) {
+        MessageDTO message = messageApplicationService.createMessage(request);
         return ApiResponse.success(message);
     }
 
     @GetMapping("/{messageId}")
-    public ApiResponse<Message> getMessage(@PathVariable String messageId) {
-        Message message = messageApplicationService.getMessageById(messageId);
+    public ApiResponse<MessageDTO> getMessage(@PathVariable String messageId) {
+        MessageDTO message = messageApplicationService.getMessageById(messageId);
         if (message == null) {
             return ApiResponse.failure(ErrorCode.NOT_FOUND, "消息不存在");
         }
@@ -34,8 +34,8 @@ public class MessageController {
     }
 
     @GetMapping
-    public ApiResponse<List<Message>> queryMessages(MessageQueryRequest request) {
-        List<Message> messages = messageApplicationService.queryMessages(request);
+    public ApiResponse<List<MessageDTO>> queryMessages(MessageQueryRequest request) {
+        List<MessageDTO> messages = messageApplicationService.queryMessages(request);
         return ApiResponse.success(messages);
     }
 
@@ -46,8 +46,8 @@ public class MessageController {
     }
 
     @PutMapping("/{messageId}/read")
-    public ApiResponse<Message> markAsRead(@PathVariable String messageId) {
-        Message message = messageApplicationService.markAsRead(messageId);
+    public ApiResponse<MessageDTO> markAsRead(@PathVariable String messageId) {
+        MessageDTO message = messageApplicationService.markAsRead(messageId);
         if (message == null) {
             return ApiResponse.failure(ErrorCode.NOT_FOUND, "消息不存在");
         }

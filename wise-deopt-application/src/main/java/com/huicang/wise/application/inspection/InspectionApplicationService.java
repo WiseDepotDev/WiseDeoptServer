@@ -566,7 +566,7 @@ public class InspectionApplicationService {
                 messageRequest.setRelatedEntityId(task.getTaskId().toString());
                 messageRequest.setPriority(1);
 
-                com.huicang.wise.domain.message.Message message = messageApplicationService.createMessage(messageRequest);
+                com.huicang.wise.application.message.MessageDTO message = messageApplicationService.createMessage(messageRequest);
                 messageApplicationService.sendPushNotification(message);
             });
         } catch (Exception e) {

@@ -108,6 +108,22 @@ class ArchitectureTest {
             .because("业务失败必须用 BusinessException + ErrorCode（STD-ERR-01；否则被兜底映射为 500）");
 
     /**
+     * 入口层不得依赖领域实体（STD-NAME-02 / STD-ARCH-05）。
+     *
+     * <p>领域实体（{@code @Entity}）不得出现在控制器签名或实现中，对外必须使用 DTO；
+     * 该规则以「是否标注 JPA {@code @Entity}」作为实体的判定依据，避免误伤领域枚举与值对象。
+     *
+     * <p>已知存量债务以显式例外记录：{@code DataInitializer}（启动期数据播种需直接构造实体，
+     * 共 146 处调用点，随 P2-04b 迁移至 infrastructure 或改为应用服务调用）。
+     */
+    @ArchTest
+    static final ArchRule api_不应依赖领域实体 = noClasses()
+            .that().resideInAPackage("com.huicang.wise.api..")
+            .and().haveSimpleNameNotContaining("DataInitializer")
+            .should().dependOnClassesThat().areAnnotatedWith(jakarta.persistence.Entity.class)
+            .because("对外接口必须使用 DTO，禁止暴露领域实体（STD-NAME-02；存量债务见 P2-04b）");
+
+    /**
      * 业务代码不得直接使用 {@code System.out} / {@code System.err}（STD-LOG-02）。
      *
      * <p>日志必须走日志门面（含链路标识与级别控制）；直出标准流无法被日志系统采集与脱敏。

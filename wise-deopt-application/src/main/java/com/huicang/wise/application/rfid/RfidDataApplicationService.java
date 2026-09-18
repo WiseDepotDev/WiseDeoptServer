@@ -174,7 +174,7 @@ public class RfidDataApplicationService {
                 messageRequest.setReceiverId(user.getUserId());
                 messageRequest.setPriority(1);
                 
-                com.huicang.wise.domain.message.Message message = messageApplicationService.createMessage(messageRequest);
+                com.huicang.wise.application.message.MessageDTO message = messageApplicationService.createMessage(messageRequest);
                 messageApplicationService.sendPushNotification(message);
             }
         } catch (Exception e) {
