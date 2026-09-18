@@ -7,9 +7,10 @@ import com.huicang.wise.application.oss.PresignedUrlResponse;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.protocol.ApiPacketType;
 import com.huicang.wise.common.protocol.PacketType;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,15 +46,15 @@ public class OssController {
     @ApiPacketType(PacketType.OSS_FILE_CREATE)
     @PostMapping("/files")
     public ApiResponse<MinioFileDTO> createFileRecord(
-            @Parameter(description = "文件记录创建请求", required = true)
-            @RequestBody MinioFileCreateRequest request) {
+            @Parameter(description = "文件记录创建请求", required = true) @Valid @RequestBody
+                    MinioFileCreateRequest request) {
         return ApiResponse.success(ossApplicationService.createFileRecord(request));
     }
 
     /**
      * 方法功能描述：生成预签名下载链接
      *
-     * @param bucket    Bucket名称
+     * @param bucket Bucket名称
      * @param objectKey 对象Key
      * @param expiresIn 过期秒数
      * @return 预签名链接
@@ -62,14 +63,13 @@ public class OssController {
     @ApiPacketType(PacketType.OSS_PRESIGNED_URL)
     @GetMapping("/presigned-url")
     public ApiResponse<PresignedUrlResponse> generatePresignedUrl(
-            @Parameter(description = "Bucket名称", required = true)
-            @RequestParam("bucket") String bucket,
-            @Parameter(description = "对象Key", required = true)
-            @RequestParam("objectKey") String objectKey,
-            @Parameter(description = "过期秒数", required = true)
-            @RequestParam("expiresIn") Integer expiresIn) {
-        return ApiResponse.success(ossApplicationService.generatePresignedUrl(bucket, objectKey, expiresIn));
+            @Parameter(description = "Bucket名称", required = true) @RequestParam("bucket")
+                    String bucket,
+            @Parameter(description = "对象Key", required = true) @RequestParam("objectKey")
+                    String objectKey,
+            @Parameter(description = "过期秒数", required = true) @RequestParam("expiresIn")
+                    Integer expiresIn) {
+        return ApiResponse.success(
+                ossApplicationService.generatePresignedUrl(bucket, objectKey, expiresIn));
     }
 }
-
-

@@ -9,9 +9,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 仓库管理接口
@@ -35,13 +34,15 @@ public class WarehouseController {
     @GetMapping
     public ApiResponse<List<WarehouseDTO>> listWarehouses(
             @Parameter(description = "搜索关键字", required = false)
-            @RequestParam(value = "keyword", required = false) String keyword) {
+                    @RequestParam(value = "keyword", required = false)
+                    String keyword) {
         return ApiResponse.success(warehouseApplicationService.listWarehouses(keyword));
     }
 
     @Operation(summary = "创建仓库", description = "创建新仓库")
     @PostMapping
-    public ApiResponse<WarehouseDTO> createWarehouse(@RequestBody @Valid WarehouseCreateRequest request) {
+    public ApiResponse<WarehouseDTO> createWarehouse(
+            @RequestBody @Valid WarehouseCreateRequest request) {
         return ApiResponse.success(warehouseApplicationService.createWarehouse(request));
     }
 
@@ -49,7 +50,7 @@ public class WarehouseController {
     @PutMapping("/{id}")
     public ApiResponse<WarehouseDTO> updateWarehouse(
             @Parameter(description = "仓库ID", required = true) @PathVariable Long id,
-            @RequestBody WarehouseUpdateRequest request) {
+            @Valid @RequestBody WarehouseUpdateRequest request) {
         return ApiResponse.success(warehouseApplicationService.updateWarehouse(id, request));
     }
 

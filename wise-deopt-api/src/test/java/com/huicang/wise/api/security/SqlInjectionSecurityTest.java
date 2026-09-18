@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
+import com.huicang.wise.api.support.SecurityAssertions;
 import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
@@ -66,7 +67,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -89,7 +90,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -138,7 +139,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -161,7 +162,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -208,7 +209,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -220,6 +221,6 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         mockMvc.perform(get("/api/users/0x31").header("Authorization", "Bearer token"))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 }

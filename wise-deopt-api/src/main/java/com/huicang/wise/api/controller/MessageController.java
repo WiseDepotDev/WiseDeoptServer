@@ -6,22 +6,28 @@ import com.huicang.wise.application.message.MessageDTO;
 import com.huicang.wise.application.message.MessageQueryRequest;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.api.ErrorCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Tag(name = "Message", description = "Message 接口")
 @RequestMapping("/api/messages")
 public class MessageController {
 
     @Autowired private MessageApplicationService messageApplicationService;
 
+    @Operation(summary = "创建消息")
     @PostMapping
-    public ApiResponse<MessageDTO> createMessage(@RequestBody MessageCreateRequest request) {
+    public ApiResponse<MessageDTO> createMessage(@Valid @RequestBody MessageCreateRequest request) {
         MessageDTO message = messageApplicationService.createMessage(request);
         return ApiResponse.success(message);
     }
 
+    @Operation(summary = "获取消息详情")
     @GetMapping("/{messageId}")
     public ApiResponse<MessageDTO> getMessage(@PathVariable String messageId) {
         MessageDTO message = messageApplicationService.getMessageById(messageId);
@@ -31,18 +37,21 @@ public class MessageController {
         return ApiResponse.success(message);
     }
 
+    @Operation(summary = "查询消息列表")
     @GetMapping
     public ApiResponse<List<MessageDTO>> queryMessages(MessageQueryRequest request) {
         List<MessageDTO> messages = messageApplicationService.queryMessages(request);
         return ApiResponse.success(messages);
     }
 
+    @Operation(summary = "查询未读消息数")
     @GetMapping("/unread-count")
     public ApiResponse<Integer> getUnreadCount(@RequestParam Long receiverId) {
         int count = messageApplicationService.getUnreadCount(receiverId);
         return ApiResponse.success(count);
     }
 
+    @Operation(summary = "标记单条消息已读")
     @PutMapping("/{messageId}/read")
     public ApiResponse<MessageDTO> markAsRead(@PathVariable String messageId) {
         MessageDTO message = messageApplicationService.markAsRead(messageId);
@@ -52,18 +61,21 @@ public class MessageController {
         return ApiResponse.success(message);
     }
 
+    @Operation(summary = "标记全部消息已读")
     @PutMapping("/read-all")
     public ApiResponse<Void> markAllAsRead(@RequestParam Long receiverId) {
         messageApplicationService.markAllAsRead(receiverId);
         return ApiResponse.success(null);
     }
 
+    @Operation(summary = "删除单条消息")
     @DeleteMapping("/{messageId}")
     public ApiResponse<Void> deleteMessage(@PathVariable String messageId) {
         messageApplicationService.deleteMessage(messageId);
         return ApiResponse.success(null);
     }
 
+    @Operation(summary = "删除某接收人的全部消息")
     @DeleteMapping
     public ApiResponse<Void> deleteAllMessages(@RequestParam Long receiverId) {
         messageApplicationService.deleteAllMessages(receiverId);

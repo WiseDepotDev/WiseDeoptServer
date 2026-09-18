@@ -13,6 +13,7 @@ import com.huicang.wise.common.api.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class InspectionController {
     @Operation(summary = "创建巡检计划")
     @PostMapping("/plan")
     public ApiResponse<InspectionPlanDTO> createPlan(
-            @RequestBody InspectionPlanCreateRequest request) {
+            @Valid @RequestBody InspectionPlanCreateRequest request) {
         InspectionPlanDTO plan = inspectionApplicationService.createPlan(request);
         return ApiResponse.success(plan);
     }
@@ -45,7 +46,7 @@ public class InspectionController {
     @PutMapping("/plan/{planId}")
     public ApiResponse<InspectionPlanDTO> updatePlan(
             @Parameter(description = "计划ID") @PathVariable("planId") Long planId,
-            @RequestBody InspectionPlanUpdateRequest request) {
+            @Valid @RequestBody InspectionPlanUpdateRequest request) {
         InspectionPlanDTO plan = inspectionApplicationService.updatePlan(planId, request);
         return ApiResponse.success(plan);
     }
@@ -83,7 +84,7 @@ public class InspectionController {
     @Operation(summary = "创建巡检任务")
     @PostMapping("/task")
     public ApiResponse<InspectionTaskDTO> createTask(
-            @RequestBody InspectionTaskCreateRequest request) {
+            @Valid @RequestBody InspectionTaskCreateRequest request) {
         InspectionTaskDTO task = inspectionApplicationService.createTask(request);
         return ApiResponse.success(task);
     }
@@ -212,7 +213,8 @@ public class InspectionController {
     @Operation(summary = "上报巡检结果与明细")
     @PostMapping("/report")
     public ApiResponse<InspectionResultDTO> reportResult(
-            @RequestBody com.huicang.wise.application.inspection.InspectionReportRequest request) {
+            @Valid @RequestBody
+                    com.huicang.wise.application.inspection.InspectionReportRequest request) {
         InspectionResultDTO result = inspectionApplicationService.reportResult(request);
 
         // Progress will be broadcasted via event mechanism
@@ -247,7 +249,7 @@ public class InspectionController {
     @PostMapping("/result/{resultId}/confirm")
     public ApiResponse<Void> confirmResult(
             @Parameter(description = "结果ID") @PathVariable("resultId") Long resultId,
-            @RequestBody java.util.Map<String, Object> request) {
+            @Valid @RequestBody java.util.Map<String, Object> request) {
         // Here we can process the differences (e.g. create adjustments, update inventory)
         // For demonstration, we just return success
         return ApiResponse.success();
@@ -271,7 +273,8 @@ public class InspectionController {
     @PostMapping("/task/{taskId}/manual-record")
     public ApiResponse<Void> manualRecord(
             @Parameter(description = "任务ID") @PathVariable("taskId") Long taskId,
-            @RequestBody com.huicang.wise.application.inspection.ManualRecordRequest request) {
+            @Valid @RequestBody
+                    com.huicang.wise.application.inspection.ManualRecordRequest request) {
         request.setTaskId(taskId);
         inspectionApplicationService.manualRecord(request);
         return ApiResponse.success();

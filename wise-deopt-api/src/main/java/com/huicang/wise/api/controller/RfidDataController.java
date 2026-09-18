@@ -3,9 +3,10 @@ package com.huicang.wise.api.controller;
 import com.huicang.wise.application.rfid.RfidDataApplicationService;
 import com.huicang.wise.application.rfid.RfidReportDTO;
 import com.huicang.wise.common.api.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,10 +39,9 @@ public class RfidDataController {
     @PostMapping("/report")
     @Operation(summary = "RFID数据上报接口")
     public ApiResponse<Void> reportRfidData(
-            @Parameter(description = "RFID数据上报DTO", required = true)
-            @RequestBody RfidReportDTO request) {
+            @Parameter(description = "RFID数据上报DTO", required = true) @Valid @RequestBody
+                    RfidReportDTO request) {
         rfidDataApplicationService.processRfidReport(request);
         return ApiResponse.success(null);
     }
 }
-

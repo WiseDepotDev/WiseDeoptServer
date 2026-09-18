@@ -7,6 +7,8 @@ import com.huicang.wise.application.oss.MinioFileDTO;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @since 2026-02-27
  */
 @RestController
+@Tag(name = "FileStorage", description = "FileStorage 接口")
 @RequestMapping("/api/files")
 public class FileStorageController {
 
@@ -43,6 +46,7 @@ public class FileStorageController {
      * @param uploadBy 上传者ID
      * @return 文件上传响应
      */
+    @Operation(summary = "上传文件")
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadFile(
             @RequestParam("file") MultipartFile file,
@@ -71,6 +75,7 @@ public class FileStorageController {
      * @param fileId 文件ID
      * @return 文件字节数组
      */
+    @Operation(summary = "下载文件")
     @GetMapping("/{fileId}/download")
     public ResponseEntity<byte[]> downloadFile(@PathVariable Long fileId) {
         try {
@@ -96,6 +101,7 @@ public class FileStorageController {
      * @param expiresIn 过期时间（秒）
      * @return 临时访问链接
      */
+    @Operation(summary = "生成临时访问链接")
     @GetMapping("/{fileId}/presigned-url")
     public ResponseEntity<ApiResponse<Map<String, String>>> generatePresignedUrl(
             @PathVariable Long fileId,
@@ -122,6 +128,7 @@ public class FileStorageController {
      * @param uploadBy 上传者ID
      * @return 文件列表
      */
+    @Operation(summary = "查询文件列表")
     @GetMapping
     public ResponseEntity<ApiResponse<List<MinioFileDTO>>> listFiles(
             @RequestParam(value = "uploadBy", required = false) Long uploadBy) {
@@ -141,6 +148,7 @@ public class FileStorageController {
      * @param fileId 文件ID
      * @return 文件详情
      */
+    @Operation(summary = "获取文件详情")
     @GetMapping("/{fileId}")
     public ResponseEntity<ApiResponse<MinioFileDTO>> getFileDetail(@PathVariable Long fileId) {
         try {
@@ -159,6 +167,7 @@ public class FileStorageController {
      * @param fileId 文件ID
      * @return 删除结果
      */
+    @Operation(summary = "删除文件")
     @DeleteMapping("/{fileId}")
     public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long fileId) {
         try {

@@ -11,6 +11,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.huicang.wise.api.config.JpaConfiguration;
+import com.huicang.wise.api.controller.UserController;
+import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.application.user.UserApplicationService;
+import com.huicang.wise.application.user.UserCreateRequest;
+import com.huicang.wise.application.user.UserDTO;
+import com.huicang.wise.common.api.ErrorCode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +29,6 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,30 +41,19 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.huicang.wise.api.config.JpaConfiguration;
-import com.huicang.wise.api.controller.UserController;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.auth.AuthApplicationService;
-import com.huicang.wise.application.user.UserApplicationService;
-import com.huicang.wise.application.user.UserCreateRequest;
-import com.huicang.wise.application.user.UserDTO;
-import com.huicang.wise.common.api.ErrorCode;
-
 /**
  * 三端统一信封契约测试（服务端侧，STD-CONTRACT-01 / STD-TEST-02）。
  *
- * <p>与 APP 端 {@code EnvelopeContractTest}、设备端 {@code test/test_envelope.c} 使用**同一组**
- * 权威样例报文（{@code docs/standards/fixtures/*.json}）与同一份 schema
- * （{@code docs/standards/schemas/envelope.schema.json}），确保三端对信封的理解一致。
+ * <p>与 APP 端 {@code EnvelopeContractTest}、设备端 {@code test/test_envelope.c} 使用**同一组** 权威样例报文（{@code
+ * docs/standards/fixtures/*.json}）与同一份 schema （{@code
+ * docs/standards/schemas/envelope.schema.json}），确保三端对信封的理解一致。
  *
  * <p>覆盖：
+ *
  * <ul>
- *   <li>成功 / 业务失败 / 系统失败三类样例的结构与字段语义；</li>
- *   <li>样例中的业务码必须在 {@link ErrorCode} 中存在（与对照表联动）；</li>
- *   <li>服务端确实接受「信封信封化请求」并把 {@code payload.data} 交给控制器。</li>
+ *   <li>成功 / 业务失败 / 系统失败三类样例的结构与字段语义；
+ *   <li>样例中的业务码必须在 {@link ErrorCode} 中存在（与对照表联动）；
+ *   <li>服务端确实接受「信封信封化请求」并把 {@code payload.data} 交给控制器。
  * </ul>
  *
  * <p>找不到 fixtures 时跳过（裁剪构建环境），不使构建失败。
@@ -64,29 +63,30 @@ import com.huicang.wise.common.api.ErrorCode;
  * @since 2026-02-27
  */
 @AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(controllers = UserController.class, excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class),
-        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*") })
+@WebMvcTest(
+        controllers = UserController.class,
+        excludeFilters = {
+            @ComponentScan.Filter(
+                    type = FilterType.ASSIGNABLE_TYPE,
+                    classes = JpaConfiguration.class),
+            @ComponentScan.Filter(
+                    type = FilterType.REGEX,
+                    pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*")
+        })
 class EnvelopeContractTest extends AbstractWebMvcSliceTest {
 
     /** fixtures 相对路径候选（相对各模块工作目录） */
     private static final String[] FIXTURE_CANDIDATES = {
-            "../../docs/standards/fixtures",
-            "../docs/standards/fixtures",
-            "docs/standards/fixtures"
+        "../../docs/standards/fixtures", "../docs/standards/fixtures", "docs/standards/fixtures"
     };
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-    @MockBean
-    private UserApplicationService userApplicationService;
+    @MockBean private UserApplicationService userApplicationService;
 
-    @MockBean
-    private AuthApplicationService authApplicationService;
+    @MockBean private AuthApplicationService authApplicationService;
 
     @BeforeEach
     void setUp() {
@@ -158,8 +158,7 @@ class EnvelopeContractTest extends AbstractWebMvcSliceTest {
         assertTrue(root.get("payload").get("data").has("rows"), "分页载荷应为 data.rows");
         // 成功响应：errorCode 必须省略或为 null（STD-CONTRACT-01 第 3 条）
         JsonNode errorCode = root.get("payload").get("errorCode");
-        assertTrue(errorCode == null || errorCode.isNull(),
-                "成功响应不应携带非空 errorCode");
+        assertTrue(errorCode == null || errorCode.isNull(), "成功响应不应携带非空 errorCode");
     }
 
     /**
@@ -174,10 +173,11 @@ class EnvelopeContractTest extends AbstractWebMvcSliceTest {
         JsonNode payload = root.get("payload");
 
         assertEnvelopeShape(root);
-        assertEquals(payload.get("code").asText(), payload.get("errorCode").asText(),
+        assertEquals(
+                payload.get("code").asText(),
+                payload.get("errorCode").asText(),
                 "失败响应 errorCode 应与业务码一致");
-        assertTrue(isRegisteredCode(payload.get("code").asText()),
-                "业务码必须存在于 ErrorCode 枚举（与对照表联动）");
+        assertTrue(isRegisteredCode(payload.get("code").asText()), "业务码必须存在于 ErrorCode 枚举（与对照表联动）");
     }
 
     /**
@@ -219,8 +219,12 @@ class EnvelopeContractTest extends AbstractWebMvcSliceTest {
     @DisplayName("shouldRegisterEveryFixtureCodeInEnum")
     void shouldRegisterEveryFixtureCodeInEnum() throws Exception {
         List<String> unknown = new ArrayList<>();
-        for (String fixture : new String[] {
-                "envelope-success.json", "envelope-business-error.json", "envelope-system-error.json" }) {
+        for (String fixture :
+                new String[] {
+                    "envelope-success.json",
+                    "envelope-business-error.json",
+                    "envelope-system-error.json"
+                }) {
             String code = loadFixture(fixture).get("payload").get("code").asText();
             if (!isRegisteredCode(code)) {
                 unknown.add(fixture + " -> " + code);
@@ -239,6 +243,8 @@ class EnvelopeContractTest extends AbstractWebMvcSliceTest {
     void shouldUnwrapPayloadDataWhenEnvelopedRequest() throws Exception {
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername("testuser");
+        // nickname 为 @NotBlank 必填字段：@Valid 启用后缺省会返回 400（P2-08）
+        request.setNickname("测试昵称");
         request.setPassword("password");
         request.setEmail("test@example.com");
 
@@ -262,11 +268,12 @@ class EnvelopeContractTest extends AbstractWebMvcSliceTest {
         envelope.set("header", header);
         envelope.set("payload", payload);
 
-        mockMvc.perform(post("/api/users")
-                        .header("Authorization", "Bearer token")
-                        .header("REQUEST-ID", "contract-test-req-1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(envelope)))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer token")
+                                .header("REQUEST-ID", "contract-test-req-1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(envelope)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value(ErrorCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.payload.data.username").value("testuser"))

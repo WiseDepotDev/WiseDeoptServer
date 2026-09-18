@@ -3,10 +3,10 @@ package com.huicang.wise.api.security;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
+import com.huicang.wise.api.support.SecurityAssertions;
 import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
@@ -65,7 +65,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -88,7 +88,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -111,7 +111,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -157,7 +157,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -180,7 +180,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -203,7 +203,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -226,7 +226,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -249,7 +249,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -272,7 +272,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -295,7 +295,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -318,7 +318,7 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 
     @Test
@@ -341,6 +341,6 @@ public class XssSecurityTest extends AbstractAuthenticatedSliceTest {
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(SecurityAssertions.noServerErrorAndNoEcho());
     }
 }

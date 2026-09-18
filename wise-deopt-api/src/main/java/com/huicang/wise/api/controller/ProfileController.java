@@ -12,6 +12,7 @@ import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
@@ -66,7 +67,7 @@ public class ProfileController {
     @PutMapping
     public ApiResponse<UserProfileDTO> updateProfile(
             @RequestHeader("Authorization") String token,
-            @RequestBody UserProfileUpdateRequest request) {
+            @Valid @RequestBody UserProfileUpdateRequest request) {
         String username = extractUsername(token);
         return ApiResponse.success(
                 userProfileApplicationService.updateUserProfile(username, request));
@@ -103,7 +104,7 @@ public class ProfileController {
     @PutMapping("/settings")
     public ApiResponse<UserSettingsDTO> updateSettings(
             @RequestHeader("Authorization") String token,
-            @RequestBody UserSettingsUpdateRequest request) {
+            @Valid @RequestBody UserSettingsUpdateRequest request) {
         String username = extractUsername(token);
         return ApiResponse.success(
                 userProfileApplicationService.updateUserSettings(username, request));

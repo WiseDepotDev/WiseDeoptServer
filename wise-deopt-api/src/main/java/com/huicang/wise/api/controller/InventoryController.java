@@ -15,6 +15,7 @@ import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,7 +57,7 @@ public class InventoryController {
     @ApiPacketType(PacketType.PRODUCT_CREATE)
     @PostMapping("/products")
     public ApiResponse<ProductDTO> createProduct(
-            @Parameter(description = "产品创建请求", required = true) @RequestBody
+            @Parameter(description = "产品创建请求", required = true) @Valid @RequestBody
                     ProductCreateRequest request) {
         return ApiResponse.success(inventoryApplicationService.createProduct(request));
     }
@@ -74,7 +75,7 @@ public class InventoryController {
     public ApiResponse<ProductDTO> updateProduct(
             @Parameter(description = "产品主键ID", required = true) @PathVariable("productId")
                     Long productId,
-            @Parameter(description = "产品更新请求", required = true) @RequestBody
+            @Parameter(description = "产品更新请求", required = true) @Valid @RequestBody
                     ProductUpdateRequest request) {
         return ApiResponse.success(inventoryApplicationService.updateProduct(productId, request));
     }
@@ -162,7 +163,7 @@ public class InventoryController {
     @ApiPacketType(PacketType.INVENTORY_CREATE)
     @PostMapping
     public ApiResponse<InventoryDTO> createInventory(
-            @Parameter(description = "库存创建请求", required = true) @RequestBody
+            @Parameter(description = "库存创建请求", required = true) @Valid @RequestBody
                     InventoryCreateRequest request) {
         return ApiResponse.success(inventoryApplicationService.createInventory(request));
     }
@@ -211,7 +212,7 @@ public class InventoryController {
     public ApiResponse<InventoryDTO> updateInventory(
             @Parameter(description = "库存明细ID", required = true) @PathVariable("inventoryId")
                     Long inventoryId,
-            @Parameter(description = "库存更新请求", required = true) @RequestBody
+            @Parameter(description = "库存更新请求", required = true) @Valid @RequestBody
                     InventoryUpdateRequest request) {
         return ApiResponse.success(
                 inventoryApplicationService.updateInventory(inventoryId, request));

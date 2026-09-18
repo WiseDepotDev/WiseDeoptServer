@@ -1,23 +1,22 @@
 package com.huicang.wise.api.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.auth.LoginRequest;
 import com.huicang.wise.application.auth.LoginResponse;
 import com.huicang.wise.application.auth.RefreshTokenRequest;
 import com.huicang.wise.common.api.ApiResponse;
-
 import com.huicang.wise.common.protocol.ApiPacketType;
 import com.huicang.wise.common.protocol.PacketType;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 类功能描述：认证控制层，提供登录相关接口
@@ -47,8 +46,8 @@ public class AuthController {
     @ApiPacketType(PacketType.AUTH_LOGIN)
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(
-            @Parameter(description = "登录请求参数", required = true)
-            @RequestBody LoginRequest request,
+            @Parameter(description = "登录请求参数", required = true) @Valid @RequestBody
+                    LoginRequest request,
             HttpServletRequest httpServletRequest) {
         return ApiResponse.success(authApplicationService.login(request, httpServletRequest));
     }
@@ -63,8 +62,8 @@ public class AuthController {
     @ApiPacketType(PacketType.AUTH_NFC_LOGIN)
     @PostMapping("/nfc-login")
     public ApiResponse<com.huicang.wise.application.auth.NfcLoginResponse> loginNfc(
-            @Parameter(description = "NFC登录请求参数", required = true)
-            @RequestBody com.huicang.wise.application.auth.UserNfcLoginDTO request,
+            @Parameter(description = "NFC登录请求参数", required = true) @Valid @RequestBody
+                    com.huicang.wise.application.auth.UserNfcLoginDTO request,
             HttpServletRequest httpServletRequest) {
         return ApiResponse.success(authApplicationService.loginNfc(request, httpServletRequest));
     }
@@ -89,10 +88,11 @@ public class AuthController {
     @Operation(summary = "刷新令牌", description = "使用刷新令牌获取新的访问令牌。成功返回200；令牌无效返回401。")
     @PostMapping("/refresh-token")
     public ApiResponse<LoginResponse> refreshToken(
-            @Parameter(description = "刷新令牌请求参数", required = true)
-            @RequestBody RefreshTokenRequest request,
+            @Parameter(description = "刷新令牌请求参数", required = true) @Valid @RequestBody
+                    RefreshTokenRequest request,
             HttpServletRequest httpServletRequest) {
-        return ApiResponse.success(authApplicationService.refreshToken(request, httpServletRequest));
+        return ApiResponse.success(
+                authApplicationService.refreshToken(request, httpServletRequest));
     }
 
     /**
@@ -105,10 +105,9 @@ public class AuthController {
     @ApiPacketType(PacketType.AUTH_NFC_PIN_LOGIN)
     @PostMapping("/nfc-pin-login")
     public ApiResponse<LoginResponse> loginNfcPin(
-            @Parameter(description = "NFC+PIN登录请求参数", required = true)
-            @RequestBody com.huicang.wise.application.auth.NfcPinDTO request,
+            @Parameter(description = "NFC+PIN登录请求参数", required = true) @Valid @RequestBody
+                    com.huicang.wise.application.auth.NfcPinDTO request,
             HttpServletRequest httpServletRequest) {
         return ApiResponse.success(authApplicationService.nfcPinLogin(request, httpServletRequest));
     }
 }
-

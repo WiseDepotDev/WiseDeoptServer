@@ -1,7 +1,15 @@
 package com.huicang.wise.api.controller;
 
+import com.huicang.wise.application.report.ReportApplicationService;
+import com.huicang.wise.application.report.ReportExportRecordDTO;
+import com.huicang.wise.application.report.ReportTaskCreateRequest;
+import com.huicang.wise.application.report.ReportTaskDTO;
+import com.huicang.wise.common.api.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,16 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.huicang.wise.application.report.ReportApplicationService;
-import com.huicang.wise.application.report.ReportTaskCreateRequest;
-import com.huicang.wise.application.report.ReportTaskDTO;
-import com.huicang.wise.application.report.ReportExportRecordDTO;
-import com.huicang.wise.common.api.ApiResponse;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 
 /**
  * 类功能描述：报表管理控制层
@@ -47,8 +45,8 @@ public class ReportController {
     @Operation(summary = "创建报表任务", description = "创建报表生成任务。成功返回200；参数错误返回400；服务器异常返回500。")
     @PostMapping
     public ApiResponse<ReportTaskDTO> createReportTask(
-            @Parameter(description = "报表任务创建请求", required = true)
-            @RequestBody ReportTaskCreateRequest request) {
+            @Parameter(description = "报表任务创建请求", required = true) @Valid @RequestBody
+                    ReportTaskCreateRequest request) {
         return ApiResponse.success(reportApplicationService.createReportTask(request));
     }
 
@@ -61,8 +59,7 @@ public class ReportController {
     @Operation(summary = "执行报表任务", description = "异步执行报表生成任务。成功返回200；任务不存在返回404；服务器异常返回500。")
     @PostMapping("/{taskId}/execute")
     public ApiResponse<Void> executeReportTask(
-            @Parameter(description = "任务ID", required = true)
-            @PathVariable("taskId") Long taskId) {
+            @Parameter(description = "任务ID", required = true) @PathVariable("taskId") Long taskId) {
         reportApplicationService.executeReportTask(taskId);
         return ApiResponse.success();
     }
@@ -79,7 +76,8 @@ public class ReportController {
     @GetMapping
     public ApiResponse<List<ReportTaskDTO>> listReportTasks(
             @Parameter(description = "任务状态", required = false)
-            @RequestParam(value = "status", required = false) Short status) {
+                    @RequestParam(value = "status", required = false)
+                    Short status) {
         return ApiResponse.success(reportApplicationService.listReportTasks(status));
     }
 
@@ -92,8 +90,7 @@ public class ReportController {
     @Operation(summary = "查询报表任务详情", description = "查询报表任务详情。成功返回200；任务不存在返回404；服务器异常返回500。")
     @GetMapping("/{taskId}")
     public ApiResponse<ReportTaskDTO> getReportTask(
-            @Parameter(description = "任务ID", required = true)
-            @PathVariable("taskId") Long taskId) {
+            @Parameter(description = "任务ID", required = true) @PathVariable("taskId") Long taskId) {
         return ApiResponse.success(reportApplicationService.getReportTask(taskId));
     }
 
@@ -106,8 +103,7 @@ public class ReportController {
     @Operation(summary = "查询导出记录列表", description = "查询报表导出记录列表。成功返回200；服务器异常返回500。")
     @GetMapping("/{taskId}/exports")
     public ApiResponse<List<ReportExportRecordDTO>> listExportRecords(
-            @Parameter(description = "任务ID", required = true)
-            @PathVariable("taskId") Long taskId) {
+            @Parameter(description = "任务ID", required = true) @PathVariable("taskId") Long taskId) {
         return ApiResponse.success(reportApplicationService.listExportRecords(taskId));
     }
 }
