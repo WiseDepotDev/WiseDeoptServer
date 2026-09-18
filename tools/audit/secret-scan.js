@@ -75,6 +75,8 @@ const ALLOWLIST = [
     // 故意保留在本机、且已由 .gitignore 排除的真实凭据文件（工作区模式会扫到）
     { path: 'WiseDeoptServer/config/application-local.yml', rule: '*', reason: '本机真实配置，未入库（模板见 .example）' },
     { path: 'deploy/.env', rule: '*', reason: '本机真实中间件凭据，未入库（模板见 .env.example）' },
+    { path: 'deploy/.env.local', rule: '*', reason: '本机 Docker 全栈凭据，未入库（模板见 .env.local.example）' },
+    { path: 'deploy/mosquitto/passwd*', rule: '*', reason: 'MQTT 口令哈希文件，非明文凭据且本机生成' },
 ];
 
 /**

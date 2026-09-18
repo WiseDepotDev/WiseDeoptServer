@@ -1,0 +1,5 @@
+# 构建上下文瘦身：只把服务端可执行 jar 送进构建上下文。
+# 其余内容（源码、各模块 target/、.git、本地配置）都不需要进镜像。
+**
+!wise-deopt-api/target/
+!wise-deopt-api/target/wise-deopt-api-0.0.23.jar
