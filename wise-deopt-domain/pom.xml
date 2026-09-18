@@ -12,6 +12,11 @@
     <artifactId>wise-deopt-domain</artifactId>
     <name>wise-deopt-domain</name>
 
+    <properties>
+        <jacoco.min.line>0.0</jacoco.min.line>
+        <jacoco.check.skip>true</jacoco.check.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.wisedeopt</groupId>

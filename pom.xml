@@ -28,6 +28,10 @@
         <google-java-format.version>1.22.0</google-java-format.version>
         <checkstyle.plugin.version>3.4.0</checkstyle.plugin.version>
         <checkstyle.version>10.17.0</checkstyle.version>
+        <jacoco.version>0.8.12</jacoco.version>
+        <!-- 覆盖率防回退门槛，可在各模块 pom 覆盖；默认 0 表示不设限 -->
+        <jacoco.min.line>0.0</jacoco.min.line>
+        <jacoco.check.skip>false</jacoco.check.skip>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
     </properties>
 
@@ -209,6 +213,72 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <!--
+                      覆盖率度量与门禁（P2-11）。
+                      为域/分层分别设限：领域层与应用层是重构风险最高的部分，门槛逐步向 70% 提升；
+                      基础设施层涉及外部系统（MySQL/Redis/MinIO），单元测试覆盖天然有限，故不设行覆盖门槛。
+                      当前门槛取「实测基线略低」以阻止回退，后续按 docs/standards/基线记录.md 的计划抬升。
+                    -->
+                    <excludes>
+                        <exclude>**/WiseDeoptServerApplication.class</exclude>
+                        <exclude>**/dto/**</exclude>
+                        <exclude>**/*Request.class</exclude>
+                        <exclude>**/*Response.class</exclude>
+                        <exclude>**/*DTO.class</exclude>
+                        <exclude>**/*VO.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <!--
+                              防回退门槛（不是达标门槛）：取实测基线略低。
+                              实现层覆盖仍偏低（application 约 3%、api 约 17%、infrastructure 约 3%），
+                              抬升到 STD-TEST-01 的「增量 ≥70%」需专项补测，推进计划见
+                              docs/standards/基线记录.md 的 P2-11 章节。
+                              未设测试的模块（domain）不足以产生报告，通过 skip 处理。
+                            -->
+                            <skip>${jacoco.check.skip}</skip>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.min.line}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <haltOnFailure>true</haltOnFailure>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

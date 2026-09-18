@@ -12,6 +12,11 @@
     <artifactId>wise-deopt-api</artifactId>
     <name>wise-deopt-api</name>
 
+    <properties>
+        <jacoco.min.line>0.16</jacoco.min.line>
+        <jacoco.check.skip>false</jacoco.check.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

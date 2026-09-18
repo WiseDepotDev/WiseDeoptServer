@@ -12,6 +12,11 @@
     <artifactId>wise-deopt-application</artifactId>
     <name>wise-deopt-application</name>
 
+    <properties>
+        <jacoco.min.line>0.05</jacoco.min.line>
+        <jacoco.check.skip>false</jacoco.check.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.wisedeopt</groupId>
