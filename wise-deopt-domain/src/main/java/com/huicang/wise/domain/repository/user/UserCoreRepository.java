@@ -1,13 +1,12 @@
 package com.huicang.wise.domain.repository.user;
 
 import com.huicang.wise.domain.user.UserCore;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户核心仓储接口
@@ -38,7 +37,7 @@ public interface UserCoreRepository extends JpaRepository<UserCore, Long> {
     /**
      * 根据状态分页查询用户
      *
-     * @param status   状态
+     * @param status 状态
      * @param pageable 分页参数
      * @return 用户分页结果
      */

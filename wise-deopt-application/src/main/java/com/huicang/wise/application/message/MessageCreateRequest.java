@@ -11,8 +11,7 @@ public class MessageCreateRequest {
     private String relatedEntityId;
     private Integer priority;
 
-    public MessageCreateRequest() {
-    }
+    public MessageCreateRequest() {}
 
     public String getTitle() {
         return title;

@@ -1,23 +1,20 @@
 package com.huicang.wise.application.accesskey;
 
-import com.huicang.wise.domain.auth.KeyAccessAuditLog;
-import com.huicang.wise.domain.user.UserAccessKey;
-import com.huicang.wise.application.accesskey.AccessKeyMapper;
-import com.huicang.wise.application.accesskey.KeyAccessAuditLogMapper;
-import com.huicang.wise.domain.repository.auth.KeyAccessAuditLogRepository;
-import com.huicang.wise.domain.repository.user.UserAccessKeyRepository;
-import com.huicang.wise.infrastructure.security.PasswordEncoder;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.huicang.wise.domain.auth.KeyAccessAuditLog;
+import com.huicang.wise.domain.repository.auth.KeyAccessAuditLogRepository;
+import com.huicang.wise.domain.repository.user.UserAccessKeyRepository;
+import com.huicang.wise.domain.user.UserAccessKey;
+import com.huicang.wise.infrastructure.security.PasswordEncoder;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccessKeyApplicationService {
@@ -28,11 +25,12 @@ public class AccessKeyApplicationService {
     private final KeyAccessAuditLogMapper auditLogMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public AccessKeyApplicationService(UserAccessKeyRepository accessKeyRepository,
-                                     KeyAccessAuditLogRepository auditLogRepository,
-                                     AccessKeyMapper accessKeyMapper,
-                                     KeyAccessAuditLogMapper auditLogMapper,
-                                     PasswordEncoder passwordEncoder) {
+    public AccessKeyApplicationService(
+            UserAccessKeyRepository accessKeyRepository,
+            KeyAccessAuditLogRepository auditLogRepository,
+            AccessKeyMapper accessKeyMapper,
+            KeyAccessAuditLogMapper auditLogMapper,
+            PasswordEncoder passwordEncoder) {
         this.accessKeyRepository = accessKeyRepository;
         this.auditLogRepository = auditLogRepository;
         this.accessKeyMapper = accessKeyMapper;
@@ -42,14 +40,14 @@ public class AccessKeyApplicationService {
 
     public List<AccessKeyDTO> getUserAccessKeys(Long userId) {
         List<UserAccessKey> accessKeys = accessKeyRepository.findByUserId(userId);
-        return accessKeys.stream()
-                .map(accessKeyMapper::toDTO)
-                .collect(Collectors.toList());
+        return accessKeys.stream().map(accessKeyMapper::toDTO).collect(Collectors.toList());
     }
 
     public AccessKeyDTO getAccessKeyById(Long keyId) {
-        UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
+        UserAccessKey accessKey =
+                accessKeyRepository
+                        .findById(keyId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         return accessKeyMapper.toDTO(accessKey);
     }
 
@@ -65,7 +63,8 @@ public class AccessKeyApplicationService {
         if (accessKey == null) {
             return null;
         }
-        return accessKeyRepository.findByAccessKey(accessKey)
+        return accessKeyRepository
+                .findByAccessKey(accessKey)
                 .map(accessKeyMapper::toDTO)
                 .orElse(null);
     }
@@ -97,8 +96,10 @@ public class AccessKeyApplicationService {
 
     @Transactional
     public void enableAccessKey(Long keyId) {
-        UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
+        UserAccessKey accessKey =
+                accessKeyRepository
+                        .findById(keyId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKey.setStatus((short) 1);
         accessKey.setUpdateBy(keyId);
         accessKey.setUpdateTime(LocalDateTime.now());
@@ -107,8 +108,10 @@ public class AccessKeyApplicationService {
 
     @Transactional
     public void disableAccessKey(Long keyId) {
-        UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
+        UserAccessKey accessKey =
+                accessKeyRepository
+                        .findById(keyId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKey.setStatus((short) 0);
         accessKey.setUpdateBy(keyId);
         accessKey.setUpdateTime(LocalDateTime.now());
@@ -117,23 +120,32 @@ public class AccessKeyApplicationService {
 
     @Transactional
     public void deleteAccessKey(Long keyId) {
-        UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
+        UserAccessKey accessKey =
+                accessKeyRepository
+                        .findById(keyId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKeyRepository.delete(accessKey);
     }
 
     public List<AccessKeyAuditLogDTO> getAccessKeyAuditLogs(Long keyId) {
-        UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
+        UserAccessKey accessKey =
+                accessKeyRepository
+                        .findById(keyId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         List<KeyAccessAuditLog> logs = auditLogRepository.findByAccessKey(accessKey.getAccessKey());
-        return logs.stream()
-                .map(auditLogMapper::toDTO)
-                .collect(Collectors.toList());
+        return logs.stream().map(auditLogMapper::toDTO).collect(Collectors.toList());
     }
 
     @Transactional
-    public void recordAccessLog(Long userId, String accessKey, String requestUri, String method,
-                               String ipAddress, Short statusCode, String resultMessage, Integer durationMs) {
+    public void recordAccessLog(
+            Long userId,
+            String accessKey,
+            String requestUri,
+            String method,
+            String ipAddress,
+            Short statusCode,
+            String resultMessage,
+            Integer durationMs) {
         KeyAccessAuditLog auditLog = new KeyAccessAuditLog();
         auditLog.setUserId(userId);
         auditLog.setAccessKey(accessKey);
@@ -149,8 +161,10 @@ public class AccessKeyApplicationService {
 
     @Transactional
     public void updateLastUsed(Long keyId) {
-        UserAccessKey accessKey = accessKeyRepository.findById(keyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
+        UserAccessKey accessKey =
+                accessKeyRepository
+                        .findById(keyId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "访问密钥不存在"));
         accessKey.setUpdateBy(keyId);
         accessKey.setUpdateTime(LocalDateTime.now());
         accessKeyRepository.save(accessKey);

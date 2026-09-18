@@ -1,86 +1,67 @@
 package com.huicang.wise.domain.tag;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 产品标签实体
- * 存储产品的RFID/条码标签信息
+ * 产品标签实体 存储产品的RFID/条码标签信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
 @Entity
-@Table(name = "product_tag", indexes = {
-    @Index(name = "idx_product_id", columnList = "product_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_create_time", columnList = "create_time")
-})
+@Table(
+        name = "product_tag",
+        indexes = {
+            @Index(name = "idx_product_id", columnList = "product_id"),
+            @Index(name = "idx_status", columnList = "status"),
+            @Index(name = "idx_create_time", columnList = "create_time")
+        })
 public class ProductTag {
 
-    /**
-     * 标签主键ID
-     */
+    /** 标签主键ID */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tag_id")
     private Long tagId;
 
-    /**
-     * 关联的产品ID
-     */
+    /** 关联的产品ID */
     @Column(name = "product_id", nullable = true)
     private Long productId;
 
-    /**
-     * 条形码
-     */
+    /** 条形码 */
     @Size(max = 100, message = "条形码长度不能超过100个字符")
     @Column(name = "barcode", nullable = true, unique = true, length = 100)
     private String barcode;
 
-    /**
-     * NFC标识
-     */
+    /** NFC标识 */
     @Size(max = 100, message = "NFC标识长度不能超过100个字符")
     @Column(name = "nfc_uid", nullable = true, unique = true, length = 100)
     private String nfcUid;
 
-    /**
-     * RFID标识
-     */
+    /** RFID标识 */
     @Size(max = 100, message = "RFID标识长度不能超过100个字符")
     @Column(name = "rfid", nullable = true, unique = true, length = 100)
     private String rfid;
 
-    /**
-     * 标签状态：0：未入库 1：已入库 2：已出库
-     */
+    /** 标签状态：0：未入库 1：已入库 2：已出库 */
     @NotNull(message = "标签状态不能为空")
     @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short status = 0;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
     @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
+    /** 创建时间 */
     @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
+    /** 更新时间 */
     @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
 

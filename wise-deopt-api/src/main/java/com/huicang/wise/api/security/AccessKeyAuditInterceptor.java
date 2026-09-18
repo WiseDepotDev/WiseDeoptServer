@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.Enumeration;
-
 /**
  * 访问密钥审计拦截器：解析请求中的访问密钥并在请求结束时记录审计日志。
  *
@@ -33,7 +31,9 @@ public class AccessKeyAuditInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws Exception {
         String accessKey = request.getHeader(ACCESS_KEY_HEADER);
         String accessSecret = request.getHeader(ACCESS_SECRET_HEADER);
 
@@ -51,7 +51,9 @@ public class AccessKeyAuditInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    public void afterCompletion(
+            HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
+            throws Exception {
         Long keyId = (Long) request.getAttribute("accessKeyId");
         Long userId = (Long) request.getAttribute("accessKeyUserId");
         String accessKey = (String) request.getAttribute("accessKeyValue");
@@ -68,8 +70,14 @@ public class AccessKeyAuditInterceptor implements HandlerInterceptor {
             try {
                 accessKeyApplicationService.updateLastUsed(keyId);
                 accessKeyApplicationService.recordAccessLog(
-                        userId, accessKey, requestUri, method, ipAddress, statusCode, resultMessage, (int) responseTimeMs
-                );
+                        userId,
+                        accessKey,
+                        requestUri,
+                        method,
+                        ipAddress,
+                        statusCode,
+                        resultMessage,
+                        (int) responseTimeMs);
             } catch (Exception e) {
                 logger.error("Failed to record access log: {}", e.getMessage(), e);
             }

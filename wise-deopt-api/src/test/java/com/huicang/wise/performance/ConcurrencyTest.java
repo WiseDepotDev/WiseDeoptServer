@@ -1,21 +1,20 @@
 package com.huicang.wise.performance;
 
-import com.huicang.wise.application.inventory.InventoryApplicationService;
-import com.huicang.wise.application.device.DeviceApplicationService;
-import com.huicang.wise.application.tag.TagApplicationService;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.huicang.wise.application.device.DeviceApplicationService;
+import com.huicang.wise.application.inventory.InventoryApplicationService;
+import com.huicang.wise.application.tag.TagApplicationService;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * 类功能描述：并发测试
@@ -29,21 +28,16 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 public class ConcurrencyTest {
 
-    @Autowired
-    private InventoryApplicationService inventoryService;
+    @Autowired private InventoryApplicationService inventoryService;
 
-    @Autowired
-    private DeviceApplicationService deviceService;
+    @Autowired private DeviceApplicationService deviceService;
 
-    @Autowired
-    private TagApplicationService tagService;
+    @Autowired private TagApplicationService tagService;
 
     private static final int CONCURRENT_THREADS = 20;
     private static final int OPERATIONS_PER_THREAD = 10;
 
-    /**
-     * 测试库存服务并发读取
-     */
+    /** 测试库存服务并发读取 */
     @Test
     public void testInventoryConcurrentRead() {
         ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT_THREADS);
@@ -54,18 +48,19 @@ public class ConcurrencyTest {
         long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < CONCURRENT_THREADS; i++) {
-            executor.submit(() -> {
-                try {
-                    for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
-                        inventoryService.searchInventoryByLocation(null);
-                    }
-                    successCount.incrementAndGet();
-                } catch (Exception e) {
-                    errorCount.incrementAndGet();
-                } finally {
-                    latch.countDown();
-                }
-            });
+            executor.submit(
+                    () -> {
+                        try {
+                            for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
+                                inventoryService.searchInventoryByLocation(null);
+                            }
+                            successCount.incrementAndGet();
+                        } catch (Exception e) {
+                            errorCount.incrementAndGet();
+                        } finally {
+                            latch.countDown();
+                        }
+                    });
         }
 
         try {
@@ -90,9 +85,7 @@ public class ConcurrencyTest {
         assertEquals(0, errorCount.get(), "不应有错误");
     }
 
-    /**
-     * 测试设备服务并发读取
-     */
+    /** 测试设备服务并发读取 */
     @Test
     public void testDeviceConcurrentRead() {
         ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT_THREADS);
@@ -103,18 +96,19 @@ public class ConcurrencyTest {
         long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < CONCURRENT_THREADS; i++) {
-            executor.submit(() -> {
-                try {
-                    for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
-                        deviceService.listDevices(null, null, null, null);
-                    }
-                    successCount.incrementAndGet();
-                } catch (Exception e) {
-                    errorCount.incrementAndGet();
-                } finally {
-                    latch.countDown();
-                }
-            });
+            executor.submit(
+                    () -> {
+                        try {
+                            for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
+                                deviceService.listDevices(null, null, null, null);
+                            }
+                            successCount.incrementAndGet();
+                        } catch (Exception e) {
+                            errorCount.incrementAndGet();
+                        } finally {
+                            latch.countDown();
+                        }
+                    });
         }
 
         try {
@@ -139,9 +133,7 @@ public class ConcurrencyTest {
         assertEquals(0, errorCount.get(), "不应有错误");
     }
 
-    /**
-     * 测试标签服务并发读取
-     */
+    /** 测试标签服务并发读取 */
     @Test
     public void testTagConcurrentRead() {
         ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT_THREADS);
@@ -152,18 +144,19 @@ public class ConcurrencyTest {
         long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < CONCURRENT_THREADS; i++) {
-            executor.submit(() -> {
-                try {
-                    for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
-                        tagService.listTags(null, null, null, 1, 10);
-                    }
-                    successCount.incrementAndGet();
-                } catch (Exception e) {
-                    errorCount.incrementAndGet();
-                } finally {
-                    latch.countDown();
-                }
-            });
+            executor.submit(
+                    () -> {
+                        try {
+                            for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
+                                tagService.listTags(null, null, null, 1, 10);
+                            }
+                            successCount.incrementAndGet();
+                        } catch (Exception e) {
+                            errorCount.incrementAndGet();
+                        } finally {
+                            latch.countDown();
+                        }
+                    });
         }
 
         try {
@@ -188,9 +181,7 @@ public class ConcurrencyTest {
         assertEquals(0, errorCount.get(), "不应有错误");
     }
 
-    /**
-     * 测试混合服务并发读取
-     */
+    /** 测试混合服务并发读取 */
     @Test
     public void testMixedServiceConcurrentRead() {
         ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT_THREADS);
@@ -202,28 +193,29 @@ public class ConcurrencyTest {
 
         for (int i = 0; i < CONCURRENT_THREADS; i++) {
             final int threadIndex = i;
-            executor.submit(() -> {
-                try {
-                    for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
-                        switch (threadIndex % 3) {
-                            case 0:
-                                inventoryService.searchInventoryByLocation(null);
-                                break;
-                            case 1:
-                                deviceService.listDevices(null, null, null, null);
-                                break;
-                            case 2:
-                                tagService.listTags(null, null, null, 1, 10);
-                                break;
+            executor.submit(
+                    () -> {
+                        try {
+                            for (int j = 0; j < OPERATIONS_PER_THREAD; j++) {
+                                switch (threadIndex % 3) {
+                                    case 0:
+                                        inventoryService.searchInventoryByLocation(null);
+                                        break;
+                                    case 1:
+                                        deviceService.listDevices(null, null, null, null);
+                                        break;
+                                    case 2:
+                                        tagService.listTags(null, null, null, 1, 10);
+                                        break;
+                                }
+                            }
+                            successCount.incrementAndGet();
+                        } catch (Exception e) {
+                            errorCount.incrementAndGet();
+                        } finally {
+                            latch.countDown();
                         }
-                    }
-                    successCount.incrementAndGet();
-                } catch (Exception e) {
-                    errorCount.incrementAndGet();
-                } finally {
-                    latch.countDown();
-                }
-            });
+                    });
         }
 
         try {

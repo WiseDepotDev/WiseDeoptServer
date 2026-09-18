@@ -10,14 +10,10 @@ import java.util.List;
  */
 public class InspectionTaskPageDTO {
 
-    /**
-     * 字段功能描述：总记录数
-     */
+    /** 字段功能描述：总记录数 */
     private Long total;
 
-    /**
-     * 字段功能描述：巡检任务列表
-     */
+    /** 字段功能描述：巡检任务列表 */
     private List<InspectionTaskDTO> rows;
 
     public Long getTotal() {

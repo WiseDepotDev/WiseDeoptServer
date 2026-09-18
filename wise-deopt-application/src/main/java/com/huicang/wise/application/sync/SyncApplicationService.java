@@ -2,13 +2,12 @@ package com.huicang.wise.application.sync;
 
 import com.huicang.wise.domain.sync.ConflictResolutionStrategy;
 import com.huicang.wise.domain.sync.SyncOperation;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SyncApplicationService {
@@ -72,7 +71,8 @@ public class SyncApplicationService {
         operation.setEntityId(entityId);
     }
 
-    private void handleUpdateOperation(SyncOperation operation, ConflictResolutionStrategy strategy) {
+    private void handleUpdateOperation(
+            SyncOperation operation, ConflictResolutionStrategy strategy) {
         switch (strategy) {
             case SERVER_WINS:
                 break;
@@ -87,22 +87,25 @@ public class SyncApplicationService {
         }
     }
 
-    private void handleDeleteOperation(SyncOperation operation) {
-    }
+    private void handleDeleteOperation(SyncOperation operation) {}
 
     private List<SyncOperation> getServerOperations(LocalDateTime lastSyncTime) {
         return new ArrayList<>();
     }
 
-    public SyncOperation resolveConflict(SyncOperation clientOperation, SyncOperation serverOperation, 
-                                         ConflictResolutionStrategy strategy) {
+    public SyncOperation resolveConflict(
+            SyncOperation clientOperation,
+            SyncOperation serverOperation,
+            ConflictResolutionStrategy strategy) {
         switch (strategy) {
             case SERVER_WINS:
                 return serverOperation;
             case CLIENT_WINS:
                 return clientOperation;
             case LAST_WRITE_WINS:
-                if (clientOperation.getOperationTime().isAfter(serverOperation.getOperationTime())) {
+                if (clientOperation
+                        .getOperationTime()
+                        .isAfter(serverOperation.getOperationTime())) {
                     return clientOperation;
                 }
                 return serverOperation;
@@ -113,13 +116,15 @@ public class SyncApplicationService {
         }
     }
 
-    private SyncOperation mergeOperations(SyncOperation clientOperation, SyncOperation serverOperation) {
+    private SyncOperation mergeOperations(
+            SyncOperation clientOperation, SyncOperation serverOperation) {
         SyncOperation merged = new SyncOperation();
         merged.setId(serverOperation.getId());
         merged.setEntityType(serverOperation.getEntityType());
         merged.setEntityId(serverOperation.getEntityId());
         merged.setOperationType("UPDATE");
-        merged.setOperationData(mergeData(clientOperation.getOperationData(), serverOperation.getOperationData()));
+        merged.setOperationData(
+                mergeData(clientOperation.getOperationData(), serverOperation.getOperationData()));
         merged.setOperationTime(LocalDateTime.now());
         merged.setDeviceId(serverOperation.getDeviceId());
         merged.setStatus("COMPLETED");

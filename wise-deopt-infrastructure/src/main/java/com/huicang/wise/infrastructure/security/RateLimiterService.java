@@ -1,20 +1,17 @@
 package com.huicang.wise.infrastructure.security;
 
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
 @Component
 @Slf4j
 public class RateLimiterService {
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    @Autowired private RedisTemplate<String, String> redisTemplate;
 
     private static final String RATE_LIMIT_PREFIX = "api:rate-limit:";
 
@@ -23,31 +20,30 @@ public class RateLimiterService {
     static {
         RATE_LIMIT_SCRIPT = new DefaultRedisScript<>();
         RATE_LIMIT_SCRIPT.setScriptText(
-                "local key = KEYS[1]\n" +
-                "local limit = tonumber(ARGV[1])\n" +
-                "local window = tonumber(ARGV[2])\n" +
-                "local current = redis.call('incr', key)\n" +
-                "if current == 1 then\n" +
-                "    redis.call('expire', key, window)\n" +
-                "end\n" +
-                "if current > limit then\n" +
-                "    return 0\n" +
-                "else\n" +
-                "    return 1\n" +
-                "end"
-        );
+                "local key = KEYS[1]\n"
+                        + "local limit = tonumber(ARGV[1])\n"
+                        + "local window = tonumber(ARGV[2])\n"
+                        + "local current = redis.call('incr', key)\n"
+                        + "if current == 1 then\n"
+                        + "    redis.call('expire', key, window)\n"
+                        + "end\n"
+                        + "if current > limit then\n"
+                        + "    return 0\n"
+                        + "else\n"
+                        + "    return 1\n"
+                        + "end");
         RATE_LIMIT_SCRIPT.setResultType(Long.class);
     }
 
     public boolean allowRequest(String key, int limit, int windowSeconds) {
         try {
             String redisKey = RATE_LIMIT_PREFIX + key;
-            Long result = redisTemplate.execute(
-                    RATE_LIMIT_SCRIPT,
-                    Collections.singletonList(redisKey),
-                    String.valueOf(limit),
-                    String.valueOf(windowSeconds)
-            );
+            Long result =
+                    redisTemplate.execute(
+                            RATE_LIMIT_SCRIPT,
+                            Collections.singletonList(redisKey),
+                            String.valueOf(limit),
+                            String.valueOf(windowSeconds));
             return result != null && result == 1;
         } catch (Exception e) {
             log.error("限流检查失败", e);

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  慧仓智控服务端 Checkstyle 规则集（P2-01）
+
+  设计原则：
+  1. 只保留「与统一标准直接相关、且可机器判定」的规则，避免风格洁癖；
+  2. 存量违规通过 config/checkstyle/suppressions.xml 以文件粒度豁免（基线清单），
+     新代码（含新增文件与存量文件的改动）默认纳入检查；
+  3. 与 ArchUnit 分工：依赖方向、异常类型、日志直出、实体泄漏由 ArchitectureTest 负责；
+     本规则集负责文件级/语句级的机械问题。
+
+  @author WiseDepot
+  @version 1.0
+  @since 2026-02-27
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- 文件级：禁止制表符缩进（STD-CODE-02：统一 4 空格） -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <!-- 文件级：文件必须以换行结尾（STD-CODE-04）
+         注意：不设置 lineSeparator —— 行尾风格（LF）由 .gitattributes 统一，
+         行尾空白由 Spotless（ratchet）统一，避免同一规则两个 owner -->
+    <module name="NewlineAtEndOfFile"/>
+
+    <!-- 文件级：单行长度上限（宽松，避免长 URL/字符串误报） -->
+    <module name="LineLength">
+        <property name="max" value="300"/>
+        <property name="ignorePattern" value="^\s*\*.*$|^import .*$|^package .*$|^\s*@.*$"/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- 导入：禁止重复导入（STD-CODE-02） -->
+        <module name="RedundantImport"/>
+        <!-- 导入：禁止未使用导入 -->
+        <module name="UnusedImports">
+            <property name="processJavadoc" value="true"/>
+        </module>
+
+        <!-- 异常：禁止空 catch（STD-ERR-02：必须记录或上抛） -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="expected|ignored"/>
+        </module>
+        <!-- 异常：禁止捕获 Throwable/Error（STD-ERR-01） -->
+        <module name="IllegalCatch">
+            <property name="id" value="illegal-catch"/>
+            <property name="illegalClassNames" value="java.lang.Throwable, java.lang.Error"/>
+        </module>
+        <!-- 异常：禁止抛出泛型异常类型（STD-ERR-01）
+             id 用于对 AOP 切面做精确抑制（见 suppressions.xml：@Around 通知必须能重抛任意 Throwable） -->
+        <module name="IllegalThrows">
+            <property name="id" value="illegal-throws"/>
+            <property name="illegalClassNames" value="java.lang.Throwable, java.lang.Error, java.lang.RuntimeException"/>
+        </module>
+
+        <!-- 语句：禁止空语句与多余分号 -->
+        <module name="EmptyStatement"/>
+        <!-- 语句：禁止 switch 落空（缺少 break/return） -->
+        <module name="FallThrough"/>
+
+        <!-- 结构：一个文件一个顶层类（STD-CODE-01） -->
+        <module name="OneTopLevelClass"/>
+        <!-- 结构：public 类名必须与文件名一致 -->
+        <module name="OuterTypeFilename"/>
+        <!-- 结构：equals 与 hashCode 必须成对重写 -->
+        <module name="EqualsHashCode"/>
+
+    </module>
+</module>

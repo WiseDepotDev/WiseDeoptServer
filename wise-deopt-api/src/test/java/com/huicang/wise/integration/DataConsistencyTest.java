@@ -1,23 +1,22 @@
 package com.huicang.wise.integration;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.huicang.wise.domain.inventory.Inventory;
 import com.huicang.wise.domain.inventory.Product;
 import com.huicang.wise.domain.repository.inventory.InventoryRepository;
 import com.huicang.wise.domain.repository.inventory.ProductRepository;
-import com.huicang.wise.domain.tag.ProductTag;
 import com.huicang.wise.domain.repository.tag.TagRepository;
-import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.domain.repository.user.UserRepository;
+import com.huicang.wise.domain.tag.ProductTag;
+import com.huicang.wise.domain.user.UserCore;
+import java.util.List;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 类功能描述：数据一致性测试
@@ -32,21 +31,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 public class DataConsistencyTest {
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private ProductRepository productRepository;
+    @Autowired private ProductRepository productRepository;
 
-    @Autowired
-    private InventoryRepository inventoryRepository;
+    @Autowired private InventoryRepository inventoryRepository;
 
-    @Autowired
-    private TagRepository tagRepository;
+    @Autowired private TagRepository tagRepository;
 
-    /**
-     * 测试用户数据一致性
-     */
+    /** 测试用户数据一致性 */
     @Test
     public void testUserDataConsistency() {
         List<UserCore> users = userRepository.findAll();
@@ -56,9 +49,7 @@ public class DataConsistencyTest {
         }
     }
 
-    /**
-     * 测试产品数据一致性
-     */
+    /** 测试产品数据一致性 */
     @Test
     public void testProductDataConsistency() {
         List<Product> products = productRepository.findAll();
@@ -68,9 +59,7 @@ public class DataConsistencyTest {
         }
     }
 
-    /**
-     * 测试库存数据一致性
-     */
+    /** 测试库存数据一致性 */
     @Test
     public void testInventoryDataConsistency() {
         List<Inventory> inventories = inventoryRepository.findAll();
@@ -82,9 +71,7 @@ public class DataConsistencyTest {
         }
     }
 
-    /**
-     * 测试标签数据一致性
-     */
+    /** 测试标签数据一致性 */
     @Test
     public void testTagDataConsistency() {
         List<ProductTag> tags = tagRepository.findAll();
@@ -94,9 +81,7 @@ public class DataConsistencyTest {
         }
     }
 
-    /**
-     * 测试库存与产品关联一致性
-     */
+    /** 测试库存与产品关联一致性 */
     @Test
     public void testInventoryProductConsistency() {
         List<Inventory> inventories = inventoryRepository.findAll();
@@ -106,9 +91,7 @@ public class DataConsistencyTest {
         }
     }
 
-    /**
-     * 测试标签与产品关联一致性
-     */
+    /** 测试标签与产品关联一致性 */
     @Test
     public void testTagProductConsistency() {
         List<ProductTag> tags = tagRepository.findAll();
@@ -118,9 +101,7 @@ public class DataConsistencyTest {
         }
     }
 
-    /**
-     * 测试数据完整性约束
-     */
+    /** 测试数据完整性约束 */
     @Test
     public void testDataIntegrityConstraints() {
         List<UserCore> users = userRepository.findAll();
@@ -136,16 +117,12 @@ public class DataConsistencyTest {
         }
     }
 
-    /**
-     * 测试数据唯一性约束
-     */
+    /** 测试数据唯一性约束 */
     @Test
     public void testDataUniquenessConstraints() {
         List<UserCore> users = userRepository.findAll();
-        List<String> usernames = users.stream()
-            .map(UserCore::getUsername)
-            .toList();
-        
+        List<String> usernames = users.stream().map(UserCore::getUsername).toList();
+
         assertEquals(usernames.size(), usernames.stream().distinct().count(), "用户名必须唯一");
     }
 }

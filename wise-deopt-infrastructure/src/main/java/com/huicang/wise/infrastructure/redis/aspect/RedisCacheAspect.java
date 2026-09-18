@@ -3,6 +3,7 @@ package com.huicang.wise.infrastructure.redis.aspect;
 import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
+import java.lang.reflect.Method;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -18,11 +19,8 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Method;
-
 /**
- * Redis缓存切面
- * 处理@Cacheable和@CacheEvict注解，实现方法的缓存功能
+ * Redis缓存切面 处理@Cacheable和@CacheEvict注解，实现方法的缓存功能
  *
  * @author WiseDepot
  * @version 0.0.27
@@ -46,7 +44,8 @@ public class RedisCacheAspect {
      * @throws Throwable 异常
      */
     @Around("@annotation(cacheable)")
-    public Object handleCacheable(ProceedingJoinPoint joinPoint, Cacheable cacheable) throws Throwable {
+    public Object handleCacheable(ProceedingJoinPoint joinPoint, Cacheable cacheable)
+            throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         Object[] args = joinPoint.getArgs();
@@ -71,8 +70,10 @@ public class RedisCacheAspect {
         logger.debug("缓存未命中，执行方法，key: {}", cacheKey);
         Object result = joinPoint.proceed();
 
-        if (result != null && evaluateCondition(cacheable.condition(), cacheable.unless(), method, args, result)) {
-            
+        if (result != null
+                && evaluateCondition(
+                        cacheable.condition(), cacheable.unless(), method, args, result)) {
+
             if (cacheable.hash()) {
                 String hashField = parseExpression(cacheable.field(), method, args);
                 Object cachedValue = RedisCacheUtils.hGet(cacheKey, hashField);
@@ -92,13 +93,14 @@ public class RedisCacheAspect {
     /**
      * 处理@CacheEvict注解
      *
-     * @param joinPoint   连接点
+     * @param joinPoint 连接点
      * @param cacheEvict 缓存清除注解
      * @return 方法执行结果
      * @throws Throwable 异常
      */
     @Around("@annotation(cacheEvict)")
-    public Object handleCacheEvict(ProceedingJoinPoint joinPoint, CacheEvict cacheEvict) throws Throwable {
+    public Object handleCacheEvict(ProceedingJoinPoint joinPoint, CacheEvict cacheEvict)
+            throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         Object[] args = joinPoint.getArgs();
@@ -120,8 +122,8 @@ public class RedisCacheAspect {
      * 清除缓存
      *
      * @param cacheEvict 缓存清除注解
-     * @param method     方法
-     * @param args       方法参数
+     * @param method 方法
+     * @param args 方法参数
      */
     private void evictCache(CacheEvict cacheEvict, Method method, Object[] args) {
         if (!evaluateCondition(cacheEvict.condition(), "", method, args, null)) {
@@ -148,9 +150,9 @@ public class RedisCacheAspect {
      * 生成缓存键
      *
      * @param prefix 前缀
-     * @param key    键表达式
+     * @param key 键表达式
      * @param method 方法
-     * @param args   方法参数
+     * @param args 方法参数
      * @return 缓存键
      */
     private String generateCacheKey(String prefix, String key, Method method, Object[] args) {
@@ -165,8 +167,8 @@ public class RedisCacheAspect {
      * 解析SpEL表达式
      *
      * @param expression 表达式
-     * @param method    方法
-     * @param args      方法参数
+     * @param method 方法
+     * @param args 方法参数
      * @return 解析结果
      */
     private String parseExpression(String expression, Method method, Object[] args) {
@@ -184,7 +186,7 @@ public class RedisCacheAspect {
      * 创建SpEL表达式上下文
      *
      * @param method 方法
-     * @param args   方法参数
+     * @param args 方法参数
      * @return 表达式上下文
      */
     private EvaluationContext createEvaluationContext(Method method, Object[] args) {
@@ -202,13 +204,14 @@ public class RedisCacheAspect {
      * 评估条件表达式
      *
      * @param condition 条件表达式
-     * @param unless    排除条件表达式
-     * @param method    方法
-     * @param args      方法参数
-     * @param result    方法执行结果
+     * @param unless 排除条件表达式
+     * @param method 方法
+     * @param args 方法参数
+     * @param result 方法执行结果
      * @return 是否满足条件
      */
-    private boolean evaluateCondition(String condition, String unless, Method method, Object[] args, Object result) {
+    private boolean evaluateCondition(
+            String condition, String unless, Method method, Object[] args, Object result) {
         EvaluationContext context = createEvaluationContext(method, args);
         if (result != null) {
             context.setVariable("result", result);

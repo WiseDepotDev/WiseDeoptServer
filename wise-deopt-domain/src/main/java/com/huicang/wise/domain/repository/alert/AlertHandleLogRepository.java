@@ -1,10 +1,9 @@
 package com.huicang.wise.domain.repository.alert;
 
 import com.huicang.wise.domain.alert.AlertHandleLog;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * 告警处理日志仓储接口

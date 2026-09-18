@@ -13,17 +13,17 @@ public class Message {
     private String relatedEntityType;
     private String relatedEntityId;
     private Boolean isRead;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime readTime;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
+
     private String status;
     private Integer priority;
 
-    public Message() {
-    }
+    public Message() {}
 
     public Message(String id, String title, String content, String type, Long receiverId) {
         this.id = id;

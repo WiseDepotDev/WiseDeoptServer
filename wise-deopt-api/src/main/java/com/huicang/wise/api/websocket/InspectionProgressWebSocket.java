@@ -1,9 +1,6 @@
 package com.huicang.wise.api.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
 import jakarta.websocket.OnMessage;
@@ -11,8 +8,9 @@ import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -20,11 +18,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InspectionProgressWebSocket {
 
     // Store sessions by taskId
-    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> sessionPools = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Session>>
+            sessionPools = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen(Session session, @PathParam("taskId") String taskId) {
-        sessionPools.computeIfAbsent(taskId, k -> new ConcurrentHashMap<>()).put(session.getId(), session);
+        sessionPools
+                .computeIfAbsent(taskId, k -> new ConcurrentHashMap<>())
+                .put(session.getId(), session);
         log.info("WebSocket connected for task {}, session id: {}", taskId, session.getId());
     }
 

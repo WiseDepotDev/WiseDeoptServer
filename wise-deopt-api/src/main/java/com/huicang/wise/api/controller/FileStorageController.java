@@ -7,16 +7,15 @@ import com.huicang.wise.application.oss.MinioFileDTO;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 类功能描述：文件存储控制器
@@ -58,9 +57,11 @@ public class FileStorageController {
             FileUploadResponse response = fileStorageService.uploadFile(request, uploadBy);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (BusinessException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode(), e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getErrorCode(), e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "文件上传失败: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "文件上传失败: " + e.getMessage()));
         }
     }
 
@@ -80,9 +81,7 @@ public class FileStorageController {
             headers.setContentDispositionFormData("attachment", "file_" + fileId);
             headers.setContentLength(fileData.length);
 
-            return ResponseEntity.ok()
-                .headers(headers)
-                .body(fileData);
+            return ResponseEntity.ok().headers(headers).body(fileData);
         } catch (BusinessException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -109,9 +108,11 @@ public class FileStorageController {
             response.put("expiresIn", expiresIn.toString());
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (BusinessException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode(), e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getErrorCode(), e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "生成访问链接失败: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "生成访问链接失败: " + e.getMessage()));
         }
     }
 
@@ -129,7 +130,8 @@ public class FileStorageController {
             List<MinioFileDTO> files = fileStorageService.listFiles(uploadBy);
             return ResponseEntity.ok(ApiResponse.success(files));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "查询文件列表失败: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "查询文件列表失败: " + e.getMessage()));
         }
     }
 
@@ -163,9 +165,11 @@ public class FileStorageController {
             fileStorageService.deleteFile(fileId);
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (BusinessException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode(), e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getErrorCode(), e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "文件删除失败: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error(ErrorCode.SYSTEM_ERROR, "文件删除失败: " + e.getMessage()));
         }
     }
 }

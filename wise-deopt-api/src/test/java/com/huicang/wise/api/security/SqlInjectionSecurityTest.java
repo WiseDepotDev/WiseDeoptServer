@@ -1,54 +1,45 @@
 package com.huicang.wise.api.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.auth.AuthApplicationService;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.user.UserApplicationService;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.user.UserCreateRequest;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.user.UserDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.application.user.UserApplicationService;
+import com.huicang.wise.application.user.UserCreateRequest;
+import com.huicang.wise.application.user.UserDTO;
+import java.time.LocalDateTime;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
+@WebMvcTest(
+        excludeFilters =
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern =
+                                "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
 public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private UserApplicationService userApplicationService;
+    @MockBean private UserApplicationService userApplicationService;
 
-    @MockBean
-    private AuthApplicationService authApplicationService;
+    @MockBean private AuthApplicationService authApplicationService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -70,10 +61,11 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.createUser(any(UserCreateRequest.class))).thenReturn(userDTO);
 
-        mockMvc.perform(post("/api/users")
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -92,10 +84,11 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.createUser(any(UserCreateRequest.class))).thenReturn(userDTO);
 
-        mockMvc.perform(post("/api/users")
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -107,8 +100,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1' OR '1'='1")
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(get("/api/users/1' OR '1'='1").header("Authorization", "Bearer token"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -120,8 +112,9 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1' UNION SELECT * FROM users--")
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(
+                        get("/api/users/1' UNION SELECT * FROM users--")
+                                .header("Authorization", "Bearer token"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -140,10 +133,11 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.createUser(any(UserCreateRequest.class))).thenReturn(userDTO);
 
-        mockMvc.perform(post("/api/users")
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -162,10 +156,11 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.createUser(any(UserCreateRequest.class))).thenReturn(userDTO);
 
-        mockMvc.perform(post("/api/users")
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -177,8 +172,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1' AND SLEEP(5)--")
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(get("/api/users/1' AND SLEEP(5)--").header("Authorization", "Bearer token"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -190,8 +184,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1' AND 1=1--")
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(get("/api/users/1' AND 1=1--").header("Authorization", "Bearer token"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -210,10 +203,11 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.createUser(any(UserCreateRequest.class))).thenReturn(userDTO);
 
-        mockMvc.perform(post("/api/users")
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -225,8 +219,7 @@ public class SqlInjectionSecurityTest extends AbstractAuthenticatedSliceTest {
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/0x31")
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(get("/api/users/0x31").header("Authorization", "Bearer token"))
                 .andExpect(status().isOk());
     }
 }

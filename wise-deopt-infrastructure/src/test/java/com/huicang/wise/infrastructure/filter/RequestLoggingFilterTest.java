@@ -5,9 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
@@ -18,9 +15,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
  * {@link RequestLoggingFilter} 的日志安全与链路标识单元测试（STD-LOG-01 / STD-LOG-02）。
  *
  * <p>锁定两条容易回退的行为：
+ *
  * <ul>
- *   <li>敏感请求头与报文中的敏感字段**必须脱敏**，不得明文落日志；</li>
- *   <li>MDC {@code request_id} 必须在请求处理期间存在、请求结束后清除（避免线程复用串号）。</li>
+ *   <li>敏感请求头与报文中的敏感字段**必须脱敏**，不得明文落日志；
+ *   <li>MDC {@code request_id} 必须在请求处理期间存在、请求结束后清除（避免线程复用串号）。
  * </ul>
  *
  * @author WiseDepot
@@ -29,9 +27,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
  */
 class RequestLoggingFilterTest {
 
-    /**
-     * 敏感请求头必须整值掩码。
-     */
+    /** 敏感请求头必须整值掩码。 */
     @Test
     @DisplayName("shouldMaskSensitiveHeaders")
     void shouldMaskSensitiveHeaders() {
@@ -44,24 +40,23 @@ class RequestLoggingFilterTest {
         assertEquals("***", RequestLoggingFilter.maskHeader("X-Signature", "sig"));
     }
 
-    /**
-     * 非敏感请求头保持原样。
-     */
+    /** 非敏感请求头保持原样。 */
     @Test
     @DisplayName("shouldKeepNonSensitiveHeaders")
     void shouldKeepNonSensitiveHeaders() {
-        assertEquals("application/json", RequestLoggingFilter.maskHeader("Content-Type", "application/json"));
+        assertEquals(
+                "application/json",
+                RequestLoggingFilter.maskHeader("Content-Type", "application/json"));
         assertEquals("req-1", RequestLoggingFilter.maskHeader("REQUEST-ID", "req-1"));
         assertNull(RequestLoggingFilter.maskHeader(null, null));
     }
 
-    /**
-     * 报文中的敏感字段必须脱敏，非敏感字段保留。
-     */
+    /** 报文中的敏感字段必须脱敏，非敏感字段保留。 */
     @Test
     @DisplayName("shouldRedactSensitiveJsonFields")
     void shouldRedactSensitiveJsonFields() {
-        String body = "{\"username\":\"admin\",\"password\":\"p@ssw0rd\",\"refreshToken\":\"rt-1\",\"pin\":\"1234\"}";
+        String body =
+                "{\"username\":\"admin\",\"password\":\"p@ssw0rd\",\"refreshToken\":\"rt-1\",\"pin\":\"1234\"}";
         String redacted = RequestLoggingFilter.redactSensitive(body);
 
         assertTrue(redacted.contains("\"password\":\"***\""), redacted);
@@ -71,9 +66,7 @@ class RequestLoggingFilterTest {
         assertTrue(!redacted.contains("p@ssw0rd"), "不得出现明文口令: " + redacted);
     }
 
-    /**
-     * 超长报文应被截断，避免日志膨胀。
-     */
+    /** 超长报文应被截断，避免日志膨胀。 */
     @Test
     @DisplayName("shouldTruncateLongBody")
     void shouldTruncateLongBody() {
@@ -81,12 +74,12 @@ class RequestLoggingFilterTest {
         String redacted = RequestLoggingFilter.redactSensitive(body);
 
         assertTrue(redacted.length() < 5000, "应被截断");
-        assertTrue(redacted.endsWith("... (截断)"), redacted.substring(Math.max(0, redacted.length() - 20)));
+        assertTrue(
+                redacted.endsWith("... (截断)"),
+                redacted.substring(Math.max(0, redacted.length() - 20)));
     }
 
-    /**
-     * 空报文应安全返回。
-     */
+    /** 空报文应安全返回。 */
     @Test
     @DisplayName("shouldHandleEmptyBody")
     void shouldHandleEmptyBody() {
@@ -108,7 +101,8 @@ class RequestLoggingFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         String[] duringRequest = new String[1];
-        FilterChain chain = (req, res) -> duringRequest[0] = MDC.get(RequestLoggingFilter.MDC_REQUEST_ID);
+        FilterChain chain =
+                (req, res) -> duringRequest[0] = MDC.get(RequestLoggingFilter.MDC_REQUEST_ID);
 
         MDC.clear();
         filter.doFilter(request, response, chain);
@@ -131,13 +125,15 @@ class RequestLoggingFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         String[] duringRequest = new String[1];
-        FilterChain chain = (req, res) -> duringRequest[0] = MDC.get(RequestLoggingFilter.MDC_REQUEST_ID);
+        FilterChain chain =
+                (req, res) -> duringRequest[0] = MDC.get(RequestLoggingFilter.MDC_REQUEST_ID);
 
         MDC.clear();
         filter.doFilter(request, response, chain);
 
         assertTrue(duringRequest[0] != null && !duringRequest[0].isBlank(), "应生成 request_id");
-        assertEquals(duringRequest[0], request.getAttribute(RequestLoggingFilter.ATTRIBUTE_REQUEST_ID));
+        assertEquals(
+                duringRequest[0], request.getAttribute(RequestLoggingFilter.ATTRIBUTE_REQUEST_ID));
         assertNull(MDC.get(RequestLoggingFilter.MDC_REQUEST_ID), "请求结束后必须清除 MDC");
     }
 }

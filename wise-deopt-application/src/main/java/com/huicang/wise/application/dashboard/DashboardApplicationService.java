@@ -3,25 +3,28 @@ package com.huicang.wise.application.dashboard;
 import com.huicang.wise.application.alert.AlertDTO;
 import com.huicang.wise.application.inspection.InspectionTaskDTO;
 import com.huicang.wise.domain.alert.AlertEvent;
+import com.huicang.wise.domain.inspection.InspectionTask;
 import com.huicang.wise.domain.repository.alert.AlertEventRepository;
 import com.huicang.wise.domain.repository.device.DeviceCoreRepository;
-import com.huicang.wise.domain.repository.inventory.InventoryRepository;
 import com.huicang.wise.domain.repository.inspection.InspectionTaskRepository;
-import com.huicang.wise.domain.inspection.InspectionTask;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
+import com.huicang.wise.domain.repository.inventory.InventoryRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class DashboardApplicationService {
+
+    private static final Logger log = LoggerFactory.getLogger(DashboardApplicationService.class);
 
     private final InventoryRepository inventoryRepository;
     private final AlertEventRepository alertEventRepository;
@@ -32,11 +35,12 @@ public class DashboardApplicationService {
     private static final String DASHBOARD_KPI_KEY = "dashboard:kpi";
     private static final String INSPECTION_PROGRESS_KEY = "inspection:progress";
 
-    public DashboardApplicationService(InventoryRepository inventoryRepository,
-                                       AlertEventRepository alertEventRepository,
-                                       InspectionTaskRepository inspectionTaskRepository,
-                                       DeviceCoreRepository deviceCoreRepository,
-                                       StringRedisTemplate stringRedisTemplate) {
+    public DashboardApplicationService(
+            InventoryRepository inventoryRepository,
+            AlertEventRepository alertEventRepository,
+            InspectionTaskRepository inspectionTaskRepository,
+            DeviceCoreRepository deviceCoreRepository,
+            StringRedisTemplate stringRedisTemplate) {
         this.inventoryRepository = inventoryRepository;
         this.alertEventRepository = alertEventRepository;
         this.inspectionTaskRepository = inspectionTaskRepository;
@@ -47,7 +51,7 @@ public class DashboardApplicationService {
     @Transactional(readOnly = true)
     public DashboardSummaryDTO getSummary() {
         DashboardSummaryDTO summary = new DashboardSummaryDTO();
-        
+
         String cachedKpi = stringRedisTemplate.opsForValue().get(DASHBOARD_KPI_KEY);
         if (StringUtils.hasText(cachedKpi)) {
             DashboardSummaryDTO kpiDto = parseKpi(cachedKpi);
@@ -61,7 +65,8 @@ public class DashboardApplicationService {
 
             LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
             LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
-            long todayAlertCount = alertEventRepository.countByCreateTimeBetween(todayStart, todayEnd);
+            long todayAlertCount =
+                    alertEventRepository.countByCreateTimeBetween(todayStart, todayEnd);
             summary.setTodayAlertCount(todayAlertCount);
 
             String progressStr = stringRedisTemplate.opsForValue().get(INSPECTION_PROGRESS_KEY);
@@ -70,6 +75,8 @@ public class DashboardApplicationService {
                 try {
                     progress = Integer.parseInt(progressStr);
                 } catch (NumberFormatException e) {
+                    // 缓存值非法时按 0 处理，但必须留痕（STD-ERR-02：禁止静默吞异常）
+                    log.warn("巡检进度缓存值非法，已按 0 处理: value={}", progressStr);
                 }
             }
             summary.setInspectionProgress(progress);
@@ -77,18 +84,24 @@ public class DashboardApplicationService {
             long onlineDeviceCount = deviceCoreRepository.countByStatus((short) 1);
             summary.setDeviceOnlineCount(onlineDeviceCount);
 
-            String kpiValue = String.format("%d|%d|%d|%d",
-                    summary.getInventoryTotal(),
-                    summary.getTodayAlertCount(),
-                    summary.getInspectionProgress(),
-                    summary.getDeviceOnlineCount());
+            String kpiValue =
+                    String.format(
+                            "%d|%d|%d|%d",
+                            summary.getInventoryTotal(),
+                            summary.getTodayAlertCount(),
+                            summary.getInspectionProgress(),
+                            summary.getDeviceOnlineCount());
             stringRedisTemplate.opsForValue().set(DASHBOARD_KPI_KEY, kpiValue, 1, TimeUnit.MINUTES);
         }
 
         List<AlertEvent> pendingAlerts = alertEventRepository.findByStatusOrderByCreateTimeDesc(0);
-        summary.setUnprocessedAlerts(pendingAlerts.stream().map(this::toAlertDTO).collect(Collectors.toList()));
+        summary.setUnprocessedAlerts(
+                pendingAlerts.stream().map(this::toAlertDTO).collect(Collectors.toList()));
 
-        InspectionTask activeTask = inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1).orElse(null);
+        InspectionTask activeTask =
+                inspectionTaskRepository
+                        .findFirstByStatusOrderByCreateTimeDesc((short) 1)
+                        .orElse(null);
         if (activeTask != null) {
             summary.setCurrentTask(toInspectionTaskDTO(activeTask));
         }
@@ -107,6 +120,8 @@ public class DashboardApplicationService {
                 summary.setDeviceOnlineCount(Long.parseLong(parts[3]));
             }
         } catch (Exception e) {
+            // 缓存不可用时回退到实时统计，但必须留痕（STD-ERR-02）
+            log.warn("读取首页 KPI 缓存失败，已回退实时统计: {}", e.getMessage());
         }
         return summary;
     }
@@ -135,7 +150,7 @@ public class DashboardApplicationService {
 
     public List<InspectionTaskDTO> getRecentTasks(int limit) {
         return inspectionTaskRepository.findRecentTasks(limit).stream()
-            .map(task -> toInspectionTaskDTO(task))
-            .collect(Collectors.toList());
+                .map(task -> toInspectionTaskDTO(task))
+                .collect(Collectors.toList());
     }
 }

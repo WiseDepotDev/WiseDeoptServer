@@ -1,13 +1,12 @@
 package com.huicang.wise.domain.repository.tag;
 
 import com.huicang.wise.domain.tag.ProductTag;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 产品标签仓储接口
@@ -55,7 +54,7 @@ public interface ProductTagRepository extends JpaRepository<ProductTag, Long> {
      * 根据产品ID和状态查询标签列表
      *
      * @param productId 产品ID
-     * @param status    标签状态
+     * @param status 标签状态
      * @return 标签列表
      */
     List<ProductTag> findByProductIdAndStatus(Long productId, Short status);

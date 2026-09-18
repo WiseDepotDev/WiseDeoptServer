@@ -1,19 +1,16 @@
 package com.huicang.wise.infrastructure.redis;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
- * Redis缓存工具类
- * 提供静态方法快速操作Redis缓存，简化缓存操作
+ * Redis缓存工具类 提供静态方法快速操作Redis缓存，简化缓存操作
  *
  * @author WiseDepot
  * @version 0.0.27
@@ -33,7 +30,7 @@ public class RedisCacheUtils {
     /**
      * 设置缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param value 缓存值
      */
     public static void set(String key, Object value) {
@@ -43,10 +40,10 @@ public class RedisCacheUtils {
     /**
      * 设置缓存并指定过期时间
      *
-     * @param key     缓存键
-     * @param value   缓存值
+     * @param key 缓存键
+     * @param value 缓存值
      * @param timeout 过期时间
-     * @param unit    时间单位
+     * @param unit 时间单位
      */
     public static void set(String key, Object value, long timeout, TimeUnit unit) {
         redisCacheManager.set(key, value, timeout, unit);
@@ -55,8 +52,8 @@ public class RedisCacheUtils {
     /**
      * 设置缓存并指定过期时间（秒）
      *
-     * @param key     缓存键
-     * @param value   缓存值
+     * @param key 缓存键
+     * @param value 缓存值
      * @param timeout 过期时间（秒）
      */
     public static void set(String key, Object value, long timeout) {
@@ -76,9 +73,9 @@ public class RedisCacheUtils {
     /**
      * 获取缓存并转换为指定类型
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param clazz 目标类型
-     * @param <T>   泛型类型
+     * @param <T> 泛型类型
      * @return 缓存值
      */
     public static <T> T get(String key, Class<T> clazz) {
@@ -125,9 +122,9 @@ public class RedisCacheUtils {
     /**
      * 设置过期时间
      *
-     * @param key     缓存键
+     * @param key 缓存键
      * @param timeout 过期时间
-     * @param unit    时间单位
+     * @param unit 时间单位
      */
     public static void expire(String key, long timeout, TimeUnit unit) {
         redisCacheManager.expire(key, timeout, unit);
@@ -136,7 +133,7 @@ public class RedisCacheUtils {
     /**
      * 设置过期时间（秒）
      *
-     * @param key     缓存键
+     * @param key 缓存键
      * @param timeout 过期时间（秒）
      */
     public static void expire(String key, long timeout) {
@@ -167,7 +164,7 @@ public class RedisCacheUtils {
     /**
      * 设置哈希缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @param value 哈希值
      */
@@ -178,7 +175,7 @@ public class RedisCacheUtils {
     /**
      * 获取哈希缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @return 哈希值
      */
@@ -189,10 +186,10 @@ public class RedisCacheUtils {
     /**
      * 获取哈希缓存并转换为指定类型
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @param clazz 目标类型
-     * @param <T>   泛型类型
+     * @param <T> 泛型类型
      * @return 哈希值
      */
     public static <T> T hGet(String key, String field, Class<T> clazz) {
@@ -202,7 +199,7 @@ public class RedisCacheUtils {
     /**
      * 删除哈希字段
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      */
     public static void hDelete(String key, String field) {
@@ -212,7 +209,7 @@ public class RedisCacheUtils {
     /**
      * 判断哈希字段是否存在
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @return 是否存在
      */
@@ -233,7 +230,7 @@ public class RedisCacheUtils {
     /**
      * 设置列表缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param value 列表值
      */
     public static void lPush(String key, Object value) {
@@ -243,9 +240,9 @@ public class RedisCacheUtils {
     /**
      * 获取列表缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param start 开始位置
-     * @param end   结束位置
+     * @param end 结束位置
      * @return 列表值
      */
     public static List<Object> lRange(String key, long start, long end) {
@@ -265,7 +262,7 @@ public class RedisCacheUtils {
     /**
      * 删除列表元素
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param count 删除数量
      * @param value 列表值
      */
@@ -276,7 +273,7 @@ public class RedisCacheUtils {
     /**
      * 设置集合缓存
      *
-     * @param key    缓存键
+     * @param key 缓存键
      * @param values 集合值
      */
     public static void sAdd(String key, Object... values) {
@@ -296,7 +293,7 @@ public class RedisCacheUtils {
     /**
      * 判断集合成员是否存在
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param value 集合值
      * @return 是否存在
      */
@@ -307,7 +304,7 @@ public class RedisCacheUtils {
     /**
      * 删除集合成员
      *
-     * @param key    缓存键
+     * @param key 缓存键
      * @param values 集合值
      */
     public static void sRemove(String key, Object... values) {
@@ -324,9 +321,7 @@ public class RedisCacheUtils {
         return redisCacheManager.sSize(key);
     }
 
-    /**
-     * 清空所有缓存
-     */
+    /** 清空所有缓存 */
     public static void flushAll() {
         redisCacheManager.flushAll();
     }
@@ -356,17 +351,17 @@ public class RedisCacheUtils {
     }
 
     /**
-     * 获取或设置缓存
-     * 如果缓存不存在，则从数据源获取并设置缓存
+     * 获取或设置缓存 如果缓存不存在，则从数据源获取并设置缓存
      *
-     * @param key        缓存键
-     * @param clazz      目标类型
+     * @param key 缓存键
+     * @param clazz 目标类型
      * @param dataLoader 数据加载器
-     * @param timeout    过期时间
-     * @param <T>        泛型类型
+     * @param timeout 过期时间
+     * @param <T> 泛型类型
      * @return 缓存值
      */
-    public static <T> T getOrSet(String key, Class<T> clazz, DataLoader<T> dataLoader, long timeout) {
+    public static <T> T getOrSet(
+            String key, Class<T> clazz, DataLoader<T> dataLoader, long timeout) {
         T value = get(key, clazz);
         if (value == null) {
             value = dataLoader.load();

@@ -1,17 +1,24 @@
 package com.huicang.wise.application.inventory;
 
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.inventory.Inventory;
-import com.huicang.wise.domain.repository.inventory.InventoryRepository;
 import com.huicang.wise.domain.inventory.Product;
+import com.huicang.wise.domain.repository.inventory.InventoryRepository;
 import com.huicang.wise.domain.repository.inventory.ProductRepository;
 import com.huicang.wise.domain.repository.tag.TagRepository;
+import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
 import com.huicang.wise.domain.tag.ProductTag;
 import com.huicang.wise.domain.warehouse.Warehouse;
-import com.huicang.wise.domain.repository.warehouse.WarehouseRepository;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,15 +26,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 类功能描述：库存应用服务
@@ -47,11 +45,12 @@ public class InventoryApplicationService {
     private final TagRepository tagRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
-    public InventoryApplicationService(ProductRepository productRepository,
-                                       InventoryRepository inventoryRepository,
-                                       WarehouseRepository warehouseRepository,
-                                       TagRepository tagRepository,
-                                       StringRedisTemplate stringRedisTemplate) {
+    public InventoryApplicationService(
+            ProductRepository productRepository,
+            InventoryRepository inventoryRepository,
+            WarehouseRepository warehouseRepository,
+            TagRepository tagRepository,
+            StringRedisTemplate stringRedisTemplate) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.warehouseRepository = warehouseRepository;
@@ -91,27 +90,30 @@ public class InventoryApplicationService {
      * 方法功能描述：更新产品
      *
      * @param productId 产品主键ID
-     * @param request   产品更新请求
+     * @param request 产品更新请求
      * @return 产品信息
      * @throws BusinessException 当产品不存在时抛出异常
      */
     @CacheEvict(prefix = "product", key = "#productId", allEntries = false)
     @Transactional
-    public ProductDTO updateProduct(Long productId, ProductUpdateRequest request) throws BusinessException {
-        Product entity = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "产品不存在"));
-        
+    public ProductDTO updateProduct(Long productId, ProductUpdateRequest request)
+            throws BusinessException {
+        Product entity =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "产品不存在"));
+
         if (request.getProductName() != null && !request.getProductName().isBlank()) {
             entity.setName(request.getProductName());
         }
-        
+
         if (request.getProductCode() != null && !request.getProductCode().isBlank()) {
             entity.setCode(request.getProductCode());
         } else if (entity.getCode() == null || entity.getCode().isBlank()) {
             // 修复旧数据缺失编码的问题
             entity.setCode("P" + System.currentTimeMillis());
         }
-        
+
         if (request.getModel() != null) {
             entity.setModel(request.getModel());
         }
@@ -122,7 +124,7 @@ public class InventoryApplicationService {
             // 修复旧数据缺失单位的问题
             entity.setUnit("个");
         }
-        
+
         entity.setUpdateTime(LocalDateTime.now());
         entity.setUpdateBy(1L);
         Product saved = productRepository.save(entity);
@@ -137,8 +139,10 @@ public class InventoryApplicationService {
      */
     @Transactional
     public void deleteProduct(Long productId) throws BusinessException {
-        Product entity = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "产品不存在"));
+        Product entity =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "产品不存在"));
         productRepository.delete(entity);
     }
 
@@ -151,35 +155,44 @@ public class InventoryApplicationService {
      */
     @Cacheable(prefix = "product", key = "#productId", timeout = 3600)
     public ProductDTO getProduct(Long productId) throws BusinessException {
-        Product entity = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "产品不存在"));
+        Product entity =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "产品不存在"));
         return toProductDTO(entity);
     }
 
     /**
      * 方法功能描述：查询产品列表（支持分页和筛选）
      *
-     * @param name       产品名称（可选，支持模糊查询）
+     * @param name 产品名称（可选，支持模糊查询）
      * @param productCode 产品编码（可选，支持产品编码或条形码）
-     * @param barcode    条形码（可选，已废弃，使用productCode参数）
+     * @param barcode 条形码（可选，已废弃，使用productCode参数）
      * @param categoryId 产品分类ID（可选，已废弃）
-     * @param enabled    是否启用（可选，已废弃）
-     * @param page       页码（从1开始，默认1）
-     * @param pageSize   每页记录数（默认10）
+     * @param enabled 是否启用（可选，已废弃）
+     * @param page 页码（从1开始，默认1）
+     * @param pageSize 每页记录数（默认10）
      * @return 产品分页数据
      */
-    public ProductPageDTO listProducts(String name, String productCode, String barcode, Long categoryId, Boolean enabled, Integer page, Integer pageSize) {
+    public ProductPageDTO listProducts(
+            String name,
+            String productCode,
+            String barcode,
+            Long categoryId,
+            Boolean enabled,
+            Integer page,
+            Integer pageSize) {
         int actualPage = page != null && page >= 1 ? page : 1;
         int actualPageSize = pageSize != null && pageSize > 0 ? pageSize : 10;
         int pageNum = actualPage - 1;
-        
+
         Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
         Pageable pageable = PageRequest.of(pageNum, actualPageSize, sort);
-        
+
         Page<Product> pageResult;
-        
+
         String searchCode = (barcode != null && !barcode.isBlank()) ? barcode : productCode;
-        
+
         if (searchCode != null && !searchCode.isBlank()) {
             pageResult = findProductsByCodeOrBarcode(searchCode, pageable);
         } else {
@@ -188,9 +201,10 @@ public class InventoryApplicationService {
 
         ProductPageDTO result = new ProductPageDTO();
         result.setTotal(pageResult.getTotalElements());
-        result.setRows(pageResult.getContent().stream()
-                .map(this::toProductDTO)
-                .collect(Collectors.toList()));
+        result.setRows(
+                pageResult.getContent().stream()
+                        .map(this::toProductDTO)
+                        .collect(Collectors.toList()));
         return result;
     }
 
@@ -206,7 +220,7 @@ public class InventoryApplicationService {
         if (!byCode.isEmpty()) {
             return byCode;
         }
-        
+
         ProductTag tag = tagRepository.findByBarcode(code).orElse(null);
         if (tag != null && tag.getProductId() != null) {
             Product product = productRepository.findById(tag.getProductId()).orElse(null);
@@ -252,16 +266,19 @@ public class InventoryApplicationService {
      * 方法功能描述：更新库存明细
      *
      * @param inventoryId 库存明细ID
-     * @param request     库存更新请求
+     * @param request 库存更新请求
      * @return 库存明细信息
      * @throws BusinessException 当库存不存在时抛出异常
      */
     @CacheEvict(prefix = "inventory", key = "#inventoryId", allEntries = false)
     @Transactional
-    public InventoryDTO updateInventory(Long inventoryId, InventoryUpdateRequest request) throws BusinessException {
-        Inventory entity = inventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
-        
+    public InventoryDTO updateInventory(Long inventoryId, InventoryUpdateRequest request)
+            throws BusinessException {
+        Inventory entity =
+                inventoryRepository
+                        .findById(inventoryId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
+
         if (request.getQuantity() != null) {
             entity.setQuantity(request.getQuantity());
         }
@@ -271,7 +288,7 @@ public class InventoryApplicationService {
             }
             entity.setWarehouseId(request.getWarehouseId());
         }
-        
+
         entity.setUpdateTime(LocalDateTime.now());
         Inventory saved = inventoryRepository.save(entity);
         cacheInventorySummary(saved.getProductId());
@@ -288,8 +305,10 @@ public class InventoryApplicationService {
      */
     @Cacheable(prefix = "inventory", key = "#inventoryId", timeout = 1800)
     public InventoryDTO getInventory(Long inventoryId) throws BusinessException {
-        Inventory entity = inventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
+        Inventory entity =
+                inventoryRepository
+                        .findById(inventoryId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
         return toInventoryDTO(entity);
     }
 
@@ -302,8 +321,10 @@ public class InventoryApplicationService {
     @CacheEvict(prefix = "inventory", key = "#inventoryId", allEntries = false)
     @Transactional
     public void deleteInventory(Long inventoryId) throws BusinessException {
-        Inventory entity = inventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
+        Inventory entity =
+                inventoryRepository
+                        .findById(inventoryId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
         inventoryRepository.delete(entity);
         cacheInventorySummary(entity.getProductId());
         clearTotalInventoryCache();
@@ -323,23 +344,26 @@ public class InventoryApplicationService {
     /**
      * 方法功能描述：获取全部库存列表（强制分页）
      *
-     * @param productId   产品主键ID（可选）
+     * @param productId 产品主键ID（可选）
      * @param warehouseId 仓库ID（可选）
-     * @param page        页码（从1开始，默认1）
-     * @param pageSize    每页记录数（默认10）
+     * @param page 页码（从1开始，默认1）
+     * @param pageSize 每页记录数（默认10）
      * @return 库存分页数据
      */
-    public InventoryPageDTO listAllInventory(Long productId, Long warehouseId, Integer page, Integer pageSize) {
+    public InventoryPageDTO listAllInventory(
+            Long productId, Long warehouseId, Integer page, Integer pageSize) {
         int actualPage = page != null && page >= 1 ? page : 1;
         int actualPageSize = pageSize != null && pageSize > 0 ? pageSize : 10;
         int pageNum = actualPage - 1;
-        
+
         Sort sort = Sort.by(Sort.Direction.DESC, "updateTime");
         Pageable pageable = PageRequest.of(pageNum, actualPageSize, sort);
-        
+
         Page<Inventory> pageResult;
         if (productId != null && warehouseId != null) {
-            pageResult = inventoryRepository.findByProductIdAndWarehouseId(productId, warehouseId, pageable);
+            pageResult =
+                    inventoryRepository.findByProductIdAndWarehouseId(
+                            productId, warehouseId, pageable);
         } else if (productId != null) {
             pageResult = inventoryRepository.findByProductId(productId, pageable);
         } else if (warehouseId != null) {
@@ -350,9 +374,10 @@ public class InventoryApplicationService {
 
         InventoryPageDTO result = new InventoryPageDTO();
         result.setTotal(pageResult.getTotalElements());
-        result.setRows(pageResult.getContent().stream()
-                .map(this::toInventoryDTO)
-                .collect(Collectors.toList()));
+        result.setRows(
+                pageResult.getContent().stream()
+                        .map(this::toInventoryDTO)
+                        .collect(Collectors.toList()));
         return result;
     }
 
@@ -363,22 +388,25 @@ public class InventoryApplicationService {
      * @return 产品列表
      */
     public List<ProductDTO> searchProducts(String keyword) {
-        Page<Product> pageResult = productRepository.findByNameContaining(keyword, PageRequest.of(0, 100));
-        return pageResult.getContent().stream().map(this::toProductDTO).collect(Collectors.toList());
+        Page<Product> pageResult =
+                productRepository.findByNameContaining(keyword, PageRequest.of(0, 100));
+        return pageResult.getContent().stream()
+                .map(this::toProductDTO)
+                .collect(Collectors.toList());
     }
 
     public List<InventoryDTO> searchInventoryByLocation(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return List.of();
         }
-        
+
         List<Inventory> inventories = inventoryRepository.findAll();
-        List<Product> products = productRepository.findByNameContaining(keyword, Pageable.unpaged()).getContent();
-        
-        List<Long> productIds = products.stream()
-                .map(Product::getProductId)
-                .collect(Collectors.toList());
-        
+        List<Product> products =
+                productRepository.findByNameContaining(keyword, Pageable.unpaged()).getContent();
+
+        List<Long> productIds =
+                products.stream().map(Product::getProductId).collect(Collectors.toList());
+
         return inventories.stream()
                 .filter(inv -> productIds.contains(inv.getProductId()))
                 .map(this::toInventoryDTO)
@@ -389,7 +417,7 @@ public class InventoryApplicationService {
      * 方法功能描述：锁定库存
      *
      * @param inventoryId 库存明细ID
-     * @param quantity    锁定数量
+     * @param quantity 锁定数量
      * @return 库存明细信息
      * @throws BusinessException 当库存不存在或可用数量不足时抛出异常
      */
@@ -398,14 +426,16 @@ public class InventoryApplicationService {
         if (quantity == null || quantity <= 0) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "锁定数量必须大于0");
         }
-        
-        Inventory entity = inventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
-        
+
+        Inventory entity =
+                inventoryRepository
+                        .findById(inventoryId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
+
         if (entity.getQuantity() - entity.getLockedQuantity() < quantity) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "库存不足");
         }
-        
+
         entity.setLockedQuantity(entity.getLockedQuantity() + quantity);
         entity.setUpdateTime(LocalDateTime.now());
         inventoryRepository.save(entity);
@@ -418,23 +448,26 @@ public class InventoryApplicationService {
      * 方法功能描述：解锁库存
      *
      * @param inventoryId 库存明细ID
-     * @param quantity    解锁数量
+     * @param quantity 解锁数量
      * @return 库存明细信息
      * @throws BusinessException 当库存不存在或锁定数量不足时抛出异常
      */
     @Transactional
-    public InventoryDTO unlockInventory(Long inventoryId, Integer quantity) throws BusinessException {
+    public InventoryDTO unlockInventory(Long inventoryId, Integer quantity)
+            throws BusinessException {
         if (quantity == null || quantity <= 0) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "解锁数量必须大于0");
         }
-        
-        Inventory entity = inventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
-        
+
+        Inventory entity =
+                inventoryRepository
+                        .findById(inventoryId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "库存明细不存在"));
+
         if (entity.getLockedQuantity() < quantity) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "锁定数量不足");
         }
-        
+
         entity.setLockedQuantity(entity.getLockedQuantity() - quantity);
         entity.setUpdateTime(LocalDateTime.now());
         inventoryRepository.save(entity);
@@ -505,16 +538,19 @@ public class InventoryApplicationService {
      */
     public Map<String, Object> getProductInventoryStatistics(Long productId) {
         Map<String, Object> statistics = new HashMap<>();
-        
+
         Integer totalQuantity = inventoryRepository.sumQuantityByProductId(productId);
         Integer lockedQuantity = inventoryRepository.sumLockedQuantityByProductId(productId);
-        Integer availableQuantity = totalQuantity != null && lockedQuantity != null ? totalQuantity - lockedQuantity : 0;
-        
+        Integer availableQuantity =
+                totalQuantity != null && lockedQuantity != null
+                        ? totalQuantity - lockedQuantity
+                        : 0;
+
         statistics.put("productId", productId);
         statistics.put("totalQuantity", totalQuantity != null ? totalQuantity : 0);
         statistics.put("lockedQuantity", lockedQuantity != null ? lockedQuantity : 0);
         statistics.put("availableQuantity", availableQuantity);
-        
+
         return statistics;
     }
 
@@ -532,7 +568,7 @@ public class InventoryApplicationService {
 
     /**
      * 转换为库存DTO
-     * 
+     *
      * @param inventory 库存实体
      * @return 库存DTO
      */
@@ -542,9 +578,9 @@ public class InventoryApplicationService {
         dto.setProductId(inventory.getProductId());
         dto.setWarehouseId(inventory.getWarehouseId());
         // Inventory 实体没有 locationCode，且 DTO 也没有该字段，暂时忽略
-        // dto.setLocationCode(""); 
+        // dto.setLocationCode("");
         dto.setQuantity(inventory.getQuantity());
-        
+
         // 关联产品信息
         if (inventory.getProductId() != null) {
             Optional<Product> productOpt = productRepository.findById(inventory.getProductId());
@@ -555,15 +591,16 @@ public class InventoryApplicationService {
                 dto.setProductSpecification(product.getModel());
             }
         }
-        
+
         // 关联仓库信息
         if (inventory.getWarehouseId() != null) {
-            Optional<Warehouse> warehouseOpt = warehouseRepository.findById(inventory.getWarehouseId());
+            Optional<Warehouse> warehouseOpt =
+                    warehouseRepository.findById(inventory.getWarehouseId());
             if (warehouseOpt.isPresent()) {
                 dto.setWarehouseName(warehouseOpt.get().getWarehouseName());
             }
         }
-        
+
         return dto;
     }
 
@@ -577,9 +614,8 @@ public class InventoryApplicationService {
     private void clearTotalInventoryCache() {
         String key = "inventory:total";
         stringRedisTemplate.delete(key);
-        
+
         // Also clear dashboard KPI cache to ensure data overview updates
         stringRedisTemplate.delete("dashboard:kpi");
     }
-
 }

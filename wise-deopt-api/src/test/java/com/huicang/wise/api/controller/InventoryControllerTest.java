@@ -1,20 +1,8 @@
 package com.huicang.wise.api.controller;
 
-import java.util.Collections;
-
-import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -22,34 +10,44 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.api.config.JpaConfiguration;
-import com.huicang.wise.application.inventory.InventoryApplicationService;
+import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
+import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.inventory.InventoryCreateRequest;
 import com.huicang.wise.application.inventory.InventoryDTO;
 import com.huicang.wise.application.inventory.InventoryPageDTO;
 import com.huicang.wise.application.inventory.ProductCreateRequest;
 import com.huicang.wise.application.inventory.ProductDTO;
 import com.huicang.wise.application.inventory.ProductUpdateRequest;
-import com.huicang.wise.application.auth.AuthApplicationService;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
-
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(controllers = InventoryController.class, excludeFilters = {
-
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JpaConfiguration.class),
-
-        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*") })
+@WebMvcTest(
+        controllers = InventoryController.class,
+        excludeFilters = {
+            @ComponentScan.Filter(
+                    type = FilterType.ASSIGNABLE_TYPE,
+                    classes = JpaConfiguration.class),
+            @ComponentScan.Filter(
+                    type = FilterType.REGEX,
+                    pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*")
+        })
 public class InventoryControllerTest extends AbstractWebMvcSliceTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @MockBean
-    private AuthApplicationService authApplicationService;
+    @Autowired private MockMvc mockMvc;
+    @MockBean private AuthApplicationService authApplicationService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -66,12 +64,14 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
         dto.setProductId(1L);
         dto.setProductName("Test Product");
 
-        when(inventoryApplicationService.createProduct(any(ProductCreateRequest.class))).thenReturn(dto);
+        when(inventoryApplicationService.createProduct(any(ProductCreateRequest.class)))
+                .thenReturn(dto);
 
-        mockMvc.perform(post("/api/inventories/products")
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/inventories/products")
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.productId").value(1))
@@ -88,12 +88,15 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
         dto.setProductId(productId);
         dto.setProductName("Updated Product");
 
-        when(inventoryApplicationService.updateProduct(eq(productId), any(ProductUpdateRequest.class))).thenReturn(dto);
+        when(inventoryApplicationService.updateProduct(
+                        eq(productId), any(ProductUpdateRequest.class)))
+                .thenReturn(dto);
 
-        mockMvc.perform(put("/api/inventories/products/{productId}", productId)
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        put("/api/inventories/products/{productId}", productId)
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.productName").value("Updated Product"));
@@ -114,7 +117,8 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
 
         // when(inventoryApplicationService.createInventory(any(InventoryCreateRequest.class))).thenReturn(dto);
 
-        when(inventoryApplicationService.createInventory(any(InventoryCreateRequest.class))).thenReturn(dto);
+        when(inventoryApplicationService.createInventory(any(InventoryCreateRequest.class)))
+                .thenReturn(dto);
 
         /*
         mockMvc.perform(post("/api/inventories")
@@ -140,9 +144,10 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
         when(inventoryApplicationService.listAllInventory(any(), any(), any(), any()))
                 .thenReturn(pageDTO);
 
-        mockMvc.perform(get("/api/inventories")
-                .header("Authorization", "Bearer token")
-                .param("productId", productId.toString()))
+        mockMvc.perform(
+                        get("/api/inventories")
+                                .header("Authorization", "Bearer token")
+                                .param("productId", productId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.rows[0].inventoryId").value(1));

@@ -12,54 +12,34 @@ import java.time.LocalDateTime;
  */
 public class ProductDTO {
 
-    /**
-     * 方法功能描述：产品主键ID
-     */
+    /** 方法功能描述：产品主键ID */
     private Long productId;
 
-    /**
-     * 方法功能描述：产品编码
-     */
+    /** 方法功能描述：产品编码 */
     private String productCode;
 
-    /**
-     * 方法功能描述：产品名称
-     */
+    /** 方法功能描述：产品名称 */
     private String productName;
 
-    /**
-     * 方法功能描述：规格型号
-     */
+    /** 方法功能描述：规格型号 */
     private String model;
 
-    /**
-     * 方法功能描述：计量单位
-     */
+    /** 方法功能描述：计量单位 */
     private String unit;
 
-    /**
-     * 方法功能描述：产品分类ID
-     */
+    /** 方法功能描述：产品分类ID */
     private Long categoryId;
 
-    /**
-     * 方法功能描述：产品描述
-     */
+    /** 方法功能描述：产品描述 */
     private String description;
 
-    /**
-     * 方法功能描述：是否启用
-     */
+    /** 方法功能描述：是否启用 */
     private Boolean enabled;
 
-    /**
-     * 方法功能描述：创建时间
-     */
+    /** 方法功能描述：创建时间 */
     private LocalDateTime createdAt;
 
-    /**
-     * 方法功能描述：最后更新时间
-     */
+    /** 方法功能描述：最后更新时间 */
     private LocalDateTime updatedAt;
 
     public Long getProductId() {

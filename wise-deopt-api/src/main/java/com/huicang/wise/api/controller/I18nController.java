@@ -2,18 +2,15 @@ package com.huicang.wise.api.controller;
 
 import com.huicang.wise.application.i18n.I18nService;
 import com.huicang.wise.common.api.ApiResponse;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Locale;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/i18n")
 public class I18nController {
 
-    @Autowired
-    private I18nService i18nService;
+    @Autowired private I18nService i18nService;
 
     @GetMapping("/translations")
     public ApiResponse<Map<String, String>> getTranslations(
@@ -32,7 +29,8 @@ public class I18nController {
 
     @GetMapping("/languages")
     public ApiResponse<com.huicang.wise.domain.i18n.Language[]> getSupportedLanguages() {
-        com.huicang.wise.domain.i18n.Language[] languages = com.huicang.wise.domain.i18n.Language.values();
+        com.huicang.wise.domain.i18n.Language[] languages =
+                com.huicang.wise.domain.i18n.Language.values();
         return ApiResponse.success(languages);
     }
 }

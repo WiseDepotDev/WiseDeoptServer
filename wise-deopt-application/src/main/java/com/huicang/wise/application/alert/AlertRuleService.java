@@ -1,20 +1,17 @@
 package com.huicang.wise.application.alert;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
 import com.huicang.wise.domain.repository.alert.AlertRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 类功能描述：告警规则服务
- * 实现各种告警规则检测和告警生成
+ * 类功能描述：告警规则服务 实现各种告警规则检测和告警生成
  *
  * @author WiseDepot
  * @version 0.1.17
@@ -38,7 +35,8 @@ public class AlertRuleService {
      * @return 告警信息
      */
     @Transactional
-    public AlertDTO createRfidVideoConsistencyAlert(Integer rfidCount, Integer videoCount, String location) {
+    public AlertDTO createRfidVideoConsistencyAlert(
+            Integer rfidCount, Integer videoCount, String location) {
         if (rfidCount == null || videoCount == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "RFID和视频数量不能为空");
         }
@@ -52,7 +50,10 @@ public class AlertRuleService {
         entity.setSourceModule("RFID_VIDEO");
         entity.setLevel((short) (difference > 5 ? 3 : 2));
         entity.setTitle("RFID-视频数量不一致");
-        entity.setMessage(String.format("位置：%s，RFID识别数量：%d，视频识别数量：%d，差异：%d", location, rfidCount, videoCount, difference));
+        entity.setMessage(
+                String.format(
+                        "位置：%s，RFID识别数量：%d，视频识别数量：%d，差异：%d",
+                        location, rfidCount, videoCount, difference));
         entity.setStatus((short) 0);
         entity.setIsActive(true);
         entity.setCreateTime(LocalDateTime.now());
@@ -72,8 +73,16 @@ public class AlertRuleService {
      * @return 告警信息
      */
     @Transactional
-    public AlertDTO createUnauthorizedMoveAlert(Long productId, String productName, String fromLocation, String toLocation, String reason) {
-        if (productId == null || productName == null || fromLocation == null || toLocation == null) {
+    public AlertDTO createUnauthorizedMoveAlert(
+            Long productId,
+            String productName,
+            String fromLocation,
+            String toLocation,
+            String reason) {
+        if (productId == null
+                || productName == null
+                || fromLocation == null
+                || toLocation == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "产品信息或位置信息不能为空");
         }
 
@@ -81,7 +90,10 @@ public class AlertRuleService {
         entity.setSourceModule("PRODUCT_MOVEMENT");
         entity.setLevel((short) 2);
         entity.setTitle("产品违规移动");
-        entity.setMessage(String.format("产品：%s，从位置：%s 移动到位置：%s，原因：%s", productName, fromLocation, toLocation, reason));
+        entity.setMessage(
+                String.format(
+                        "产品：%s，从位置：%s 移动到位置：%s，原因：%s",
+                        productName, fromLocation, toLocation, reason));
         entity.setStatus((short) 0);
         entity.setIsActive(true);
         entity.setCreateTime(LocalDateTime.now());
@@ -100,7 +112,8 @@ public class AlertRuleService {
      * @return 告警信息
      */
     @Transactional
-    public AlertDTO createDeviceOfflineAlert(Long deviceId, String deviceName, String deviceType, LocalDateTime lastHeartbeatTime) {
+    public AlertDTO createDeviceOfflineAlert(
+            Long deviceId, String deviceName, String deviceType, LocalDateTime lastHeartbeatTime) {
         if (deviceId == null || deviceName == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "设备ID和设备名称不能为空");
         }
@@ -109,7 +122,8 @@ public class AlertRuleService {
         entity.setSourceModule("DEVICE");
         entity.setLevel((short) 2);
         entity.setTitle("设备离线告警");
-        entity.setMessage(String.format("设备：%s（%s）离线，最后心跳时间：%s", deviceName, deviceType, lastHeartbeatTime));
+        entity.setMessage(
+                String.format("设备：%s（%s）离线，最后心跳时间：%s", deviceName, deviceType, lastHeartbeatTime));
         entity.setStatus((short) 0);
         entity.setIsActive(true);
         entity.setCreateTime(LocalDateTime.now());
@@ -129,8 +143,16 @@ public class AlertRuleService {
      * @return 告警信息
      */
     @Transactional
-    public AlertDTO createInventoryAbnormalAlert(Long productId, String productName, Integer expectedQuantity, Integer actualQuantity, String warehouseName) {
-        if (productId == null || productName == null || expectedQuantity == null || actualQuantity == null) {
+    public AlertDTO createInventoryAbnormalAlert(
+            Long productId,
+            String productName,
+            Integer expectedQuantity,
+            Integer actualQuantity,
+            String warehouseName) {
+        if (productId == null
+                || productName == null
+                || expectedQuantity == null
+                || actualQuantity == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "产品信息和数量不能为空");
         }
 
@@ -143,7 +165,10 @@ public class AlertRuleService {
         entity.setSourceModule("INVENTORY");
         entity.setLevel((short) (difference > 10 ? 3 : 2));
         entity.setTitle("库存异常告警");
-        entity.setMessage(String.format("仓库：%s，产品：%s，预期数量：%d，实际数量：%d，差异：%d", warehouseName, productName, expectedQuantity, actualQuantity, difference));
+        entity.setMessage(
+                String.format(
+                        "仓库：%s，产品：%s，预期数量：%d，实际数量：%d，差异：%d",
+                        warehouseName, productName, expectedQuantity, actualQuantity, difference));
         entity.setStatus((short) 0);
         entity.setIsActive(true);
         entity.setCreateTime(LocalDateTime.now());
@@ -152,15 +177,12 @@ public class AlertRuleService {
         return convertToDTO(savedEntity);
     }
 
-    /**
-     * 方法功能描述：定时检查设备离线状态
-     * 每分钟执行一次，检查设备心跳时间，超过5分钟未更新则生成告警
-     */
+    /** 方法功能描述：定时检查设备离线状态 每分钟执行一次，检查设备心跳时间，超过5分钟未更新则生成告警 */
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void checkDeviceOfflineStatus() {
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(5);
-        
+
         List<AlertEvent> existingAlerts = alertEventRepository.findByStatus(0);
 
         for (AlertEvent alert : existingAlerts) {
@@ -171,10 +193,7 @@ public class AlertRuleService {
         }
     }
 
-    /**
-     * 方法功能描述：定时检查库存异常
-     * 每小时执行一次，检查库存数量与预期数量的差异
-     */
+    /** 方法功能描述：定时检查库存异常 每小时执行一次，检查库存数量与预期数量的差异 */
     @Scheduled(fixedRate = 3600000)
     @Transactional
     public void checkInventoryAbnormalStatus() {

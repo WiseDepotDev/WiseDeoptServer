@@ -1,14 +1,22 @@
 package com.huicang.wise.application.auth;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
 import com.huicang.wise.application.captcha.CaptchaApplicationService;
 import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.user.NfcBadge;
-import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.domain.repository.user.NfcBadgeRepository;
 import com.huicang.wise.domain.repository.user.UserCoreRepository;
+import com.huicang.wise.domain.user.NfcBadge;
+import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.infrastructure.security.JwtTokenProvider;
 import com.huicang.wise.infrastructure.security.LoginAttemptGuard;
 import com.huicang.wise.infrastructure.security.PasswordEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,48 +26,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class AuthApplicationServiceTest {
 
-    @Mock
-    private UserCoreRepository userCoreRepository;
+    @Mock private UserCoreRepository userCoreRepository;
 
-    @Mock
-    private StringRedisTemplate stringRedisTemplate;
+    @Mock private StringRedisTemplate stringRedisTemplate;
 
-    @Mock
-    private ValueOperations<String, String> valueOperations;
+    @Mock private ValueOperations<String, String> valueOperations;
 
-    @Mock
-    private jakarta.servlet.http.HttpServletRequest httpServletRequest;
+    @Mock private jakarta.servlet.http.HttpServletRequest httpServletRequest;
 
-    @Mock
-    private CaptchaApplicationService captchaApplicationService;
+    @Mock private CaptchaApplicationService captchaApplicationService;
 
-    @Mock
-    private LoginAttemptGuard loginAttemptGuard;
+    @Mock private LoginAttemptGuard loginAttemptGuard;
 
-    @Mock
-    private NfcBadgeRepository nfcBadgeRepository;
+    @Mock private NfcBadgeRepository nfcBadgeRepository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    @Mock private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    @Mock private JwtTokenProvider jwtTokenProvider;
 
-    @InjectMocks
-    private AuthApplicationService authApplicationService;
+    @InjectMocks private AuthApplicationService authApplicationService;
 
     @BeforeEach
     void setUp() {
@@ -147,7 +135,9 @@ class AuthApplicationServiceTest {
         request.setNfcId(nfcId);
         request.setPin(wrongPin);
 
-        assertThrows(BusinessException.class, () -> authApplicationService.nfcPinLogin(request, httpServletRequest));
+        assertThrows(
+                BusinessException.class,
+                () -> authApplicationService.nfcPinLogin(request, httpServletRequest));
 
         // PIN 错误必须累加失败计数
         verify(loginAttemptGuard, times(1)).onFailure(eq("testuser"), any());
@@ -179,8 +169,10 @@ class AuthApplicationServiceTest {
         request.setNfcId(nfcId);
         request.setPin(wrongPin);
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> authApplicationService.nfcPinLogin(request, httpServletRequest));
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> authApplicationService.nfcPinLogin(request, httpServletRequest));
 
         assertEquals(com.huicang.wise.common.api.ErrorCode.AUTH_ACCOUNT_LOCKED, ex.getErrorCode());
         // 锁定时不应再校验 PIN，也不应改变计数
@@ -211,8 +203,10 @@ class AuthApplicationServiceTest {
         request.setNfcId(nfcId);
         request.setPin(pin);
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> authApplicationService.nfcPinLogin(request, httpServletRequest));
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> authApplicationService.nfcPinLogin(request, httpServletRequest));
 
         // IP 已封禁 -> 直接拒绝，不应校验 PIN
         assertEquals(com.huicang.wise.common.api.ErrorCode.AUTH_ACCOUNT_LOCKED, ex.getErrorCode());
@@ -236,11 +230,16 @@ class AuthApplicationServiceTest {
         request.setPassword("admin123");
         // captchaId / captchaCode 均为 null
 
-        doThrow(new BusinessException(com.huicang.wise.common.api.ErrorCode.VAL_PARAM_AUTH_CAPTCHA_ID_EMPTY,
-                "captchaId字段为空"))
-                .when(captchaApplicationService).enforceCaptcha(null, null);
+        doThrow(
+                        new BusinessException(
+                                com.huicang.wise.common.api.ErrorCode
+                                        .VAL_PARAM_AUTH_CAPTCHA_ID_EMPTY,
+                                "captchaId字段为空"))
+                .when(captchaApplicationService)
+                .enforceCaptcha(null, null);
 
-        assertThrows(BusinessException.class,
+        assertThrows(
+                BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
         // 关键断言：验证码未通过时绝不能触碰用户数据（即不可能被用来爆破口令）
@@ -257,11 +256,16 @@ class AuthApplicationServiceTest {
         request.setCaptchaId("some-captcha-id");
         // captchaCode 仍为 null
 
-        doThrow(new BusinessException(com.huicang.wise.common.api.ErrorCode.VAL_PARAM_AUTH_CAPTCHA_CODE_EMPTY,
-                "captchaCode字段为空"))
-                .when(captchaApplicationService).enforceCaptcha("some-captcha-id", null);
+        doThrow(
+                        new BusinessException(
+                                com.huicang.wise.common.api.ErrorCode
+                                        .VAL_PARAM_AUTH_CAPTCHA_CODE_EMPTY,
+                                "captchaCode字段为空"))
+                .when(captchaApplicationService)
+                .enforceCaptcha("some-captcha-id", null);
 
-        assertThrows(BusinessException.class,
+        assertThrows(
+                BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
         verify(userCoreRepository, never()).findByUsername(anyString());
@@ -277,9 +281,11 @@ class AuthApplicationServiceTest {
         request.setCaptchaCode("ZZZZ");
 
         doThrow(new BusinessException(com.huicang.wise.common.api.ErrorCode.PARAM_ERROR, "验证码错误"))
-                .when(captchaApplicationService).enforceCaptcha("cid-1", "ZZZZ");
+                .when(captchaApplicationService)
+                .enforceCaptcha("cid-1", "ZZZZ");
 
-        assertThrows(BusinessException.class,
+        assertThrows(
+                BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
         verify(userCoreRepository, never()).findByUsername(anyString());
@@ -298,7 +304,8 @@ class AuthApplicationServiceTest {
         doNothing().when(captchaApplicationService).enforceCaptcha("cid-2", "AB12");
         when(userCoreRepository.findByUsername("admin")).thenReturn(Optional.empty());
 
-        assertThrows(BusinessException.class,
+        assertThrows(
+                BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
         verify(captchaApplicationService, times(1)).enforceCaptcha("cid-2", "AB12");
@@ -329,8 +336,10 @@ class AuthApplicationServiceTest {
         doNothing().when(captchaApplicationService).enforceCaptcha("cid-lock", "OK12");
         when(loginAttemptGuard.isLocked("admin")).thenReturn(true);
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> authApplicationService.login(request, httpServletRequest));
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> authApplicationService.login(request, httpServletRequest));
 
         assertEquals(com.huicang.wise.common.api.ErrorCode.AUTH_ACCOUNT_LOCKED, ex.getErrorCode());
         // 锁定后不应触碰用户数据
@@ -346,8 +355,10 @@ class AuthApplicationServiceTest {
         when(loginAttemptGuard.isLocked("admin")).thenReturn(false);
         when(loginAttemptGuard.isIpBlocked(any())).thenReturn(true);
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> authApplicationService.login(request, httpServletRequest));
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> authApplicationService.login(request, httpServletRequest));
 
         assertEquals(com.huicang.wise.common.api.ErrorCode.AUTH_ACCOUNT_LOCKED, ex.getErrorCode());
         verify(userCoreRepository, never()).findByUsername(anyString());
@@ -362,7 +373,8 @@ class AuthApplicationServiceTest {
         when(loginAttemptGuard.isIpBlocked(any())).thenReturn(false);
         when(userCoreRepository.findByUsername("ghost")).thenReturn(Optional.empty());
 
-        assertThrows(BusinessException.class,
+        assertThrows(
+                BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
         verify(loginAttemptGuard, times(1)).onFailure(eq("ghost"), any());
@@ -373,9 +385,11 @@ class AuthApplicationServiceTest {
     void testCaptchaFailureDoesNotCountAttempt() {
         LoginRequest request = buildLoginRequest("admin", "admin123");
         doThrow(new BusinessException(com.huicang.wise.common.api.ErrorCode.PARAM_ERROR, "验证码错误"))
-                .when(captchaApplicationService).enforceCaptcha("cid-lock", "OK12");
+                .when(captchaApplicationService)
+                .enforceCaptcha("cid-lock", "OK12");
 
-        assertThrows(BusinessException.class,
+        assertThrows(
+                BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
         verify(loginAttemptGuard, never()).onFailure(anyString(), any());

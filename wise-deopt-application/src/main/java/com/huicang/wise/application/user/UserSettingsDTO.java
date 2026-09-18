@@ -11,14 +11,10 @@ import java.util.Map;
  */
 public class UserSettingsDTO {
 
-    /**
-     * 用户ID
-     */
+    /** 用户ID */
     private Long userId;
 
-    /**
-     * 设置项键值对
-     */
+    /** 设置项键值对 */
     private Map<String, String> settings;
 
     public Long getUserId() {

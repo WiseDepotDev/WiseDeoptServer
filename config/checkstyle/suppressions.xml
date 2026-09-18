@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<!--
+  Checkstyle 抑制清单（P2-01）
+
+  原则：**只抑制「规则本身对某类代码不适用」的情况，并写明理由**；
+        不为「代码没写好」开口子——那类问题应改代码，而不是加抑制。
+        存量违规经自动修复后已为 0，故本文件仅包含下列模式级抑制。
+
+  @author WiseDepot
+  @version 1.0
+  @since 2026-02-27
+-->
+<suppressions>
+    <!--
+      AOP 切面（*Aspect.java）的 @Around 通知必须声明 `throws Throwable`：
+      Spring AOP 要求通知能够重抛被代理方法的任意 Throwable（含 Error），
+      改为 `throws Exception` 会丢失语义、可能改变异常传播行为。
+      涉及：DynamicDataSourceAspect、RedisCacheAspect
+      注：规则模块设置了 id，抑制必须按 id 匹配（不能写 checks="illegal-throws"）
+    -->
+    <suppress id="illegal-throws" files=".*Aspect\.java$"/>
+    <!-- 同理：切面需要 catch Throwable 以便记录后原样重抛（WebLogAspect 等） -->
+    <suppress id="illegal-catch" files=".*Aspect\.java$"/>
+</suppressions>

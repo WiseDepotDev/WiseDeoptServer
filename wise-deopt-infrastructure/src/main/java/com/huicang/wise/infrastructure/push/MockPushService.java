@@ -7,13 +7,17 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MockPushService implements PushService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(MockPushService.class);
 
     @Override
     public void sendPushNotification(Message message, String deviceToken) {
-        logger.info("发送推送通知 - 消息ID: {}, 标题: {}, 接收者: {}, 设备Token: {}", 
-            message.getId(), message.getTitle(), message.getReceiverId(), deviceToken);
+        logger.info(
+                "发送推送通知 - 消息ID: {}, 标题: {}, 接收者: {}, 设备Token: {}",
+                message.getId(),
+                message.getTitle(),
+                message.getReceiverId(),
+                deviceToken);
     }
 
     @Override

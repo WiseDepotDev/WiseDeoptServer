@@ -9,10 +9,10 @@ public class SyncRequest {
     private LocalDateTime lastSyncTime;
     private List<SyncOperation> operations;
 
-    public SyncRequest() {
-    }
+    public SyncRequest() {}
 
-    public SyncRequest(String deviceId, LocalDateTime lastSyncTime, List<SyncOperation> operations) {
+    public SyncRequest(
+            String deviceId, LocalDateTime lastSyncTime, List<SyncOperation> operations) {
         this.deviceId = deviceId;
         this.lastSyncTime = lastSyncTime;
         this.operations = operations;

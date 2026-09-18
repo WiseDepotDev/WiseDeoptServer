@@ -1,61 +1,48 @@
 package com.huicang.wise.api.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.auth.AuthApplicationService;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.auth.LoginRequest;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.auth.LoginResponse;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.user.UserApplicationService;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.application.user.UserDTO;
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
+import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.application.auth.LoginRequest;
+import com.huicang.wise.application.auth.LoginResponse;
+import com.huicang.wise.application.user.UserApplicationService;
+import com.huicang.wise.application.user.UserDTO;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
+@WebMvcTest(
+        excludeFilters =
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern =
+                                "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
 // 说明：本用例断言的是鉴权/授权链路的失败行为，而 SecurityConfig 标注为 @Profile("prod")、
 // 且 Spring Security 过滤器链在 @WebMvcTest 切片内为默认配置，无法复现该项目真实安全规则，
 // 故归入 e2e 组（默认不执行，需真实环境：mvn test -Pe2e）。
 @Tag("e2e")
 public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private AuthApplicationService authApplicationService;
+    @MockBean private AuthApplicationService authApplicationService;
 
-    @MockBean
-    private UserApplicationService userApplicationService;
+    @MockBean private UserApplicationService userApplicationService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Test
     void testSessionFixationAttack() throws Exception {
@@ -67,11 +54,13 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         response.setAccessToken("fixed_session_token");
         response.setUsername("admin");
 
-        when(authApplicationService.login(any(LoginRequest.class), any(HttpServletRequest.class))).thenReturn(response);
+        when(authApplicationService.login(any(LoginRequest.class), any(HttpServletRequest.class)))
+                .thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -85,8 +74,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer stolen_token"))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer stolen_token"))
                 .andExpect(status().isOk());
     }
 
@@ -101,18 +89,17 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         for (int i = 0; i < 10; i++) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer replayed_token"))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer replayed_token"))
                     .andExpect(status().isOk());
         }
     }
 
     @Test
     void testSessionExpiration() throws Exception {
-        when(authApplicationService.validateToken(any())).thenThrow(new RuntimeException("Token expired"));
+        when(authApplicationService.validateToken(any()))
+                .thenThrow(new RuntimeException("Token expired"));
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer expired_token"))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer expired_token"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -127,8 +114,9 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         for (int i = 0; i < 20; i++) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer concurrent_token_" + i))
+            mockMvc.perform(
+                            get("/api/users/1")
+                                    .header("Authorization", "Bearer concurrent_token_" + i))
                     .andExpect(status().isOk());
         }
     }
@@ -143,8 +131,9 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1?token=leaked_token")
-                .header("Authorization", "Bearer valid_token"))
+        mockMvc.perform(
+                        get("/api/users/1?token=leaked_token")
+                                .header("Authorization", "Bearer valid_token"))
                 .andExpect(status().isOk());
     }
 
@@ -158,9 +147,10 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer valid_token")
-                .header("Referer", "http://evil.com?token=leaked_token"))
+        mockMvc.perform(
+                        get("/api/users/1")
+                                .header("Authorization", "Bearer valid_token")
+                                .header("Referer", "http://evil.com?token=leaked_token"))
                 .andExpect(status().isOk());
     }
 
@@ -174,9 +164,10 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer valid_token")
-                .header("Cookie", "session=leaked_token"))
+        mockMvc.perform(
+                        get("/api/users/1")
+                                .header("Authorization", "Bearer valid_token")
+                                .header("Cookie", "session=leaked_token"))
                 .andExpect(status().isOk());
     }
 
@@ -196,8 +187,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : guessedTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -213,8 +203,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         for (int i = 0; i < 100; i++) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer token_" + i))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer token_" + i))
                     .andExpect(status().isOk());
         }
     }
@@ -229,12 +218,10 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer reused_token"))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer reused_token"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/users/2")
-                .header("Authorization", "Bearer reused_token"))
+        mockMvc.perform(get("/api/users/2").header("Authorization", "Bearer reused_token"))
                 .andExpect(status().isOk());
     }
 
@@ -248,8 +235,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer forged_token"))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer forged_token"))
                 .andExpect(status().isOk());
     }
 
@@ -272,8 +258,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : manipulatedTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -288,8 +273,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer valid_token%00"))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer valid_token%00"))
                 .andExpect(status().isOk());
     }
 
@@ -309,8 +293,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : specialTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -326,13 +309,15 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         String[] unicodeTokens = {
-            "valid_token_中文", "valid_token_日本語", "valid_token_한국어",
-            "valid_token_العربية", "valid_token_русский"
+            "valid_token_中文",
+            "valid_token_日本語",
+            "valid_token_한국어",
+            "valid_token_العربية",
+            "valid_token_русский"
         };
 
         for (String token : unicodeTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -353,8 +338,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : encodedTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -370,13 +354,15 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         String[] base64Tokens = {
-            "dmFsaWRfdG9rZW4=", "YWRtaW46cGFzc3dvcmQ=", "dXNlcjoxMjM0NTY=",
-            "c3VwZXJhZG1pbjphZG1pbg==", "cm9vdDpyb290"
+            "dmFsaWRfdG9rZW4=",
+            "YWRtaW46cGFzc3dvcmQ=",
+            "dXNlcjoxMjM0NTY=",
+            "c3VwZXJhZG1pbjphZG1pbg==",
+            "cm9vdDpyb290"
         };
 
         for (String token : base64Tokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -397,8 +383,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : hexTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -414,13 +399,17 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         String[] urlEncodedTokens = {
-            "valid%20token", "valid%2Btoken", "valid%2Ftoken", "valid%3Dtoken",
-            "valid%3Ftoken", "valid%23token", "valid%26token"
+            "valid%20token",
+            "valid%2Btoken",
+            "valid%2Ftoken",
+            "valid%3Dtoken",
+            "valid%3Ftoken",
+            "valid%23token",
+            "valid%26token"
         };
 
         for (String token : urlEncodedTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -436,13 +425,15 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         String[] doubleEncodedTokens = {
-            "valid%2520token", "valid%252Btoken", "valid%252Ftoken",
-            "valid%253Dtoken", "valid%253Ftoken"
+            "valid%2520token",
+            "valid%252Btoken",
+            "valid%252Ftoken",
+            "valid%253Dtoken",
+            "valid%253Ftoken"
         };
 
         for (String token : doubleEncodedTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -458,13 +449,11 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         String[] mixedCaseTokens = {
-            "VALID_TOKEN", "valid_token", "Valid_Token", "vAlId_ToKeN",
-            "VaLiD_tOkEn"
+            "VALID_TOKEN", "valid_token", "Valid_Token", "vAlId_ToKeN", "VaLiD_tOkEn"
         };
 
         for (String token : mixedCaseTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -485,8 +474,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : paddedTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -502,13 +490,11 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
         String[] whitespaceTokens = {
-            "valid token", "valid\ttoken", "valid\ntoken", "valid\r\ntoken",
-            "valid\rtoken"
+            "valid token", "valid\ttoken", "valid\ntoken", "valid\r\ntoken", "valid\rtoken"
         };
 
         for (String token : whitespaceTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -529,8 +515,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : controlTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -551,8 +536,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : repeatedTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -573,8 +557,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : sequentialTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -595,8 +578,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : patternTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -614,8 +596,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         long timestamp = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
             String token = "token_" + (timestamp + i * 1000);
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -636,8 +617,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : randomTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -661,8 +641,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : md5Tokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -686,8 +665,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : sha1Tokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -711,8 +689,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : sha256Tokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -736,8 +713,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : uuidTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -759,8 +735,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         };
 
         for (String token : jwtTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }
@@ -775,8 +750,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer "))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer "))
                 .andExpect(status().isOk());
     }
 
@@ -790,9 +764,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", ""))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/users/1").header("Authorization", "")).andExpect(status().isOk());
     }
 
     @Test
@@ -810,8 +782,9 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
             longToken.append("a");
         }
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer " + longToken.toString()))
+        mockMvc.perform(
+                        get("/api/users/1")
+                                .header("Authorization", "Bearer " + longToken.toString()))
                 .andExpect(status().isOk());
     }
 
@@ -828,8 +801,7 @@ public class SessionHijackingSecurityTest extends AbstractAuthenticatedSliceTest
         String[] shortTokens = {"a", "ab", "abc", "abcd", "abcde"};
 
         for (String token : shortTokens) {
-            mockMvc.perform(get("/api/users/1")
-                    .header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
     }

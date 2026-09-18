@@ -2,36 +2,32 @@ package com.huicang.wise.application.user;
 
 import com.huicang.wise.application.captcha.CaptchaApplicationService;
 import com.huicang.wise.application.common.DeleteWithCaptchaRequest;
-import com.huicang.wise.common.api.ErrorCode;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.user.UserCore;
-import com.huicang.wise.domain.user.UserProfile;
-import com.huicang.wise.domain.user.UserSecurity;
-import com.huicang.wise.domain.repository.user.UserCoreRepository;
-import com.huicang.wise.domain.repository.user.UserProfileRepository;
-import com.huicang.wise.domain.repository.user.UserSecurityRepository;
 import com.huicang.wise.application.oss.FileStorageApplicationService;
 import com.huicang.wise.application.password.ChangePasswordRequest;
 import com.huicang.wise.application.password.PasswordApplicationService;
 import com.huicang.wise.application.role.RoleDTO;
-import com.huicang.wise.application.user.UserRoleApplicationService;
-import com.huicang.wise.domain.repository.auth.RoleRepository;
-import com.huicang.wise.domain.repository.auth.UserRoleRepository;
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.repository.auth.KeyAccessAuditLogRepository;
+import com.huicang.wise.domain.repository.auth.RoleRepository;
 import com.huicang.wise.domain.repository.auth.UserLoginLogRepository;
+import com.huicang.wise.domain.repository.auth.UserRoleRepository;
 import com.huicang.wise.domain.repository.user.NfcBadgeRepository;
+import com.huicang.wise.domain.repository.user.UserCoreRepository;
+import com.huicang.wise.domain.repository.user.UserProfileRepository;
+import com.huicang.wise.domain.repository.user.UserSecurityRepository;
+import com.huicang.wise.domain.user.UserCore;
+import com.huicang.wise.domain.user.UserProfile;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-import com.huicang.wise.application.user.UserRoleApplicationService;
 
 /**
  * 类功能描述：用户管理应用服务
@@ -55,18 +51,19 @@ public class UserApplicationService {
     private final FileStorageApplicationService fileStorageApplicationService;
     private final CaptchaApplicationService captchaApplicationService;
 
-    public UserApplicationService(UserCoreRepository userCoreRepository,
-                                UserProfileRepository userProfileRepository,
-                                UserSecurityRepository userSecurityRepository,
-                                PasswordApplicationService passwordApplicationService,
-                                UserRoleApplicationService userRoleApplicationService,
-                                RoleRepository roleRepository,
-                                UserRoleRepository userRoleRepository,
-                                NfcBadgeRepository nfcBadgeRepository,
-                                KeyAccessAuditLogRepository keyAccessAuditLogRepository,
-                                UserLoginLogRepository userLoginLogRepository,
-                                FileStorageApplicationService fileStorageApplicationService,
-                                CaptchaApplicationService captchaApplicationService) {
+    public UserApplicationService(
+            UserCoreRepository userCoreRepository,
+            UserProfileRepository userProfileRepository,
+            UserSecurityRepository userSecurityRepository,
+            PasswordApplicationService passwordApplicationService,
+            UserRoleApplicationService userRoleApplicationService,
+            RoleRepository roleRepository,
+            UserRoleRepository userRoleRepository,
+            NfcBadgeRepository nfcBadgeRepository,
+            KeyAccessAuditLogRepository keyAccessAuditLogRepository,
+            UserLoginLogRepository userLoginLogRepository,
+            FileStorageApplicationService fileStorageApplicationService,
+            CaptchaApplicationService captchaApplicationService) {
         this.userCoreRepository = userCoreRepository;
         this.userProfileRepository = userProfileRepository;
         this.userSecurityRepository = userSecurityRepository;
@@ -88,7 +85,7 @@ public class UserApplicationService {
         }
 
         UserCore user = new UserCore();
-        user.setUserId(System.nanoTime() + (long)(Math.random() * 1000));
+        user.setUserId(System.nanoTime() + (long) (Math.random() * 1000));
         user.setUsername(request.getUsername());
         user.setUserType((short) 0);
         user.setStatus((short) 1);
@@ -115,11 +112,15 @@ public class UserApplicationService {
     @CacheEvict(prefix = "user", key = "#request.userId", allEntries = false)
     @Transactional
     public UserDTO updateUser(UserUpdateRequest request) {
-        UserCore user = userCoreRepository.findById(request.getUserId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
+        UserCore user =
+                userCoreRepository
+                        .findById(request.getUserId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
 
-        UserProfile profile = userProfileRepository.findByUserId(request.getUserId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户资料不存在"));
+        UserProfile profile =
+                userProfileRepository
+                        .findByUserId(request.getUserId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户资料不存在"));
 
         if (request.getEmail() != null) {
             profile.setEmail(request.getEmail());
@@ -152,19 +153,27 @@ public class UserApplicationService {
 
     @Cacheable(prefix = "user", key = "#userId", timeout = 1800)
     public UserDTO getUser(Long userId) {
-        UserCore user = userCoreRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
-        UserProfile profile = userProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户资料不存在"));
+        UserCore user =
+                userCoreRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
+        UserProfile profile =
+                userProfileRepository
+                        .findByUserId(userId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户资料不存在"));
         return toUserDTO(user, profile);
     }
 
     @Cacheable(prefix = "user:username", key = "#username", timeout = 1800)
     public UserDTO getUserByUsername(String username) {
-        UserCore user = userCoreRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
-        UserProfile profile = userProfileRepository.findByUserId(user.getUserId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户资料不存在"));
+        UserCore user =
+                userCoreRepository
+                        .findByUsername(username)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户不存在"));
+        UserProfile profile =
+                userProfileRepository
+                        .findByUserId(user.getUserId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "用户资料不存在"));
         return toUserDTO(user, profile);
     }
 
@@ -172,17 +181,23 @@ public class UserApplicationService {
         if (page == null || page < 1) page = 1;
         if (size == null || size < 1) size = 10;
 
-        Page<UserCore> userPage = userCoreRepository.findAll(
-                PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createTime")));
+        Page<UserCore> userPage =
+                userCoreRepository.findAll(
+                        PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createTime")));
 
         UserPageDTO dto = new UserPageDTO();
         dto.setTotal(userPage.getTotalElements());
-        List<UserDTO> items = userPage.getContent().stream()
-                .map(user -> {
-                    UserProfile profile = userProfileRepository.findByUserId(user.getUserId()).orElse(null);
-                    return toUserDTO(user, profile);
-                })
-                .collect(Collectors.toList());
+        List<UserDTO> items =
+                userPage.getContent().stream()
+                        .map(
+                                user -> {
+                                    UserProfile profile =
+                                            userProfileRepository
+                                                    .findByUserId(user.getUserId())
+                                                    .orElse(null);
+                                    return toUserDTO(user, profile);
+                                })
+                        .collect(Collectors.toList());
         dto.setItems(items);
         return dto;
     }
@@ -193,21 +208,21 @@ public class UserApplicationService {
         if (!userCoreRepository.existsById(userId)) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "用户不存在");
         }
-        
+
         // 删除关联数据
         userProfileRepository.deleteByUserId(userId);
         if (userSecurityRepository.existsByUserId(userId)) {
             userSecurityRepository.deleteByUserId(userId);
         }
         userRoleApplicationService.removeUserRoles(userId);
-        
+
         // 删除NFC工牌
         nfcBadgeRepository.deleteByUserId(userId);
         // 删除访问密钥审计日志
         keyAccessAuditLogRepository.deleteByUserId(userId);
         // 删除用户登录日志
         userLoginLogRepository.deleteByUserId(userId);
-        
+
         userCoreRepository.deleteById(userId);
     }
 
@@ -230,12 +245,18 @@ public class UserApplicationService {
 
     private void updateRole(Long userId, String roleCode) {
         userRoleApplicationService.removeUserRoles(userId);
-        
+
         String roleName = mapRoleCodeToName(roleCode);
-        com.huicang.wise.domain.auth.Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "角色不存在: " + roleCode));
-        
-        com.huicang.wise.domain.auth.UserRole userRole = new com.huicang.wise.domain.auth.UserRole();
+        com.huicang.wise.domain.auth.Role role =
+                roleRepository
+                        .findByName(roleName)
+                        .orElseThrow(
+                                () ->
+                                        new BusinessException(
+                                                ErrorCode.NOT_FOUND, "角色不存在: " + roleCode));
+
+        com.huicang.wise.domain.auth.UserRole userRole =
+                new com.huicang.wise.domain.auth.UserRole();
         userRole.setUserId(userId);
         userRole.setRoleId(role.getRoleId());
         userRole.setCreateBy(userId);
@@ -262,7 +283,7 @@ public class UserApplicationService {
         dto.setUserId(user.getUserId());
         dto.setUsername(user.getUsername());
         dto.setNickname(profile != null ? profile.getNickname() : null);
-        
+
         if (profile != null && profile.getAvatarFileId() != null) {
             // 返回头像API访问路径
             String avatarUrl = "/api/profile/" + user.getUserId() + "/avatar/image";
@@ -270,18 +291,18 @@ public class UserApplicationService {
         } else {
             dto.setAvatar(null);
         }
-        
+
         dto.setEmail(profile != null ? profile.getEmail() : null);
         dto.setEnabled(user.getStatus() == 1);
         dto.setNfcId(null);
         dto.setCreatedAt(user.getCreateTime());
         dto.setUpdatedAt(user.getUpdateTime());
-        
+
         List<RoleDTO> roles = userRoleApplicationService.getUserRoles(user.getUserId());
         if (!roles.isEmpty()) {
             dto.setRole(roles.get(0).getRoleCode());
         }
-        
+
         return dto;
     }
 }

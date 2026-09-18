@@ -12,8 +12,7 @@ public class SyncResponse {
     private List<SyncOperation> failedOperations;
     private List<String> conflicts;
 
-    public SyncResponse() {
-    }
+    public SyncResponse() {}
 
     public SyncResponse(boolean success, String message, LocalDateTime syncTime) {
         this.success = success;

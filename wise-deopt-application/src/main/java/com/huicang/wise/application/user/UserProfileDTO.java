@@ -11,59 +11,37 @@ import java.time.LocalDateTime;
  */
 public class UserProfileDTO {
 
-    /**
-     * 个人资料ID
-     */
+    /** 个人资料ID */
     private Long profileId;
 
-    /**
-     * 用户ID
-     */
+    /** 用户ID */
     private Long userId;
 
-    /**
-     * 用户名
-     */
+    /** 用户名 */
     private String username;
 
-    /**
-     * 昵称
-     */
+    /** 昵称 */
     private String nickname;
 
-    /**
-     * 邮箱
-     */
+    /** 邮箱 */
     private String email;
 
-    /**
-     * 性别：0：保密 1：男 2：女
-     */
+    /** 性别：0：保密 1：男 2：女 */
     private Integer gender;
 
-    /**
-     * 头像文件ID
-     */
+    /** 头像文件ID */
     private Long avatarFileId;
 
-    /**
-     * 头像URL
-     */
+    /** 头像URL */
     private String avatarUrl;
 
-    /**
-     * 用户状态：0：封禁 1：正常
-     */
+    /** 用户状态：0：封禁 1：正常 */
     private Short status;
 
-    /**
-     * 创建时间
-     */
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     public Long getProfileId() {

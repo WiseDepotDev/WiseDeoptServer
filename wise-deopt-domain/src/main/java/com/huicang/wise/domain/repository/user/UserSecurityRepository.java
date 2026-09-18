@@ -1,10 +1,9 @@
 package com.huicang.wise.domain.repository.user;
 
 import com.huicang.wise.domain.user.UserSecurity;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 /**
  * 用户安全仓储接口

@@ -1,13 +1,10 @@
 package com.huicang.wise.domain.repository.device;
 
 import com.huicang.wise.domain.device.DeviceCore;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 /**
  * 设备核心仓储接口
@@ -70,7 +67,7 @@ public interface DeviceCoreRepository extends JpaRepository<DeviceCore, Long> {
     /**
      * 根据设备类型和状态查询设备列表
      *
-     * @param type   设备类型
+     * @param type 设备类型
      * @param status 设备状态
      * @return 设备列表
      */

@@ -7,18 +7,16 @@ import com.huicang.wise.domain.inventory.Product;
 import com.huicang.wise.domain.repository.inventory.ProductRepository;
 import com.huicang.wise.domain.repository.tag.TagRepository;
 import com.huicang.wise.domain.tag.ProductTag;
-import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 类功能描述：标签应用服务
@@ -34,9 +32,10 @@ public class TagApplicationService {
     private final ProductRepository productRepository;
     private final CaptchaApplicationService captchaApplicationService;
 
-    public TagApplicationService(TagRepository tagRepository,
-                              ProductRepository productRepository,
-                              CaptchaApplicationService captchaApplicationService) {
+    public TagApplicationService(
+            TagRepository tagRepository,
+            ProductRepository productRepository,
+            CaptchaApplicationService captchaApplicationService) {
         this.tagRepository = tagRepository;
         this.productRepository = productRepository;
         this.captchaApplicationService = captchaApplicationService;
@@ -70,25 +69,34 @@ public class TagApplicationService {
         if (hasNfc && tagRepository.existsByNfcUid(request.getNfcUid())) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "NFC标识已存在");
         }
-        
+
         if (request.getProductId() != null) {
             if (productRepository.findById(request.getProductId()).isEmpty()) {
                 throw new BusinessException(ErrorCode.NOT_FOUND, "产品不存在");
             }
         }
-        
+
         ProductTag entity = new ProductTag();
         if (request.getProductId() != null) {
             entity.setProductId(request.getProductId());
         }
-        entity.setBarcode(request.getBarcode() != null && !request.getBarcode().isBlank() ? request.getBarcode() : null);
-        entity.setNfcUid(request.getNfcUid() != null && !request.getNfcUid().isBlank() ? request.getNfcUid() : null);
-        entity.setRfid(request.getRfid() != null && !request.getRfid().isBlank() ? request.getRfid() : null);
+        entity.setBarcode(
+                request.getBarcode() != null && !request.getBarcode().isBlank()
+                        ? request.getBarcode()
+                        : null);
+        entity.setNfcUid(
+                request.getNfcUid() != null && !request.getNfcUid().isBlank()
+                        ? request.getNfcUid()
+                        : null);
+        entity.setRfid(
+                request.getRfid() != null && !request.getRfid().isBlank()
+                        ? request.getRfid()
+                        : null);
         entity.setStatus(request.getStatus() != null ? request.getStatus() : 0);
         entity.setCreateBy(1L);
         entity.setCreateTime(LocalDateTime.now());
         entity.setUpdateTime(LocalDateTime.now());
-        
+
         ProductTag saved = tagRepository.save(entity);
         return toProductTagDTO(saved);
     }
@@ -96,56 +104,59 @@ public class TagApplicationService {
     /**
      * 方法功能描述：更新标签
      *
-     * @param tagId  标签ID
+     * @param tagId 标签ID
      * @param request 标签更新请求
      * @return 标签信息
      * @throws BusinessException 当标签不存在时抛出异常
      */
     @Transactional
-    public ProductTagDTO updateTag(Long tagId, ProductTagUpdateRequest request) throws BusinessException {
-        ProductTag entity = tagRepository.findById(tagId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
-        
+    public ProductTagDTO updateTag(Long tagId, ProductTagUpdateRequest request)
+            throws BusinessException {
+        ProductTag entity =
+                tagRepository
+                        .findById(tagId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
+
         if (request.getProductId() != null) {
             if (productRepository.findById(request.getProductId()).isEmpty()) {
                 throw new BusinessException(ErrorCode.NOT_FOUND, "产品不存在");
             }
             entity.setProductId(request.getProductId());
         }
-        
+
         if (request.getStatus() != null) {
             entity.setStatus(request.getStatus());
         }
-        
+
         if (request.getBarcode() != null) {
-            if (!request.getBarcode().isBlank() && 
-                !request.getBarcode().equals(entity.getBarcode()) && 
-                tagRepository.existsByBarcode(request.getBarcode())) {
+            if (!request.getBarcode().isBlank()
+                    && !request.getBarcode().equals(entity.getBarcode())
+                    && tagRepository.existsByBarcode(request.getBarcode())) {
                 throw new BusinessException(ErrorCode.PARAM_ERROR, "条形码已存在");
             }
             entity.setBarcode(request.getBarcode().isBlank() ? null : request.getBarcode());
         }
-        
+
         if (request.getNfcUid() != null) {
-            if (!request.getNfcUid().isBlank() && 
-                !request.getNfcUid().equals(entity.getNfcUid()) && 
-                tagRepository.existsByNfcUid(request.getNfcUid())) {
+            if (!request.getNfcUid().isBlank()
+                    && !request.getNfcUid().equals(entity.getNfcUid())
+                    && tagRepository.existsByNfcUid(request.getNfcUid())) {
                 throw new BusinessException(ErrorCode.PARAM_ERROR, "NFC标识已存在");
             }
             entity.setNfcUid(request.getNfcUid().isBlank() ? null : request.getNfcUid());
         }
-        
+
         if (request.getRfid() != null) {
-            if (!request.getRfid().isBlank() && 
-                !request.getRfid().equals(entity.getRfid()) && 
-                tagRepository.existsByRfid(request.getRfid())) {
+            if (!request.getRfid().isBlank()
+                    && !request.getRfid().equals(entity.getRfid())
+                    && tagRepository.existsByRfid(request.getRfid())) {
                 throw new BusinessException(ErrorCode.PARAM_ERROR, "RFID标识已存在");
             }
             entity.setRfid(request.getRfid().isBlank() ? null : request.getRfid());
         }
-        
+
         entity.setUpdateTime(LocalDateTime.now());
-        
+
         ProductTag saved = tagRepository.save(entity);
         return toProductTagDTO(saved);
     }
@@ -173,8 +184,10 @@ public class TagApplicationService {
      */
     @Cacheable(prefix = "tag", key = "#tagId", timeout = 1800)
     public ProductTagDTO getTag(Long tagId) throws BusinessException {
-        ProductTag entity = tagRepository.findById(tagId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
+        ProductTag entity =
+                tagRepository
+                        .findById(tagId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
         return toProductTagDTO(entity);
     }
 
@@ -187,8 +200,10 @@ public class TagApplicationService {
      */
     @Cacheable(prefix = "tag:code", key = "#barcode", timeout = 1800)
     public ProductTagDTO getTagByCode(String barcode) throws BusinessException {
-        ProductTag entity = tagRepository.findByBarcode(barcode)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
+        ProductTag entity =
+                tagRepository
+                        .findByBarcode(barcode)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
         return toProductTagDTO(entity);
     }
 
@@ -196,20 +211,21 @@ public class TagApplicationService {
      * 方法功能描述：查询标签列表（支持分页和筛选）
      *
      * @param productId 产品ID（可选）
-     * @param status    标签状态（可选）
-     * @param search    搜索关键词（可选，支持RFID、条码、NFC UID）
-     * @param page      页码（从1开始，默认1）
-     * @param pageSize  每页记录数（默认10）
+     * @param status 标签状态（可选）
+     * @param search 搜索关键词（可选，支持RFID、条码、NFC UID）
+     * @param page 页码（从1开始，默认1）
+     * @param pageSize 每页记录数（默认10）
      * @return 标签分页数据
      */
-    public ProductTagPageDTO listTags(Long productId, String status, String search, Integer page, Integer pageSize) {
+    public ProductTagPageDTO listTags(
+            Long productId, String status, String search, Integer page, Integer pageSize) {
         int actualPage = page != null && page >= 1 ? page : 1;
         int actualPageSize = pageSize != null && pageSize > 0 ? pageSize : 10;
         int pageNum = actualPage - 1;
-        
+
         Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
         Pageable pageable = PageRequest.of(pageNum, actualPageSize, sort);
-        
+
         Short statusValue = null;
         if (status != null && !status.isEmpty()) {
             try {
@@ -218,14 +234,16 @@ public class TagApplicationService {
                 statusValue = null;
             }
         }
-        
-        Page<ProductTag> pageResult = tagRepository.findTags(productId, statusValue, search, pageable);
+
+        Page<ProductTag> pageResult =
+                tagRepository.findTags(productId, statusValue, search, pageable);
 
         ProductTagPageDTO result = new ProductTagPageDTO();
         result.setTotal(pageResult.getTotalElements());
-        result.setRows(pageResult.getContent().stream()
-                .map(this::toProductTagDTO)
-                .collect(Collectors.toList()));
+        result.setRows(
+                pageResult.getContent().stream()
+                        .map(this::toProductTagDTO)
+                        .collect(Collectors.toList()));
         return result;
     }
 
@@ -233,7 +251,7 @@ public class TagApplicationService {
      * 方法功能描述：按产品查询标签
      *
      * @param productId 产品ID
-     * @param page     页码（从1开始，默认1）
+     * @param page 页码（从1开始，默认1）
      * @param pageSize 每页记录数（默认10）
      * @return 标签分页数据
      */
@@ -241,24 +259,25 @@ public class TagApplicationService {
         int actualPage = page != null && page >= 1 ? page : 1;
         int actualPageSize = pageSize != null && pageSize > 0 ? pageSize : 10;
         int pageNum = actualPage - 1;
-        
+
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(pageNum, actualPageSize, sort);
-        
+
         Page<ProductTag> pageResult = tagRepository.findByProductId(productId, pageable);
 
         ProductTagPageDTO result = new ProductTagPageDTO();
         result.setTotal(pageResult.getTotalElements());
-        result.setRows(pageResult.getContent().stream()
-                .map(this::toProductTagDTO)
-                .collect(Collectors.toList()));
+        result.setRows(
+                pageResult.getContent().stream()
+                        .map(this::toProductTagDTO)
+                        .collect(Collectors.toList()));
         return result;
     }
 
     /**
      * 方法功能描述：绑定标签到产品
      *
-     * @param tagId    标签ID
+     * @param tagId 标签ID
      * @param productId 产品ID
      * @return 标签信息
      * @throws BusinessException 当标签或产品不存在时抛出异常
@@ -268,18 +287,20 @@ public class TagApplicationService {
         if (!tagRepository.existsById(tagId)) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "标签不存在");
         }
-        
+
         if (productRepository.findById(productId).isEmpty()) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "产品不存在");
         }
-        
+
         int updated = tagRepository.bindProduct(tagId, productId);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "绑定失败");
         }
-        
-        ProductTag entity = tagRepository.findById(tagId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
+
+        ProductTag entity =
+                tagRepository
+                        .findById(tagId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
         return toProductTagDTO(entity);
     }
 
@@ -295,14 +316,16 @@ public class TagApplicationService {
         if (!tagRepository.existsById(tagId)) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "标签不存在");
         }
-        
+
         int updated = tagRepository.unbindProduct(tagId);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "解绑失败");
         }
-        
-        ProductTag entity = tagRepository.findById(tagId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
+
+        ProductTag entity =
+                tagRepository
+                        .findById(tagId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "标签不存在"));
         return toProductTagDTO(entity);
     }
 
@@ -314,39 +337,41 @@ public class TagApplicationService {
      * @throws BusinessException 当产品不存在时抛出异常
      */
     @Transactional
-    public BatchBindResult batchBindTags(ProductTagBatchBindRequest request) throws BusinessException {
+    public BatchBindResult batchBindTags(ProductTagBatchBindRequest request)
+            throws BusinessException {
         if (request.getProductId() == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "产品ID不能为空");
         }
-        
+
         if (request.getTagIds() == null || request.getTagIds().isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "标签ID列表不能为空");
         }
-        
+
         if (productRepository.findById(request.getProductId()).isEmpty()) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "产品不存在");
         }
-        
+
         int updated = tagRepository.batchBindProducts(request.getTagIds(), request.getProductId());
-        
+
         BatchBindResult result = new BatchBindResult();
         result.setProductId(request.getProductId());
         result.setTotalCount(request.getTagIds().size());
         result.setSuccessCount(updated);
         result.setFailedCount(request.getTagIds().size() - updated);
-        
+
         return result;
     }
 
     @Transactional
-    public BatchBindResult batchBindTagsWithCaptcha(ProductTagBatchBindRequestWithCaptcha request) throws BusinessException {
+    public BatchBindResult batchBindTagsWithCaptcha(ProductTagBatchBindRequestWithCaptcha request)
+            throws BusinessException {
         // 验证码为必填项：防止绕过验证码直接批量绑定标签
         captchaApplicationService.enforceCaptcha(request.getCaptchaId(), request.getCaptchaCode());
 
         ProductTagBatchBindRequest bindRequest = new ProductTagBatchBindRequest();
         bindRequest.setProductId(request.getProductId());
         bindRequest.setTagIds(request.getTagIds());
-        
+
         return batchBindTags(bindRequest);
     }
 
@@ -361,22 +386,22 @@ public class TagApplicationService {
         if (tagIds == null || tagIds.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "标签ID列表不能为空");
         }
-        
+
         int updated = tagRepository.batchUnbindProducts(tagIds);
-        
+
         BatchUnbindResult result = new BatchUnbindResult();
         result.setTotalCount(tagIds.size());
         result.setSuccessCount(updated);
         result.setFailedCount(tagIds.size() - updated);
-        
+
         return result;
     }
 
     /**
      * 方法功能描述：搜索标签
      *
-     * @param keyword  搜索关键字
-     * @param page     页码（从1开始，默认1）
+     * @param keyword 搜索关键字
+     * @param page 页码（从1开始，默认1）
      * @param pageSize 每页记录数（默认10）
      * @return 标签分页数据
      */
@@ -384,17 +409,18 @@ public class TagApplicationService {
         int actualPage = page != null && page >= 1 ? page : 1;
         int actualPageSize = pageSize != null && pageSize > 0 ? pageSize : 10;
         int pageNum = actualPage - 1;
-        
+
         Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
         Pageable pageable = PageRequest.of(pageNum, actualPageSize, sort);
-        
+
         Page<ProductTag> pageResult = tagRepository.findByBarcodeContaining(keyword, pageable);
 
         ProductTagPageDTO result = new ProductTagPageDTO();
         result.setTotal(pageResult.getTotalElements());
-        result.setRows(pageResult.getContent().stream()
-                .map(this::toProductTagDTO)
-                .collect(Collectors.toList()));
+        result.setRows(
+                pageResult.getContent().stream()
+                        .map(this::toProductTagDTO)
+                        .collect(Collectors.toList()));
         return result;
     }
 
@@ -420,14 +446,14 @@ public class TagApplicationService {
         dto.setCreateBy(entity.getCreateBy());
         dto.setCreateTime(entity.getCreateTime());
         dto.setUpdateTime(entity.getUpdateTime());
-        
+
         if (entity.getProductId() != null) {
             Product product = productRepository.findById(entity.getProductId()).orElse(null);
             if (product != null) {
                 dto.setProductName(product.getName());
             }
         }
-        
+
         return dto;
     }
 }

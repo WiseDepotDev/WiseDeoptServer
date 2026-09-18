@@ -10,14 +10,10 @@ import java.util.List;
  */
 public class ProductPageDTO {
 
-    /**
-     * 总记录数
-     */
+    /** 总记录数 */
     private Long total;
 
-    /**
-     * 产品列表
-     */
+    /** 产品列表 */
     private List<ProductDTO> rows;
 
     /**

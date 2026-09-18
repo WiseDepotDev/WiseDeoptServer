@@ -9,23 +9,20 @@ import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
 import com.huicang.wise.domain.device.DeviceCore;
+import com.huicang.wise.domain.message.MessageType;
 import com.huicang.wise.domain.repository.alert.AlertEventRepository;
 import com.huicang.wise.domain.repository.device.DeviceRepository;
-import com.huicang.wise.domain.inout.StockOrder;
-import com.huicang.wise.domain.inout.StockOrderDetail;
-import com.huicang.wise.domain.repository.inout.StockOrderRepository;
 import com.huicang.wise.domain.repository.inout.StockOrderDetailRepository;
-import com.huicang.wise.domain.message.MessageType;
+import com.huicang.wise.domain.repository.inout.StockOrderRepository;
+import com.huicang.wise.domain.repository.tag.ProductTagRepository;
 import com.huicang.wise.domain.repository.user.UserRepository;
 import com.huicang.wise.domain.tag.ProductTag;
-import com.huicang.wise.domain.repository.tag.ProductTagRepository;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * RFID数据应用服务
@@ -48,14 +45,15 @@ public class RfidDataApplicationService {
     private final UserRepository userRepository;
     private final AlertEventRepository alertEventRepository;
 
-    public RfidDataApplicationService(DeviceRepository deviceRepository,
-                                      ProductTagRepository productTagRepository,
-                                      StockOrderRepository stockOrderRepository,
-                                      StockOrderDetailRepository stockOrderDetailRepository,
-                                      AlertApplicationService alertApplicationService,
-                                      MessageApplicationService messageApplicationService,
-                                      UserRepository userRepository,
-                                      AlertEventRepository alertEventRepository) {
+    public RfidDataApplicationService(
+            DeviceRepository deviceRepository,
+            ProductTagRepository productTagRepository,
+            StockOrderRepository stockOrderRepository,
+            StockOrderDetailRepository stockOrderDetailRepository,
+            AlertApplicationService alertApplicationService,
+            MessageApplicationService messageApplicationService,
+            UserRepository userRepository,
+            AlertEventRepository alertEventRepository) {
         this.deviceRepository = deviceRepository;
         this.productTagRepository = productTagRepository;
         this.stockOrderRepository = stockOrderRepository;
@@ -98,64 +96,77 @@ public class RfidDataApplicationService {
     }
 
     private void processSingleTag(DeviceCore device, String rfid, String snapshotUrl) {
-        logger.debug("开始处理RFID标签: {}, 设备类型: {}, 设备编码: {}", rfid, device.getType(), device.getDeviceCode());
-        
+        logger.debug(
+                "开始处理RFID标签: {}, 设备类型: {}, 设备编码: {}",
+                rfid,
+                device.getType(),
+                device.getDeviceCode());
+
         ProductTag tagEntity = productTagRepository.findByRfid(rfid).orElse(null);
         if (tagEntity == null) {
             logger.warn("未找到RFID标签对应的记录: {}", rfid);
             return;
         }
-        
-        logger.debug("RFID标签: {} 对应产品ID: {}, 标签ID: {}", rfid, tagEntity.getProductId(), tagEntity.getTagId());
+
+        logger.debug(
+                "RFID标签: {} 对应产品ID: {}, 标签ID: {}",
+                rfid,
+                tagEntity.getProductId(),
+                tagEntity.getTagId());
 
         if (device.getType() == 0) {
             if (hasUnresolvedAlert(rfid)) {
                 logger.info("检测到RFID标签: {} (已存在未解决告警，跳过)", rfid);
                 return;
             }
-            
+
             boolean hasOutboundOrder = hasValidOutboundOrder(tagEntity.getTagId());
             logger.debug("RFID标签: {} 是否有有效出库单据: {}", rfid, hasOutboundOrder);
-            
+
             if (hasOutboundOrder) {
                 logger.info("检测到RFID标签: {} (有有效出库单据，不告警)", rfid);
                 return;
             }
-            
+
             logger.warn("检测到RFID标签: {} (无有效出库单据，触发告警)", rfid);
             triggerUnauthorizedMovementAlert(device, tagEntity, rfid, snapshotUrl);
         }
     }
 
     private boolean hasValidOutboundOrder(Long tagId) {
-        boolean hasOrder = stockOrderDetailRepository.findValidOutboundOrderDetailByTagId(tagId).isPresent();
+        boolean hasOrder =
+                stockOrderDetailRepository.findValidOutboundOrderDetailByTagId(tagId).isPresent();
         logger.debug("检查标签ID: {} 是否有有效出库单据: {}", tagId, hasOrder);
         return hasOrder;
     }
 
     private boolean hasUnresolvedAlert(String rfid) {
-        List<AlertEvent> unresolvedAlerts = alertEventRepository.findByStatusAndMessageContainingRfid(0, rfid);
+        List<AlertEvent> unresolvedAlerts =
+                alertEventRepository.findByStatusAndMessageContainingRfid(0, rfid);
         return !unresolvedAlerts.isEmpty();
     }
 
-    private void triggerUnauthorizedMovementAlert(DeviceCore device, ProductTag tag, String rfid, String snapshotUrl) {
+    private void triggerUnauthorizedMovementAlert(
+            DeviceCore device, ProductTag tag, String rfid, String snapshotUrl) {
         try {
             AlertCreateRequest alertRequest = new AlertCreateRequest();
             alertRequest.setAlertType("UNAUTHORIZED_MOVEMENT");
             alertRequest.setSourceModule("RFID");
             alertRequest.setAlertLevel("3");
-            String desc = String.format("检测到违规移动！设备：%s(%s)，RFID：%s，产品ID：%d",
-                    device.getName(), device.getDeviceCode(), rfid, tag.getProductId());
-            
+            String desc =
+                    String.format(
+                            "检测到违规移动！设备：%s(%s)，RFID：%s，产品ID：%d",
+                            device.getName(), device.getDeviceCode(), rfid, tag.getProductId());
+
             if (snapshotUrl != null && !snapshotUrl.isEmpty()) {
                 desc += String.format("，抓拍画面：%s", snapshotUrl);
                 alertRequest.setSnapshotUrl(snapshotUrl);
             }
             alertRequest.setDescription(desc);
-            
+
             AlertDTO alert = alertApplicationService.createAlert(alertRequest);
             logger.warn("RFID告警已创建: 告警ID: {}, {}", alert.getEventId(), desc);
-            
+
             sendAlertMessageToAllUsers(desc);
         } catch (Exception e) {
             logger.error("触发告警失败", e);
@@ -165,7 +176,7 @@ public class RfidDataApplicationService {
     private void sendAlertMessageToAllUsers(String alertContent) {
         try {
             List<com.huicang.wise.domain.user.UserCore> users = userRepository.findAll();
-            
+
             for (com.huicang.wise.domain.user.UserCore user : users) {
                 MessageCreateRequest messageRequest = new MessageCreateRequest();
                 messageRequest.setTitle("违规移动告警");
@@ -173,8 +184,9 @@ public class RfidDataApplicationService {
                 messageRequest.setType(MessageType.ALERT);
                 messageRequest.setReceiverId(user.getUserId());
                 messageRequest.setPriority(1);
-                
-                com.huicang.wise.application.message.MessageDTO message = messageApplicationService.createMessage(messageRequest);
+
+                com.huicang.wise.application.message.MessageDTO message =
+                        messageApplicationService.createMessage(messageRequest);
                 messageApplicationService.sendPushNotification(message);
             }
         } catch (Exception e) {

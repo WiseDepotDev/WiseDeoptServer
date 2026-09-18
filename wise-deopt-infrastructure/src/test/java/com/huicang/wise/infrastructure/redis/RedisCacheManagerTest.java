@@ -1,16 +1,15 @@
 package com.huicang.wise.infrastructure.redis;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Redis缓存管理器测试类
@@ -23,11 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class RedisCacheManagerTest {
 
-    @Autowired
-    private RedisCacheManager redisCacheManager;
+    @Autowired private RedisCacheManager redisCacheManager;
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    @Autowired private RedisTemplate<String, Object> redisTemplate;
 
     private static final String TEST_KEY_PREFIX = "test:";
 
@@ -343,8 +340,7 @@ class RedisCacheManagerTest {
         private String username;
         private String email;
 
-        public TestUser() {
-        }
+        public TestUser() {}
 
         public TestUser(Long userId, String username, String email) {
             this.userId = userId;

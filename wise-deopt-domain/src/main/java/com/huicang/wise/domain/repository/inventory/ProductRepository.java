@@ -8,9 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-
 /**
  * 产品仓储接口
  *
@@ -25,7 +22,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * 根据产品名称模糊查询产品
      *
      * @param name 产品名称（支持模糊匹配）
-     * @param pageable   分页参数
+     * @param pageable 分页参数
      * @return 产品分页结果
      */
     @Query("SELECT p FROM Product p WHERE p.name LIKE %:name%")
@@ -56,8 +53,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @param pageable 分页参数
      * @return 产品分页结果
      */
-    @Query("SELECT p FROM Product p WHERE " +
-           "(:name IS NULL OR p.name LIKE %:name%)")
-    Page<Product> findProducts(@Param("name") String name,
-                               Pageable pageable);
+    @Query("SELECT p FROM Product p WHERE " + "(:name IS NULL OR p.name LIKE %:name%)")
+    Page<Product> findProducts(@Param("name") String name, Pageable pageable);
 }

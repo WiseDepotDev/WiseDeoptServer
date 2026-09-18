@@ -11,29 +11,19 @@ import java.time.LocalDateTime;
  */
 public class FileUploadResponse {
 
-    /**
-     * 文件ID
-     */
+    /** 文件ID */
     private Long fileId;
 
-    /**
-     * 文件路径
-     */
+    /** 文件路径 */
     private String filePath;
 
-    /**
-     * 文件大小（字节）
-     */
+    /** 文件大小（字节） */
     private Long fileSize;
 
-    /**
-     * 访问URL
-     */
+    /** 访问URL */
     private String accessUrl;
 
-    /**
-     * 上传时间
-     */
+    /** 上传时间 */
     private LocalDateTime uploadTime;
 
     /**

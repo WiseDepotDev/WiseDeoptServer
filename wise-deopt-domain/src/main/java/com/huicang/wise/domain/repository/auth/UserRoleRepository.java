@@ -1,10 +1,9 @@
 package com.huicang.wise.domain.repository.auth;
 
 import com.huicang.wise.domain.auth.UserRole;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * 用户角色关联仓储接口

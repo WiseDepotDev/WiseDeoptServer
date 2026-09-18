@@ -1,18 +1,17 @@
 package com.huicang.wise.performance;
 
-import com.huicang.wise.application.inventory.InventoryApplicationService;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.huicang.wise.application.device.DeviceApplicationService;
+import com.huicang.wise.application.inventory.InventoryApplicationService;
 import com.huicang.wise.application.tag.TagApplicationService;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 类功能描述：响应时间测试
@@ -26,21 +25,16 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 public class ResponseTimeTest {
 
-    @Autowired
-    private InventoryApplicationService inventoryService;
+    @Autowired private InventoryApplicationService inventoryService;
 
-    @Autowired
-    private DeviceApplicationService deviceService;
+    @Autowired private DeviceApplicationService deviceService;
 
-    @Autowired
-    private TagApplicationService tagService;
+    @Autowired private TagApplicationService tagService;
 
     private static final int TEST_ITERATIONS = 100;
     private static final long MAX_ACCEPTABLE_RESPONSE_TIME = 1000;
 
-    /**
-     * 测试库存服务响应时间
-     */
+    /** 测试库存服务响应时间 */
     @Test
     public void testInventoryServiceResponseTime() {
         List<Long> responseTimes = new ArrayList<>();
@@ -56,19 +50,12 @@ public class ResponseTimeTest {
             }
         }
 
-        long averageResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .sum() / responseTimes.size();
-        
-        long maxResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .max()
-            .orElse(0);
+        long averageResponseTime =
+                responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
 
-        long minResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .min()
-            .orElse(0);
+        long maxResponseTime = responseTimes.stream().mapToLong(Long::longValue).max().orElse(0);
+
+        long minResponseTime = responseTimes.stream().mapToLong(Long::longValue).min().orElse(0);
 
         System.out.println("库存服务响应时间测试结果:");
         System.out.println("测试次数: " + TEST_ITERATIONS);
@@ -76,13 +63,12 @@ public class ResponseTimeTest {
         System.out.println("最大响应时间: " + maxResponseTime + "ms");
         System.out.println("最小响应时间: " + minResponseTime + "ms");
 
-        assertTrue(averageResponseTime < MAX_ACCEPTABLE_RESPONSE_TIME, 
-            "平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
+        assertTrue(
+                averageResponseTime < MAX_ACCEPTABLE_RESPONSE_TIME,
+                "平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
     }
 
-    /**
-     * 测试设备服务响应时间
-     */
+    /** 测试设备服务响应时间 */
     @Test
     public void testDeviceServiceResponseTimeWithParams() {
         List<Long> responseTimes = new ArrayList<>();
@@ -98,19 +84,12 @@ public class ResponseTimeTest {
             }
         }
 
-        long averageResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .sum() / responseTimes.size();
-        
-        long maxResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .max()
-            .orElse(0);
+        long averageResponseTime =
+                responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
 
-        long minResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .min()
-            .orElse(0);
+        long maxResponseTime = responseTimes.stream().mapToLong(Long::longValue).max().orElse(0);
+
+        long minResponseTime = responseTimes.stream().mapToLong(Long::longValue).min().orElse(0);
 
         System.out.println("设备服务响应时间测试结果:");
         System.out.println("测试次数: " + TEST_ITERATIONS);
@@ -118,13 +97,12 @@ public class ResponseTimeTest {
         System.out.println("最大响应时间: " + maxResponseTime + "ms");
         System.out.println("最小响应时间: " + minResponseTime + "ms");
 
-        assertTrue(averageResponseTime < MAX_ACCEPTABLE_RESPONSE_TIME, 
-            "平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
+        assertTrue(
+                averageResponseTime < MAX_ACCEPTABLE_RESPONSE_TIME,
+                "平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
     }
 
-    /**
-     * 测试标签服务响应时间
-     */
+    /** 测试标签服务响应时间 */
     @Test
     public void testTagServiceResponseTime() {
         List<Long> responseTimes = new ArrayList<>();
@@ -140,19 +118,12 @@ public class ResponseTimeTest {
             }
         }
 
-        long averageResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .sum() / responseTimes.size();
-        
-        long maxResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .max()
-            .orElse(0);
+        long averageResponseTime =
+                responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
 
-        long minResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .min()
-            .orElse(0);
+        long maxResponseTime = responseTimes.stream().mapToLong(Long::longValue).max().orElse(0);
+
+        long minResponseTime = responseTimes.stream().mapToLong(Long::longValue).min().orElse(0);
 
         System.out.println("标签服务响应时间测试结果:");
         System.out.println("测试次数: " + TEST_ITERATIONS);
@@ -160,13 +131,12 @@ public class ResponseTimeTest {
         System.out.println("最大响应时间: " + maxResponseTime + "ms");
         System.out.println("最小响应时间: " + minResponseTime + "ms");
 
-        assertTrue(averageResponseTime < MAX_ACCEPTABLE_RESPONSE_TIME, 
-            "平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
+        assertTrue(
+                averageResponseTime < MAX_ACCEPTABLE_RESPONSE_TIME,
+                "平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
     }
 
-    /**
-     * 测试混合服务响应时间
-     */
+    /** 测试混合服务响应时间 */
     @Test
     public void testMixedServiceResponseTime() {
         List<Long> inventoryResponseTimes = new ArrayList<>();
@@ -189,7 +159,7 @@ public class ResponseTimeTest {
                 }
                 long endTime = System.currentTimeMillis();
                 long responseTime = endTime - startTime;
-                
+
                 switch (i % 3) {
                     case 0:
                         inventoryResponseTimes.add(responseTime);
@@ -206,17 +176,17 @@ public class ResponseTimeTest {
             }
         }
 
-        long inventoryAvg = inventoryResponseTimes.stream()
-            .mapToLong(Long::longValue)
-            .sum() / inventoryResponseTimes.size();
-        
-        long deviceAvg = deviceResponseTimes.stream()
-            .mapToLong(Long::longValue)
-            .sum() / deviceResponseTimes.size();
-        
-        long tagAvg = tagResponseTimes.stream()
-            .mapToLong(Long::longValue)
-            .sum() / tagResponseTimes.size();
+        long inventoryAvg =
+                inventoryResponseTimes.stream().mapToLong(Long::longValue).sum()
+                        / inventoryResponseTimes.size();
+
+        long deviceAvg =
+                deviceResponseTimes.stream().mapToLong(Long::longValue).sum()
+                        / deviceResponseTimes.size();
+
+        long tagAvg =
+                tagResponseTimes.stream().mapToLong(Long::longValue).sum()
+                        / tagResponseTimes.size();
 
         System.out.println("混合服务响应时间测试结果:");
         System.out.println("测试次数: " + TEST_ITERATIONS);
@@ -224,17 +194,18 @@ public class ResponseTimeTest {
         System.out.println("设备服务平均响应时间: " + deviceAvg + "ms");
         System.out.println("标签服务平均响应时间: " + tagAvg + "ms");
 
-        assertTrue(inventoryAvg < MAX_ACCEPTABLE_RESPONSE_TIME, 
-            "库存服务平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
-        assertTrue(deviceAvg < MAX_ACCEPTABLE_RESPONSE_TIME, 
-            "设备服务平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
-        assertTrue(tagAvg < MAX_ACCEPTABLE_RESPONSE_TIME, 
-            "标签服务平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
+        assertTrue(
+                inventoryAvg < MAX_ACCEPTABLE_RESPONSE_TIME,
+                "库存服务平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
+        assertTrue(
+                deviceAvg < MAX_ACCEPTABLE_RESPONSE_TIME,
+                "设备服务平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
+        assertTrue(
+                tagAvg < MAX_ACCEPTABLE_RESPONSE_TIME,
+                "标签服务平均响应时间应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
     }
 
-    /**
-     * 测试响应时间稳定性
-     */
+    /** 测试响应时间稳定性 */
     @Test
     public void testResponseTimeStability() {
         List<Long> responseTimes = new ArrayList<>();
@@ -250,19 +221,12 @@ public class ResponseTimeTest {
             }
         }
 
-        long averageResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .sum() / responseTimes.size();
-        
-        long maxResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .max()
-            .orElse(0);
+        long averageResponseTime =
+                responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
 
-        long minResponseTime = responseTimes.stream()
-            .mapToLong(Long::longValue)
-            .min()
-            .orElse(0);
+        long maxResponseTime = responseTimes.stream().mapToLong(Long::longValue).max().orElse(0);
+
+        long minResponseTime = responseTimes.stream().mapToLong(Long::longValue).min().orElse(0);
 
         long variance = maxResponseTime - minResponseTime;
 
@@ -273,7 +237,8 @@ public class ResponseTimeTest {
         System.out.println("最小响应时间: " + minResponseTime + "ms");
         System.out.println("响应时间方差: " + variance + "ms");
 
-        assertTrue(variance < MAX_ACCEPTABLE_RESPONSE_TIME, 
-            "响应时间方差应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
+        assertTrue(
+                variance < MAX_ACCEPTABLE_RESPONSE_TIME,
+                "响应时间方差应小于" + MAX_ACCEPTABLE_RESPONSE_TIME + "ms");
     }
 }

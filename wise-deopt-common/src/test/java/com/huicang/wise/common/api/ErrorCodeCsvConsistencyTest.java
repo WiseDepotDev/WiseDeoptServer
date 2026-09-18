@@ -1,6 +1,5 @@
 package com.huicang.wise.common.api;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,9 +19,10 @@ import org.junit.jupiter.api.Test;
  * 错误码与《后端异常码对照表.csv》一致性测试（STD-CONTRACT-03 / STD-ERR-03）。
  *
  * <p>对照表是错误码的**唯一来源**；本测试确保：
+ *
  * <ul>
- *   <li>{@link ErrorCode} 中每个中文描述与 HTTP 状态码都与对照表一致；</li>
- *   <li>对照表登记的每个错误码都能在枚举中找到（不允许「表里有、代码里没有」）。</li>
+ *   <li>{@link ErrorCode} 中每个中文描述与 HTTP 状态码都与对照表一致；
+ *   <li>对照表登记的每个错误码都能在枚举中找到（不允许「表里有、代码里没有」）。
  * </ul>
  *
  * <p>找不到对照表时（例如裁剪后的构建环境）跳过，不使构建失败。
@@ -34,13 +33,11 @@ import org.junit.jupiter.api.Test;
  */
 class ErrorCodeCsvConsistencyTest {
 
-    /**
-     * 对照表相对路径（相对各模块工作目录）。
-     */
+    /** 对照表相对路径（相对各模块工作目录）。 */
     private static final String[] CANDIDATES = {
-            "wise-depot-plan/后端异常码对照表.csv",
-            "../wise-depot-plan/后端异常码对照表.csv",
-            "../../wise-depot-plan/后端异常码对照表.csv"
+        "wise-depot-plan/后端异常码对照表.csv",
+        "../wise-depot-plan/后端异常码对照表.csv",
+        "../../wise-depot-plan/后端异常码对照表.csv"
     };
 
     /**
@@ -111,7 +108,7 @@ class ErrorCodeCsvConsistencyTest {
             if (code.isEmpty() || "--".equals(code)) {
                 continue;
             }
-            result.put(code, new String[] { fields.get(5).trim(), fields.get(6).trim() });
+            result.put(code, new String[] {fields.get(5).trim(), fields.get(6).trim()});
         }
         return result;
     }
@@ -137,18 +134,26 @@ class ErrorCodeCsvConsistencyTest {
                 continue;
             }
             if (!row[0].equals(errorCode.getMessage())) {
-                mismatches.add(String.format("%s 描述不一致: 代码=%s 对照表=%s",
-                        errorCode.getCode(), errorCode.getMessage(), row[0]));
+                mismatches.add(
+                        String.format(
+                                "%s 描述不一致: 代码=%s 对照表=%s",
+                                errorCode.getCode(), errorCode.getMessage(), row[0]));
             }
             if (!row[1].equals(String.valueOf(errorCode.getHttpStatus()))) {
-                mismatches.add(String.format("%s 状态码不一致: 代码=%s 对照表=%s",
-                        errorCode.getCode(), errorCode.getHttpStatus(), row[1]));
+                mismatches.add(
+                        String.format(
+                                "%s 状态码不一致: 代码=%s 对照表=%s",
+                                errorCode.getCode(), errorCode.getHttpStatus(), row[1]));
             }
         }
 
-        assertTrue(mismatches.isEmpty(), "错误码与对照表不一致：" + System.lineSeparator()
-                + String.join(System.lineSeparator(), mismatches)
-                + System.lineSeparator() + "请运行 tools/gen/gen-errorcodes.ps1 重新生成。");
+        assertTrue(
+                mismatches.isEmpty(),
+                "错误码与对照表不一致："
+                        + System.lineSeparator()
+                        + String.join(System.lineSeparator(), mismatches)
+                        + System.lineSeparator()
+                        + "请运行 tools/gen/gen-errorcodes.ps1 重新生成。");
     }
 
     /**
@@ -177,8 +182,10 @@ class ErrorCodeCsvConsistencyTest {
             }
         }
 
-        assertTrue(missing.isEmpty(), "对照表已登记但枚举缺失的错误码："
-                + String.join(", ", missing)
-                + "；请运行 tools/gen/gen-errorcodes.ps1 重新生成。");
+        assertTrue(
+                missing.isEmpty(),
+                "对照表已登记但枚举缺失的错误码："
+                        + String.join(", ", missing)
+                        + "；请运行 tools/gen/gen-errorcodes.ps1 重新生成。");
     }
 }

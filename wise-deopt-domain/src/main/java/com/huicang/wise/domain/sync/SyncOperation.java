@@ -15,11 +15,16 @@ public class SyncOperation {
     private String errorMessage;
     private Integer version;
 
-    public SyncOperation() {
-    }
+    public SyncOperation() {}
 
-    public SyncOperation(String id, String entityType, String entityId, String operationType, 
-                         String operationData, LocalDateTime operationTime, String deviceId) {
+    public SyncOperation(
+            String id,
+            String entityType,
+            String entityId,
+            String operationType,
+            String operationData,
+            LocalDateTime operationTime,
+            String deviceId) {
         this.id = id;
         this.entityType = entityType;
         this.entityId = entityId;

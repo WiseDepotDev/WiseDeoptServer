@@ -1,15 +1,13 @@
 package com.huicang.wise.infrastructure.redis;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 /**
  * Redis缓存工具类测试类
@@ -418,8 +416,7 @@ class RedisCacheUtilsTest {
         private String username;
         private String email;
 
-        public TestUser() {
-        }
+        public TestUser() {}
 
         public TestUser(Long userId, String username, String email) {
             this.userId = userId;

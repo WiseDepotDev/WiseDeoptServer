@@ -11,9 +11,7 @@ import java.util.Map;
  */
 public class UserSettingsUpdateRequest {
 
-    /**
-     * 设置项键值对
-     */
+    /** 设置项键值对 */
     private Map<String, String> settings;
 
     public Map<String, String> getSettings() {

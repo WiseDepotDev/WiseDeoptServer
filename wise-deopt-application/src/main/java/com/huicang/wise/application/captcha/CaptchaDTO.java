@@ -1,8 +1,7 @@
 package com.huicang.wise.application.captcha;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
 public class CaptchaDTO {

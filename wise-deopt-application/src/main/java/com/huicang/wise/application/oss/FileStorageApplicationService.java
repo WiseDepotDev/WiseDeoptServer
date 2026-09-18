@@ -1,23 +1,20 @@
 package com.huicang.wise.application.oss;
 
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.domain.oss.MinioFile;
+import com.huicang.wise.domain.repository.oss.MinioFileRepository;
 import io.minio.*;
 import io.minio.http.Method;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.huicang.wise.common.api.ErrorCode;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.oss.MinioFile;
-import com.huicang.wise.domain.repository.oss.MinioFileRepository;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * 类功能描述：文件存储应用服务
@@ -31,21 +28,30 @@ public class FileStorageApplicationService {
 
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
 
-    private static final List<String> ALLOWED_FILE_TYPES = List.of(
-        "jpg", "jpeg", "png", "gif", "bmp",
-        "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-        "txt", "csv", "zip", "rar", "7z"
-    );
+    private static final List<String> ALLOWED_FILE_TYPES =
+            List.of(
+                    "jpg", "jpeg", "png", "gif", "bmp", "pdf", "doc", "docx", "xls", "xlsx", "ppt",
+                    "pptx", "txt", "csv", "zip", "rar", "7z");
 
-    private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
-        "image/jpeg", "image/png", "image/gif", "image/bmp", "image/*",
-        "application/pdf",
-        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "text/plain", "text/csv",
-        "application/zip", "application/x-rar-compressed", "application/x-7z-compressed"
-    );
+    private static final List<String> ALLOWED_CONTENT_TYPES =
+            List.of(
+                    "image/jpeg",
+                    "image/png",
+                    "image/gif",
+                    "image/bmp",
+                    "image/*",
+                    "application/pdf",
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "application/vnd.ms-excel",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/vnd.ms-powerpoint",
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    "text/plain",
+                    "text/csv",
+                    "application/zip",
+                    "application/x-rar-compressed",
+                    "application/x-7z-compressed");
 
     @Autowired(required = false)
     private MinioClient minioClient;
@@ -77,7 +83,8 @@ public class FileStorageApplicationService {
      * @throws BusinessException 当上传失败时抛出异常
      */
     @Transactional
-    public FileUploadResponse uploadFile(FileUploadRequest request, Long uploadBy) throws BusinessException {
+    public FileUploadResponse uploadFile(FileUploadRequest request, Long uploadBy)
+            throws BusinessException {
         MultipartFile file = request.getFile();
         if (file == null || file.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "文件不能为空");
@@ -85,7 +92,8 @@ public class FileStorageApplicationService {
 
         validateFile(file);
 
-        String bucketName = request.getBucketName() != null ? request.getBucketName() : defaultBucket;
+        String bucketName =
+                request.getBucketName() != null ? request.getBucketName() : defaultBucket;
         String originalFilename = file.getOriginalFilename();
         String fileExtension = getFileExtension(originalFilename);
         String objectKey = generateObjectKey(originalFilename);
@@ -95,13 +103,10 @@ public class FileStorageApplicationService {
             ensureBucketExists(bucketName);
 
             minioClient.putObject(
-                PutObjectArgs.builder()
-                    .bucket(bucketName)
-                    .object(objectKey)
-                    .stream(file.getInputStream(), file.getSize(), -1)
-                    .contentType(contentType)
-                    .build()
-            );
+                    PutObjectArgs.builder().bucket(bucketName).object(objectKey).stream(
+                                    file.getInputStream(), file.getSize(), -1)
+                            .contentType(contentType)
+                            .build());
 
             MinioFile minioFile = new MinioFile();
             minioFile.setBucketName(bucketName);
@@ -134,16 +139,19 @@ public class FileStorageApplicationService {
      * @throws BusinessException 当下载失败时抛出异常
      */
     public byte[] downloadFile(Long fileId) throws BusinessException {
-        MinioFile minioFile = minioFileRepository.findById(fileId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在"));
+        MinioFile minioFile =
+                minioFileRepository
+                        .findById(fileId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在"));
 
         try {
-            return minioClient.getObject(
-                GetObjectArgs.builder()
-                    .bucket(minioFile.getBucketName())
-                    .object(minioFile.getFilePath())
-                    .build()
-            ).readAllBytes();
+            return minioClient
+                    .getObject(
+                            GetObjectArgs.builder()
+                                    .bucket(minioFile.getBucketName())
+                                    .object(minioFile.getFilePath())
+                                    .build())
+                    .readAllBytes();
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件下载失败: " + e.getMessage());
         }
@@ -158,18 +166,19 @@ public class FileStorageApplicationService {
      * @throws BusinessException 当生成链接失败时抛出异常
      */
     public String generatePresignedUrl(Long fileId, Integer expiresIn) throws BusinessException {
-        MinioFile minioFile = minioFileRepository.findById(fileId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在"));
+        MinioFile minioFile =
+                minioFileRepository
+                        .findById(fileId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在"));
 
         try {
             return minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                    .method(Method.GET)
-                    .bucket(minioFile.getBucketName())
-                    .object(minioFile.getFilePath())
-                    .expiry(expiresIn != null && expiresIn > 0 ? expiresIn : 3600)
-                    .build()
-            );
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(minioFile.getBucketName())
+                            .object(minioFile.getFilePath())
+                            .expiry(expiresIn != null && expiresIn > 0 ? expiresIn : 3600)
+                            .build());
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成访问链接失败: " + e.getMessage());
         }
@@ -182,10 +191,13 @@ public class FileStorageApplicationService {
      * @return 文件列表
      */
     public List<MinioFileDTO> listFiles(Long uploadBy) {
-        List<MinioFile> files = (uploadBy != null)
-                ? minioFileRepository.findByUploadBy(uploadBy)
-                : minioFileRepository.findAll();
-        return files.stream().map(FileStorageApplicationService::toDto).collect(Collectors.toList());
+        List<MinioFile> files =
+                (uploadBy != null)
+                        ? minioFileRepository.findByUploadBy(uploadBy)
+                        : minioFileRepository.findAll();
+        return files.stream()
+                .map(FileStorageApplicationService::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -224,7 +236,8 @@ public class FileStorageApplicationService {
      * @throws BusinessException 文件不存在时抛出
      */
     private MinioFile findFileOrThrow(Long fileId) throws BusinessException {
-        return minioFileRepository.findById(fileId)
+        return minioFileRepository
+                .findById(fileId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在: " + fileId));
     }
 
@@ -236,16 +249,17 @@ public class FileStorageApplicationService {
      */
     @Transactional
     public void deleteFile(Long fileId) throws BusinessException {
-        MinioFile minioFile = minioFileRepository.findById(fileId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在"));
+        MinioFile minioFile =
+                minioFileRepository
+                        .findById(fileId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "文件不存在"));
 
         try {
             minioClient.removeObject(
-                RemoveObjectArgs.builder()
-                    .bucket(minioFile.getBucketName())
-                    .object(minioFile.getFilePath())
-                    .build()
-            );
+                    RemoveObjectArgs.builder()
+                            .bucket(minioFile.getBucketName())
+                            .object(minioFile.getFilePath())
+                            .build());
 
             minioFileRepository.deleteById(fileId);
 
@@ -276,7 +290,9 @@ public class FileStorageApplicationService {
         }
 
         String contentType = file.getContentType();
-        if (contentType == null || (!contentType.startsWith("image/") && !ALLOWED_CONTENT_TYPES.contains(contentType))) {
+        if (contentType == null
+                || (!contentType.startsWith("image/")
+                        && !ALLOWED_CONTENT_TYPES.contains(contentType))) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "不支持的文件内容类型: " + contentType);
         }
     }
@@ -305,8 +321,9 @@ public class FileStorageApplicationService {
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String fileExtension = getFileExtension(originalFilename);
         LocalDateTime now = LocalDateTime.now();
-        return String.format("%d/%02d/%02d/%s.%s",
-            now.getYear(), now.getMonthValue(), now.getDayOfMonth(), uuid, fileExtension);
+        return String.format(
+                "%d/%02d/%02d/%s.%s",
+                now.getYear(), now.getMonthValue(), now.getDayOfMonth(), uuid, fileExtension);
     }
 
     /**
@@ -316,18 +333,11 @@ public class FileStorageApplicationService {
      * @throws Exception 当创建存储桶失败时抛出异常
      */
     private void ensureBucketExists(String bucketName) throws Exception {
-        boolean found = minioClient.bucketExists(
-            BucketExistsArgs.builder()
-                .bucket(bucketName)
-                .build()
-        );
+        boolean found =
+                minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
 
         if (!found) {
-            minioClient.makeBucket(
-                MakeBucketArgs.builder()
-                    .bucket(bucketName)
-                    .build()
-            );
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
         }
     }
 

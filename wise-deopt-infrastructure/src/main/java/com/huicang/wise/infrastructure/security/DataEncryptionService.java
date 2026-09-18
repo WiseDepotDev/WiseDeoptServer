@@ -1,20 +1,18 @@
 package com.huicang.wise.infrastructure.security;
 
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.common.api.ErrorCode;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
@@ -61,7 +59,8 @@ public class DataEncryptionService {
 
             byte[] encryptedBytesWithIv = new byte[GCM_IV_LENGTH + encryptedBytes.length];
             System.arraycopy(iv, 0, encryptedBytesWithIv, 0, GCM_IV_LENGTH);
-            System.arraycopy(encryptedBytes, 0, encryptedBytesWithIv, GCM_IV_LENGTH, encryptedBytes.length);
+            System.arraycopy(
+                    encryptedBytes, 0, encryptedBytesWithIv, GCM_IV_LENGTH, encryptedBytes.length);
 
             return Base64.getEncoder().encodeToString(encryptedBytesWithIv);
         } catch (Exception e) {
@@ -81,7 +80,8 @@ public class DataEncryptionService {
             System.arraycopy(encryptedBytesWithIv, 0, iv, 0, GCM_IV_LENGTH);
 
             byte[] encryptedBytes = new byte[encryptedBytesWithIv.length - GCM_IV_LENGTH];
-            System.arraycopy(encryptedBytesWithIv, GCM_IV_LENGTH, encryptedBytes, 0, encryptedBytes.length);
+            System.arraycopy(
+                    encryptedBytesWithIv, GCM_IV_LENGTH, encryptedBytes, 0, encryptedBytes.length);
 
             GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);

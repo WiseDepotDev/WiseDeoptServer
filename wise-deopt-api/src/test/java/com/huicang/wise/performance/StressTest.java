@@ -1,23 +1,20 @@
 package com.huicang.wise.performance;
 
-import com.huicang.wise.application.inventory.InventoryApplicationService;
-import com.huicang.wise.application.device.DeviceApplicationService;
-import com.huicang.wise.application.tag.TagApplicationService;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.huicang.wise.application.device.DeviceApplicationService;
+import com.huicang.wise.application.inventory.InventoryApplicationService;
+import com.huicang.wise.application.tag.TagApplicationService;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * 类功能描述：压力测试
@@ -31,22 +28,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 public class StressTest {
 
-    @Autowired
-    private InventoryApplicationService inventoryService;
+    @Autowired private InventoryApplicationService inventoryService;
 
-    @Autowired
-    private DeviceApplicationService deviceService;
+    @Autowired private DeviceApplicationService deviceService;
 
-    @Autowired
-    private TagApplicationService tagService;
+    @Autowired private TagApplicationService tagService;
 
     private static final int THREAD_COUNT = 50;
     private static final int REQUESTS_PER_THREAD = 100;
     private static final int TOTAL_REQUESTS = THREAD_COUNT * REQUESTS_PER_THREAD;
 
-    /**
-     * 测试库存服务压力
-     */
+    /** 测试库存服务压力 */
     @Test
     public void testInventoryServiceStress() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
@@ -57,18 +49,19 @@ public class StressTest {
         long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < THREAD_COUNT; i++) {
-            executor.submit(() -> {
-                for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
-                    try {
-                        inventoryService.searchInventoryByLocation(null);
-                        successCount.incrementAndGet();
-                    } catch (Exception e) {
-                        failureCount.incrementAndGet();
-                    } finally {
-                        latch.countDown();
-                    }
-                }
-            });
+            executor.submit(
+                    () -> {
+                        for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
+                            try {
+                                inventoryService.searchInventoryByLocation(null);
+                                successCount.incrementAndGet();
+                            } catch (Exception e) {
+                                failureCount.incrementAndGet();
+                            } finally {
+                                latch.countDown();
+                            }
+                        }
+                    });
         }
 
         try {
@@ -93,9 +86,7 @@ public class StressTest {
         assertTrue(successCount.get() >= TOTAL_REQUESTS * 0.95, "成功率应大于95%");
     }
 
-    /**
-     * 测试设备服务压力
-     */
+    /** 测试设备服务压力 */
     @Test
     public void testDeviceServiceStress() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
@@ -106,18 +97,19 @@ public class StressTest {
         long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < THREAD_COUNT; i++) {
-            executor.submit(() -> {
-                for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
-                    try {
-                        deviceService.listDevices(null, null, null, null);
-                        successCount.incrementAndGet();
-                    } catch (Exception e) {
-                        failureCount.incrementAndGet();
-                    } finally {
-                        latch.countDown();
-                    }
-                }
-            });
+            executor.submit(
+                    () -> {
+                        for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
+                            try {
+                                deviceService.listDevices(null, null, null, null);
+                                successCount.incrementAndGet();
+                            } catch (Exception e) {
+                                failureCount.incrementAndGet();
+                            } finally {
+                                latch.countDown();
+                            }
+                        }
+                    });
         }
 
         try {
@@ -142,9 +134,7 @@ public class StressTest {
         assertTrue(successCount.get() >= TOTAL_REQUESTS * 0.95, "成功率应大于95%");
     }
 
-    /**
-     * 测试标签服务压力
-     */
+    /** 测试标签服务压力 */
     @Test
     public void testTagServiceStress() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
@@ -155,18 +145,19 @@ public class StressTest {
         long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < THREAD_COUNT; i++) {
-            executor.submit(() -> {
-                for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
-                    try {
-                        tagService.listTags(null, null, null, 1, 10);
-                        successCount.incrementAndGet();
-                    } catch (Exception e) {
-                        failureCount.incrementAndGet();
-                    } finally {
-                        latch.countDown();
-                    }
-                }
-            });
+            executor.submit(
+                    () -> {
+                        for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
+                            try {
+                                tagService.listTags(null, null, null, 1, 10);
+                                successCount.incrementAndGet();
+                            } catch (Exception e) {
+                                failureCount.incrementAndGet();
+                            } finally {
+                                latch.countDown();
+                            }
+                        }
+                    });
         }
 
         try {
@@ -191,9 +182,7 @@ public class StressTest {
         assertTrue(successCount.get() >= TOTAL_REQUESTS * 0.95, "成功率应大于95%");
     }
 
-    /**
-     * 测试混合服务压力
-     */
+    /** 测试混合服务压力 */
     @Test
     public void testMixedServiceStress() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
@@ -205,28 +194,29 @@ public class StressTest {
 
         for (int i = 0; i < THREAD_COUNT; i++) {
             final int threadIndex = i;
-            executor.submit(() -> {
-                for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
-                    try {
-                        switch (threadIndex % 3) {
-                            case 0:
-                                inventoryService.searchInventoryByLocation(null);
-                                break;
-                            case 1:
-                                deviceService.listDevices(null, null, null, null);
-                                break;
-                            case 2:
-                                tagService.listTags(null, null, null, 1, 10);
-                                break;
+            executor.submit(
+                    () -> {
+                        for (int j = 0; j < REQUESTS_PER_THREAD; j++) {
+                            try {
+                                switch (threadIndex % 3) {
+                                    case 0:
+                                        inventoryService.searchInventoryByLocation(null);
+                                        break;
+                                    case 1:
+                                        deviceService.listDevices(null, null, null, null);
+                                        break;
+                                    case 2:
+                                        tagService.listTags(null, null, null, 1, 10);
+                                        break;
+                                }
+                                successCount.incrementAndGet();
+                            } catch (Exception e) {
+                                failureCount.incrementAndGet();
+                            } finally {
+                                latch.countDown();
+                            }
                         }
-                        successCount.incrementAndGet();
-                    } catch (Exception e) {
-                        failureCount.incrementAndGet();
-                    } finally {
-                        latch.countDown();
-                    }
-                }
-            });
+                    });
         }
 
         try {

@@ -1,8 +1,7 @@
 package com.huicang.wise.application.tag;
 
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class ProductTagBatchBindRequestWithCaptcha {

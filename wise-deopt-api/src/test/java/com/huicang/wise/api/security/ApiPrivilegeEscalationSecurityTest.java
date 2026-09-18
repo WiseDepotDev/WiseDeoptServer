@@ -1,56 +1,49 @@
 package com.huicang.wise.api.security;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.AuthApplicationService;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserApplicationService;
-import com.huicang.wise.api.support.AbstractAuthenticatedSliceTest;
-import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.user.UserDTO;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-
-@WebMvcTest(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
+@WebMvcTest(
+        excludeFilters =
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern =
+                                "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
 // 说明：本用例断言的是鉴权/授权链路的失败行为，而 SecurityConfig 标注为 @Profile("prod")、
 // 且 Spring Security 过滤器链在 @WebMvcTest 切片内为默认配置，无法复现该项目真实安全规则，
 // 故归入 e2e 组（默认不执行，需真实环境：mvn test -Pe2e）。
 @Tag("e2e")
 public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSliceTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private UserApplicationService userApplicationService;
+    @MockBean private UserApplicationService userApplicationService;
 
-    @MockBean
-    private AuthApplicationService authApplicationService;
+    @MockBean private AuthApplicationService authApplicationService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -67,8 +60,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/2")
-                .header("Authorization", "Bearer user1_token"))
+        mockMvc.perform(get("/api/users/2").header("Authorization", "Bearer user1_token"))
                 .andExpect(status().isOk());
     }
 
@@ -82,8 +74,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -97,8 +88,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/999")
-                .header("Authorization", "Bearer user1_token"))
+        mockMvc.perform(get("/api/users/999").header("Authorization", "Bearer user1_token"))
                 .andExpect(status().isOk());
     }
 
@@ -112,9 +102,10 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer user_token")
-                .header("X-User-Role", "admin"))
+        mockMvc.perform(
+                        get("/api/users/1")
+                                .header("Authorization", "Bearer user_token")
+                                .header("X-User-Role", "admin"))
                 .andExpect(status().isOk());
     }
 
@@ -128,9 +119,10 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer user_token")
-                .header("X-Role", "superadmin"))
+        mockMvc.perform(
+                        get("/api/users/1")
+                                .header("Authorization", "Bearer user_token")
+                                .header("X-Role", "superadmin"))
                 .andExpect(status().isOk());
     }
 
@@ -144,8 +136,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/admin/users")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/admin/users").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -160,8 +151,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/1")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/users/1").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -177,10 +167,12 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.createUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(post("/api/users")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"username\":\"newuser\",\"password\":\"password\",\"email\":\"newuser@example.com\"}"))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"username\":\"newuser\",\"password\":\"password\",\"email\":\"newuser@example.com\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -188,8 +180,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testUnauthorizedUserDeletion() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(delete("/api/users/1")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(delete("/api/users/1").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -204,10 +195,11 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.updateUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(put("/api/users/1")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"updated@example.com\"}"))
+        mockMvc.perform(
+                        put("/api/users/1")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"email\":\"updated@example.com\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -222,8 +214,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
 
         when(userApplicationService.getUser(any())).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/2")
-                .header("Authorization", "Bearer user1_token"))
+        mockMvc.perform(get("/api/users/2").header("Authorization", "Bearer user1_token"))
                 .andExpect(status().isOk());
     }
 
@@ -231,8 +222,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemConfiguration() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/config")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/config").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -240,8 +230,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToAuditLogs() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/audit/logs")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/audit/logs").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -249,8 +238,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToPermissions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/permissions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/permissions").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -258,8 +246,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToRoles() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/roles")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/roles").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -267,8 +254,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToAccessKeys() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/access-keys")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/access-keys").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -276,8 +262,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSessions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/sessions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/sessions").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -285,10 +270,11 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToPasswordManagement() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/password/change")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"oldPassword\":\"old\",\"newPassword\":\"new\"}"))
+        mockMvc.perform(
+                        post("/api/password/change")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"oldPassword\":\"old\",\"newPassword\":\"new\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -296,10 +282,11 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToOtherUserPasswordReset() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/password/reset/1")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"newPassword\":\"new\"}"))
+        mockMvc.perform(
+                        post("/api/password/reset/1")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"newPassword\":\"new\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -307,8 +294,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToInventoryManagement() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/inventory")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/inventory").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -316,8 +302,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToProductManagement() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/products")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/products").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -325,8 +310,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToTaskManagement() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/tasks")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/tasks").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -334,8 +318,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToDeviceManagement() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/devices")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/devices").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -343,8 +326,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToAlertManagement() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/alerts")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/alerts").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -352,8 +334,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToReportManagement() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/reports")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/reports").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -361,8 +342,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToDashboard() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/dashboard")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/dashboard").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -370,8 +350,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToStatistics() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/statistics")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/statistics").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -379,8 +358,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToAnalytics() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/analytics")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/analytics").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -388,8 +366,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToExportData() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/export/users")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/export/users").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -397,9 +374,10 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToImportData() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/import/users")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.MULTIPART_FORM_DATA))
+        mockMvc.perform(
+                        post("/api/import/users")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk());
     }
 
@@ -407,10 +385,11 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToBulkOperations() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/users/bulk-delete")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"userIds\":[1,2,3]}"))
+        mockMvc.perform(
+                        post("/api/users/bulk-delete")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"userIds\":[1,2,3]}"))
                 .andExpect(status().isOk());
     }
 
@@ -418,8 +397,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogs() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/logs")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/logs").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -427,8 +405,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemMonitoring() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/monitoring")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/monitoring").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -436,8 +413,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemHealth() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/health")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/health").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -445,8 +421,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemMetrics() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/metrics")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/metrics").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -454,8 +429,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemInfo() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/info")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/info").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -463,8 +437,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemStatus() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/status")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/status").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -472,8 +445,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemVersion() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/version")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/version").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -481,8 +453,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemEnvironment() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/environment")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/environment").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -490,8 +461,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemSettings() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/settings")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/settings").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -499,8 +469,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemNotifications() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/notifications")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/notifications").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -508,8 +477,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemMessages() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/messages")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/messages").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -517,8 +485,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemAnnouncements() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/announcements")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/announcements").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -526,8 +493,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemUpdates() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/updates")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/updates").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -535,8 +501,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemBackups() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/backups")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/backups").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -544,10 +509,11 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemRestores() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/restores")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"backupId\":\"123\"}"))
+        mockMvc.perform(
+                        post("/api/restores")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"backupId\":\"123\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -555,10 +521,11 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemMaintenance() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/maintenance")
-                .header("Authorization", "Bearer user_token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"enabled\":true}"))
+        mockMvc.perform(
+                        post("/api/maintenance")
+                                .header("Authorization", "Bearer user_token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"enabled\":true}"))
                 .andExpect(status().isOk());
     }
 
@@ -566,8 +533,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemShutdown() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/shutdown")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(post("/api/shutdown").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -575,8 +541,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemRestart() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/restart")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(post("/api/restart").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -584,8 +549,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemCache() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(delete("/api/cache")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(delete("/api/cache").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -593,8 +557,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemDatabase() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(post("/api/database/backup")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(post("/api/database/backup").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -602,8 +565,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemSecurity() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/security")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/security").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -611,8 +573,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemPermissions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/permissions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/permissions").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -620,8 +581,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemRoles() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/roles")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/roles").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -629,8 +589,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemUsers() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/users")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/users").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -638,8 +597,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemGroups() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/groups")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/groups").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -647,8 +605,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemPolicies() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/policies")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/policies").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -656,8 +613,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemRules() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/rules")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/rules").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -665,8 +621,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemWorkflows() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/workflows")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/workflows").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -674,8 +629,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemProcesses() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/processes")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/processes").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -683,8 +637,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemJobs() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/jobs")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/jobs").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -692,8 +645,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemTasks() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/tasks")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/tasks").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -701,8 +653,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemSchedules() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/schedules")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/schedules").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -710,8 +661,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemTriggers() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/triggers")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/triggers").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -719,8 +669,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemEvents() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/events")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/events").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -728,8 +677,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemHooks() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/hooks")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/hooks").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -737,8 +685,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemIntegrations() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/integrations")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/integrations")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -746,8 +695,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemConnections() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/connections")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/connections").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -755,8 +703,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemApis() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/apis")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/apis").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -764,8 +711,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemWebhooks() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/webhooks")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/webhooks").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -773,8 +719,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemServices() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/services")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/services").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -782,8 +727,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemEndpoints() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/endpoints")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/endpoints").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -791,8 +735,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemResources() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/resources")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/resources").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -800,8 +743,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemAssets() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/assets")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/assets").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -809,8 +751,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemFiles() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/files")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/files").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -818,8 +759,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemDocuments() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/documents")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/documents").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -827,8 +767,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemImages() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/images")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/images").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -836,8 +775,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemVideos() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/videos")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/videos").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -845,8 +783,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemAudios() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/audios")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/audios").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -854,8 +791,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemArchives() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/archives")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/archives").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -863,8 +799,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemCompressions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/compressions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/compressions")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -872,8 +809,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemEncryptions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/encryptions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/encryptions").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -881,8 +817,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemDecryptions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/decryptions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/decryptions").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -890,8 +825,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemHashings() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/hashings")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/hashings").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -899,8 +833,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemSignatures() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/signatures")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/signatures").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -908,8 +841,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemCertificates() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/certificates")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/certificates")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -917,8 +851,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemKeys() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/keys")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/keys").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -926,8 +859,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemSecrets() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/secrets")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/secrets").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -935,8 +867,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemPasswords() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/passwords")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/passwords").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -944,8 +875,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemTokens() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/tokens")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/tokens").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -953,8 +883,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemSessions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/sessions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/sessions").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -962,8 +891,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemCookies() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/cookies")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/cookies").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -971,8 +899,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemHeaders() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/headers")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/headers").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -980,8 +907,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemParameters() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/parameters")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/parameters").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -989,8 +915,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemQueries() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/queries")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/queries").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -998,8 +923,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemBodies() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/bodies")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/bodies").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1007,8 +931,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemResponses() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/responses")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/responses").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1016,8 +939,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemRequests() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/requests")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/requests").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1025,8 +947,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemErrors() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/errors")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/errors").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1034,8 +955,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemExceptions() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/exceptions")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/exceptions").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1043,8 +963,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemWarnings() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/warnings")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/warnings").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1052,8 +971,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemInfos() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/infos")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/infos").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1061,8 +979,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemDebugs() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/debugs")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/debugs").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1070,8 +987,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemTraces() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/traces")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/traces").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1079,8 +995,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsAccess() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/access")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/access").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1088,8 +1003,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsError() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/error")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/error").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1097,8 +1011,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsSecurity() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/security")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/security")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1106,8 +1021,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsAudit() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/audit")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/audit").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1115,8 +1029,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsPerformance() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/performance")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/performance")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1124,8 +1039,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsApplication() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/application")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/application")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1133,8 +1049,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsSystem() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/system")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/system").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1142,8 +1057,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsDatabase() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/database")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/database")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1151,8 +1067,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsNetwork() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/network")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/network")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1160,8 +1077,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsCache() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/cache")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/cache").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1169,8 +1085,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsQueue() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/queue")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/queue").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1178,8 +1093,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsStorage() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/storage")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/storage")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1187,8 +1103,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsMemory() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/memory")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/memory").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1196,8 +1111,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsCpu() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/cpu")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/cpu").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1205,8 +1119,7 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsDisk() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/disk")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(get("/api/system/logs/disk").header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1214,8 +1127,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsNetworkInbound() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/network/inbound")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/network/inbound")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1223,8 +1137,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsNetworkOutbound() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/network/outbound")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/network/outbound")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1232,8 +1147,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsNetworkInternal() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/network/internal")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/network/internal")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 
@@ -1241,8 +1157,9 @@ public class ApiPrivilegeEscalationSecurityTest extends AbstractAuthenticatedSli
     void testAccessToSystemLogsNetworkExternal() throws Exception {
         when(authApplicationService.validateToken(any())).thenReturn("user");
 
-        mockMvc.perform(get("/api/system/logs/network/external")
-                .header("Authorization", "Bearer user_token"))
+        mockMvc.perform(
+                        get("/api/system/logs/network/external")
+                                .header("Authorization", "Bearer user_token"))
                 .andExpect(status().isOk());
     }
 }

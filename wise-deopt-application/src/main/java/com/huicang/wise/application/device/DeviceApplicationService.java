@@ -1,11 +1,23 @@
 package com.huicang.wise.application.device;
 
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.domain.device.DeviceConfigPublisher;
+import com.huicang.wise.domain.device.DeviceCore;
+import com.huicang.wise.domain.device.DeviceInspectionRobot;
+import com.huicang.wise.domain.inspection.InspectionTask;
+import com.huicang.wise.domain.inspection.TaskMessage;
+import com.huicang.wise.domain.inspection.TaskPublisher;
+import com.huicang.wise.domain.repository.device.DeviceRepository;
+import com.huicang.wise.domain.repository.device.RobotConfigRepository;
+import com.huicang.wise.domain.repository.inspection.InspectionTaskRepository;
+import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
+import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,21 +25,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.huicang.wise.common.api.ErrorCode;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.device.DeviceCore;
-import com.huicang.wise.domain.device.DeviceInspectionRobot;
-import com.huicang.wise.domain.repository.device.DeviceRepository;
-import com.huicang.wise.domain.repository.device.RobotConfigRepository;
-import com.huicang.wise.domain.device.DeviceConfigPublisher;
-
-import com.huicang.wise.domain.inspection.InspectionTask;
-import com.huicang.wise.domain.inspection.TaskMessage;
-import com.huicang.wise.domain.repository.inspection.InspectionTaskRepository;
-import com.huicang.wise.domain.inspection.TaskPublisher;
-import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
-import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 
 /**
  * 类功能描述：设备应用服务
@@ -40,29 +37,23 @@ public class DeviceApplicationService {
 
     private static final Logger logger = LoggerFactory.getLogger(DeviceApplicationService.class);
 
-    @Autowired
-    private DeviceRepository deviceRepository;
+    @Autowired private DeviceRepository deviceRepository;
 
-    @Autowired
-    private RobotConfigRepository robotRepository;
+    @Autowired private RobotConfigRepository robotRepository;
 
     @Autowired(required = false)
     private DeviceConfigPublisher deviceConfigPublisher;
 
-    @Autowired
-    private com.huicang.wise.infrastructure.security.JwtTokenProvider jwtTokenProvider;
+    @Autowired private com.huicang.wise.infrastructure.security.JwtTokenProvider jwtTokenProvider;
 
     @Autowired(required = false)
     private com.huicang.wise.domain.service.DeviceLogStorage deviceLogStorage;
 
-    @Autowired
-    private InspectionTaskRepository inspectionTaskRepository;
+    @Autowired private InspectionTaskRepository inspectionTaskRepository;
 
-    @Autowired
-    private TaskPublisher taskPublisher;
+    @Autowired private TaskPublisher taskPublisher;
 
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    @Autowired private StringRedisTemplate stringRedisTemplate;
 
     private static final short DEVICE_TYPE_RFID = 0;
     private static final short DEVICE_TYPE_CAMERA = 1;
@@ -80,17 +71,27 @@ public class DeviceApplicationService {
         }
         String trimmedIp = ipAddress.trim();
         logger.info("Checking for IP conflict: {}", trimmedIp);
-        deviceRepository.findByIpAddress(trimmedIp).ifPresentOrElse(device -> {
-            if (!device.getDeviceCode().equals(currentDeviceCode)) {
-                logger.warn("IP conflict: Device {} already uses IP {}. Clearing IP from old device.", device.getDeviceCode(), trimmedIp);
-                device.setIpAddress(null);
-                device.setUpdateBy(1L);
-                device.setUpdateTime(LocalDateTime.now());
-                deviceRepository.saveAndFlush(device);
-            } else {
-                logger.info("Device {} already owns IP {}", currentDeviceCode, trimmedIp);
-            }
-        }, () -> logger.info("No existing device found with IP {}", trimmedIp));
+        deviceRepository
+                .findByIpAddress(trimmedIp)
+                .ifPresentOrElse(
+                        device -> {
+                            if (!device.getDeviceCode().equals(currentDeviceCode)) {
+                                logger.warn(
+                                        "IP conflict: Device {} already uses IP {}. Clearing IP from old device.",
+                                        device.getDeviceCode(),
+                                        trimmedIp);
+                                device.setIpAddress(null);
+                                device.setUpdateBy(1L);
+                                device.setUpdateTime(LocalDateTime.now());
+                                deviceRepository.saveAndFlush(device);
+                            } else {
+                                logger.info(
+                                        "Device {} already owns IP {}",
+                                        currentDeviceCode,
+                                        trimmedIp);
+                            }
+                        },
+                        () -> logger.info("No existing device found with IP {}", trimmedIp));
     }
 
     @Transactional
@@ -98,9 +99,9 @@ public class DeviceApplicationService {
         if (request == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "请求参数不能为空");
         }
-        
+
         if (request.getIpAddress() != null) {
-             request.setIpAddress(request.getIpAddress().trim());
+            request.setIpAddress(request.getIpAddress().trim());
         }
 
         handleIpConflict(request.getIpAddress(), request.getDeviceCode());
@@ -108,8 +109,10 @@ public class DeviceApplicationService {
         // 如果设备已存在，则更新信息（支持重复注册/重启场景）
         // 实际生产中应有独立的 Login 接口或更严格的认证
         if (deviceRepository.existsByDeviceCode(request.getDeviceCode())) {
-            DeviceCore existingDevice = deviceRepository.findByDeviceCode(request.getDeviceCode())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
+            DeviceCore existingDevice =
+                    deviceRepository
+                            .findByDeviceCode(request.getDeviceCode())
+                            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
             existingDevice.setName(request.getDeviceName());
             existingDevice.setIpAddress(request.getIpAddress());
             existingDevice.setRemark(request.getRemark());
@@ -118,38 +121,54 @@ public class DeviceApplicationService {
             existingDevice.setUpdateBy(1L);
             existingDevice.setUpdateTime(LocalDateTime.now());
             existingDevice = deviceRepository.save(existingDevice);
-            
+
             // Clear dashboard KPI cache to ensure data overview updates
             stringRedisTemplate.delete("dashboard:kpi");
-            
-            logger.info("设备重新注册/上线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}", 
-                existingDevice.getDeviceCode(), existingDevice.getName(), getDeviceStatusName(existingDevice.getStatus()), getDeviceStatusName(DEVICE_STATUS_ONLINE));
-            
+
+            logger.info(
+                    "设备重新注册/上线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}",
+                    existingDevice.getDeviceCode(),
+                    existingDevice.getName(),
+                    getDeviceStatusName(existingDevice.getStatus()),
+                    getDeviceStatusName(DEVICE_STATUS_ONLINE));
+
             // 设备上线，推送未完成的任务（最多推送10个）
-            List<InspectionTask> pendingTasks = inspectionTaskRepository.findByDeviceIdAndStatus(existingDevice.getDeviceId(), (short) 0);
+            List<InspectionTask> pendingTasks =
+                    inspectionTaskRepository.findByDeviceIdAndStatus(
+                            existingDevice.getDeviceId(), (short) 0);
             int maxTasksToPush = 10;
             int pushedCount = 0;
             for (InspectionTask task : pendingTasks) {
                 if (pushedCount >= maxTasksToPush) {
-                    logger.warn("设备上线推送任务达到上限 - 设备编码: {}, 已推送: {}, 待推送: {}", 
-                        existingDevice.getDeviceCode(), pushedCount, pendingTasks.size() - pushedCount);
+                    logger.warn(
+                            "设备上线推送任务达到上限 - 设备编码: {}, 已推送: {}, 待推送: {}",
+                            existingDevice.getDeviceCode(),
+                            pushedCount,
+                            pendingTasks.size() - pushedCount);
                     break;
                 }
-                 TaskMessage message = new TaskMessage(
-                     task.getTaskId(),
-                     task.getTaskType(),
-                     task.getTargetDistance(),
-                     task.getPlanId(),
-                     task.getWarehouseId()
-                 );
-                 taskPublisher.publishTask(existingDevice.getDeviceCode(), message);
-                 logger.info("设备上线推送任务 - 任务ID: {}, 设备编码: {}", task.getTaskId(), existingDevice.getDeviceCode());
-                 pushedCount++;
+                TaskMessage message =
+                        new TaskMessage(
+                                task.getTaskId(),
+                                task.getTaskType(),
+                                task.getTargetDistance(),
+                                task.getPlanId(),
+                                task.getWarehouseId());
+                taskPublisher.publishTask(existingDevice.getDeviceCode(), message);
+                logger.info(
+                        "设备上线推送任务 - 任务ID: {}, 设备编码: {}",
+                        task.getTaskId(),
+                        existingDevice.getDeviceCode());
+                pushedCount++;
             }
 
             DeviceDTO dto = toDeviceDTO(existingDevice);
-            String accessToken = jwtTokenProvider.generateAccessToken(existingDevice.getDeviceCode(), existingDevice.getDeviceId());
-            String refreshToken = jwtTokenProvider.generateRefreshToken(existingDevice.getDeviceCode(), existingDevice.getDeviceId());
+            String accessToken =
+                    jwtTokenProvider.generateAccessToken(
+                            existingDevice.getDeviceCode(), existingDevice.getDeviceId());
+            String refreshToken =
+                    jwtTokenProvider.generateRefreshToken(
+                            existingDevice.getDeviceCode(), existingDevice.getDeviceId());
             dto.setToken(accessToken);
             dto.setRefreshToken(refreshToken);
             return dto;
@@ -173,12 +192,20 @@ public class DeviceApplicationService {
         // Clear dashboard KPI cache to ensure data overview updates
         stringRedisTemplate.delete("dashboard:kpi");
 
-        logger.info("设备注册 - 设备编码: {}, 设备名称: {}, 设备类型: {}, IP地址: {}", 
-            savedDevice.getDeviceCode(), savedDevice.getName(), getDeviceTypeName(savedDevice.getType()), savedDevice.getIpAddress());
+        logger.info(
+                "设备注册 - 设备编码: {}, 设备名称: {}, 设备类型: {}, IP地址: {}",
+                savedDevice.getDeviceCode(),
+                savedDevice.getName(),
+                getDeviceTypeName(savedDevice.getType()),
+                savedDevice.getIpAddress());
 
         DeviceDTO dto = toDeviceDTO(savedDevice);
-        String accessToken = jwtTokenProvider.generateAccessToken(savedDevice.getDeviceCode(), savedDevice.getDeviceId());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(savedDevice.getDeviceCode(), savedDevice.getDeviceId());
+        String accessToken =
+                jwtTokenProvider.generateAccessToken(
+                        savedDevice.getDeviceCode(), savedDevice.getDeviceId());
+        String refreshToken =
+                jwtTokenProvider.generateRefreshToken(
+                        savedDevice.getDeviceCode(), savedDevice.getDeviceId());
         dto.setToken(accessToken);
         dto.setRefreshToken(refreshToken);
         return dto;
@@ -186,9 +213,12 @@ public class DeviceApplicationService {
 
     @Transactional
     @CacheEvict(prefix = "device", key = "#deviceId", allEntries = false)
-    public DeviceDTO updateDevice(Long deviceId, DeviceUpdateRequest request) throws BusinessException {
-        DeviceCore device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
+    public DeviceDTO updateDevice(Long deviceId, DeviceUpdateRequest request)
+            throws BusinessException {
+        DeviceCore device =
+                deviceRepository
+                        .findById(deviceId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
 
         if (request.getDeviceName() != null) {
             device.setName(request.getDeviceName());
@@ -211,7 +241,7 @@ public class DeviceApplicationService {
         device.setUpdateTime(LocalDateTime.now());
 
         DeviceCore savedDevice = deviceRepository.save(device);
-        
+
         // Clear dashboard KPI cache to ensure data overview updates
         stringRedisTemplate.delete("dashboard:kpi");
 
@@ -221,44 +251,62 @@ public class DeviceApplicationService {
     @CacheEvict(prefix = "device", key = "#deviceId", allEntries = false)
     @Transactional
     public void deleteDevice(Long deviceId) throws BusinessException {
-        DeviceCore device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
+        DeviceCore device =
+                deviceRepository
+                        .findById(deviceId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
 
         deviceRepository.delete(device);
-        
+
         // Clear dashboard KPI cache to ensure data overview updates
         stringRedisTemplate.delete("dashboard:kpi");
     }
 
     @Cacheable(prefix = "device", key = "#deviceId", timeout = 1800)
     public DeviceDTO getDevice(Long deviceId) throws BusinessException {
-        DeviceCore device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
+        DeviceCore device =
+                deviceRepository
+                        .findById(deviceId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
 
         return toDeviceDTO(device);
     }
 
     @Cacheable(prefix = "device:code", key = "#deviceCode", timeout = 1800)
     public DeviceDTO getDeviceByCode(String deviceCode) throws BusinessException {
-        DeviceCore device = deviceRepository.findByDeviceCode(deviceCode)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
+        DeviceCore device =
+                deviceRepository
+                        .findByDeviceCode(deviceCode)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
 
         return toDeviceDTO(device);
     }
 
-    public List<DeviceDTO> listDevices(Short deviceType, Short deviceStatus, Boolean enabled, String keyword) {
-        List<DeviceCore> devices = deviceRepository.findByKeywordAndTypeAndStatus(keyword, deviceType, deviceStatus);
+    public List<DeviceDTO> listDevices(
+            Short deviceType, Short deviceStatus, Boolean enabled, String keyword) {
+        List<DeviceCore> devices =
+                deviceRepository.findByKeywordAndTypeAndStatus(keyword, deviceType, deviceStatus);
 
         return devices.stream()
-                .filter(d -> enabled == null || (enabled ? d.getStatus() != 2 : d.getStatus() == 2)) // This filter logic for 'enabled' might be wrong, based on previous code.
+                .filter(
+                        d ->
+                                enabled == null
+                                        || (enabled
+                                                ? d.getStatus() != 2
+                                                : d.getStatus()
+                                                        == 2)) // This filter logic for 'enabled'
+                // might be wrong, based on previous
+                // code.
                 .map(this::toDeviceDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public void receiveHeartbeat(String deviceCode) throws BusinessException {
-        DeviceCore device = deviceRepository.findByDeviceCode(deviceCode)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
+        DeviceCore device =
+                deviceRepository
+                        .findByDeviceCode(deviceCode)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
 
         Short oldStatus = device.getStatus();
         device.setLastHeartbeat(LocalDateTime.now());
@@ -267,33 +315,43 @@ public class DeviceApplicationService {
 
         if (DEVICE_STATUS_ONLINE != oldStatus) {
             device.setStatus(DEVICE_STATUS_ONLINE);
-            
+
             // Clear dashboard KPI cache to ensure data overview updates
             stringRedisTemplate.delete("dashboard:kpi");
-            
-            logger.info("设备上线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}", 
-                device.getDeviceCode(), device.getName(), getDeviceStatusName(oldStatus), getDeviceStatusName(DEVICE_STATUS_ONLINE));
-            
+
+            logger.info(
+                    "设备上线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}",
+                    device.getDeviceCode(),
+                    device.getName(),
+                    getDeviceStatusName(oldStatus),
+                    getDeviceStatusName(DEVICE_STATUS_ONLINE));
+
             // 设备上线，推送未完成的任务（最多推送10个）
-            List<InspectionTask> pendingTasks = inspectionTaskRepository.findByDeviceIdAndStatus(device.getDeviceId(), (short) 0);
+            List<InspectionTask> pendingTasks =
+                    inspectionTaskRepository.findByDeviceIdAndStatus(
+                            device.getDeviceId(), (short) 0);
             int maxTasksToPush = 10;
             int pushedCount = 0;
             for (InspectionTask task : pendingTasks) {
                 if (pushedCount >= maxTasksToPush) {
-                    logger.warn("设备上线推送任务达到上限 - 设备编码: {}, 已推送: {}, 待推送: {}", 
-                        device.getDeviceCode(), pushedCount, pendingTasks.size() - pushedCount);
+                    logger.warn(
+                            "设备上线推送任务达到上限 - 设备编码: {}, 已推送: {}, 待推送: {}",
+                            device.getDeviceCode(),
+                            pushedCount,
+                            pendingTasks.size() - pushedCount);
                     break;
                 }
-                 TaskMessage message = new TaskMessage(
-                     task.getTaskId(),
-                     task.getTaskType(),
-                     task.getTargetDistance(),
-                     task.getPlanId(),
-                     task.getWarehouseId()
-                 );
-                 taskPublisher.publishTask(device.getDeviceCode(), message);
-                 logger.info("设备上线推送任务 - 任务ID: {}, 设备编码: {}", task.getTaskId(), device.getDeviceCode());
-                 pushedCount++;
+                TaskMessage message =
+                        new TaskMessage(
+                                task.getTaskId(),
+                                task.getTaskType(),
+                                task.getTargetDistance(),
+                                task.getPlanId(),
+                                task.getWarehouseId());
+                taskPublisher.publishTask(device.getDeviceCode(), message);
+                logger.info(
+                        "设备上线推送任务 - 任务ID: {}, 设备编码: {}", task.getTaskId(), device.getDeviceCode());
+                pushedCount++;
             }
         }
 
@@ -338,21 +396,31 @@ public class DeviceApplicationService {
                 device.setUpdateBy(1L);
                 device.setUpdateTime(LocalDateTime.now());
                 deviceRepository.save(device);
-                
+
                 // Clear dashboard KPI cache to ensure data overview updates
                 stringRedisTemplate.delete("dashboard:kpi");
-                
-                logger.info("设备离线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}, 最后心跳时间: {}", 
-                    device.getDeviceCode(), device.getName(), getDeviceStatusName(DEVICE_STATUS_ONLINE), getDeviceStatusName(DEVICE_STATUS_OFFLINE), device.getLastHeartbeat());
-                
+
+                logger.info(
+                        "设备离线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}, 最后心跳时间: {}",
+                        device.getDeviceCode(),
+                        device.getName(),
+                        getDeviceStatusName(DEVICE_STATUS_ONLINE),
+                        getDeviceStatusName(DEVICE_STATUS_OFFLINE),
+                        device.getLastHeartbeat());
+
                 // 重置该设备所有"执行中"(status=1)的任务为"待执行"(status=0)
-                List<InspectionTask> runningTasks = inspectionTaskRepository.findByDeviceIdAndStatus(device.getDeviceId(), (short) 1);
+                List<InspectionTask> runningTasks =
+                        inspectionTaskRepository.findByDeviceIdAndStatus(
+                                device.getDeviceId(), (short) 1);
                 for (InspectionTask task : runningTasks) {
                     task.setStatus((short) 0);
                     task.setStartTime(null); // 清除开始时间
                     task.setUpdateTime(LocalDateTime.now());
                     inspectionTaskRepository.save(task);
-                    logger.info("设备离线重置任务 - 任务ID: {}, 设备ID: {}", task.getTaskId(), device.getDeviceId());
+                    logger.info(
+                            "设备离线重置任务 - 任务ID: {}, 设备ID: {}",
+                            task.getTaskId(),
+                            device.getDeviceId());
                 }
             }
         }
@@ -409,7 +477,7 @@ public class DeviceApplicationService {
 
     public Map<String, Object> getConfig(String deviceCode, String version) {
         String latestVersion = "1.0.1";
-        
+
         Map<String, Object> config = new HashMap<>();
         config.put("version", latestVersion);
         config.put("heartbeatInterval", 1);
@@ -417,18 +485,26 @@ public class DeviceApplicationService {
         config.put("taskPollInterval", 3);
         config.put("logUploadStrategy", "periodic");
         config.put("networkTimeout", 2000);
-        
+
         // Add robot specific config
         DeviceCore device = deviceRepository.findByDeviceCode(deviceCode).orElse(null);
         if (device != null && DEVICE_TYPE_ROBOT == device.getType()) {
-            robotRepository.findById(device.getDeviceId()).ifPresent(robot -> {
-                if (robot.getMoveSpeedCmS() != null) config.put("move_speed_cm_s", robot.getMoveSpeedCmS());
-                if (robot.getMotorTrimA() != null) config.put("motor_trim_a", robot.getMotorTrimA());
-                if (robot.getMotorTrimB() != null) config.put("motor_trim_b", robot.getMotorTrimB());
-                if (robot.getMotorTrimC() != null) config.put("motor_trim_c", robot.getMotorTrimC());
-                if (robot.getMotorTrimD() != null) config.put("motor_trim_d", robot.getMotorTrimD());
-            });
-            
+            robotRepository
+                    .findById(device.getDeviceId())
+                    .ifPresent(
+                            robot -> {
+                                if (robot.getMoveSpeedCmS() != null)
+                                    config.put("move_speed_cm_s", robot.getMoveSpeedCmS());
+                                if (robot.getMotorTrimA() != null)
+                                    config.put("motor_trim_a", robot.getMotorTrimA());
+                                if (robot.getMotorTrimB() != null)
+                                    config.put("motor_trim_b", robot.getMotorTrimB());
+                                if (robot.getMotorTrimC() != null)
+                                    config.put("motor_trim_c", robot.getMotorTrimC());
+                                if (robot.getMotorTrimD() != null)
+                                    config.put("motor_trim_d", robot.getMotorTrimD());
+                            });
+
             // If fields are null, provide defaults (based on user's calibration)
             // config.putIfAbsent("move_speed_cm_s", 19.7f);
             // config.putIfAbsent("motor_trim_a", 0.2f);
@@ -441,28 +517,33 @@ public class DeviceApplicationService {
             config.putIfAbsent("motor_trim_c", 0.3f);
             config.putIfAbsent("motor_trim_d", -0.195f);
         }
-        
+
         return config;
     }
 
     @Transactional
     public void updateRobotConfig(String deviceCode, Map<String, Object> params) {
-        DeviceCore device = deviceRepository.findByDeviceCode(deviceCode)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
-        
+        DeviceCore device =
+                deviceRepository
+                        .findByDeviceCode(deviceCode)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "设备不存在"));
+
         if (DEVICE_TYPE_ROBOT != device.getType()) {
-             throw new BusinessException(ErrorCode.PARAM_ERROR, "非机器人设备不支持此配置");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "非机器人设备不支持此配置");
         }
 
-        DeviceInspectionRobot robot = robotRepository.findById(device.getDeviceId())
-                .orElseGet(() -> {
-                    DeviceInspectionRobot newRobot = new DeviceInspectionRobot();
-                    newRobot.setDeviceId(device.getDeviceId());
-                    newRobot.setCreateBy(1L);
-                    newRobot.setCreateTime(LocalDateTime.now());
-                    return newRobot;
-                });
-        
+        DeviceInspectionRobot robot =
+                robotRepository
+                        .findById(device.getDeviceId())
+                        .orElseGet(
+                                () -> {
+                                    DeviceInspectionRobot newRobot = new DeviceInspectionRobot();
+                                    newRobot.setDeviceId(device.getDeviceId());
+                                    newRobot.setCreateBy(1L);
+                                    newRobot.setCreateTime(LocalDateTime.now());
+                                    return newRobot;
+                                });
+
         if (params.containsKey("move_speed_cm_s")) {
             robot.setMoveSpeedCmS(toFloat(params.get("move_speed_cm_s")));
         }
@@ -478,11 +559,11 @@ public class DeviceApplicationService {
         if (params.containsKey("motor_trim_d")) {
             robot.setMotorTrimD(toFloat(params.get("motor_trim_d")));
         }
-        
+
         robot.setUpdateBy(1L);
         robot.setUpdateTime(LocalDateTime.now());
         robotRepository.save(robot);
-        
+
         // Push update
         try {
             pushConfigUpdate(deviceCode);

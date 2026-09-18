@@ -2,21 +2,19 @@ package com.huicang.wise.api.controller;
 
 import com.huicang.wise.application.message.MessageApplicationService;
 import com.huicang.wise.application.message.MessageCreateRequest;
-import com.huicang.wise.application.message.MessageQueryRequest;
-import com.huicang.wise.common.api.ErrorCode;
-import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.application.message.MessageDTO;
+import com.huicang.wise.application.message.MessageQueryRequest;
+import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.api.ErrorCode;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/messages")
 public class MessageController {
 
-    @Autowired
-    private MessageApplicationService messageApplicationService;
+    @Autowired private MessageApplicationService messageApplicationService;
 
     @PostMapping
     public ApiResponse<MessageDTO> createMessage(@RequestBody MessageCreateRequest request) {

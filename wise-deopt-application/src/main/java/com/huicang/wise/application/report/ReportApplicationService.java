@@ -1,5 +1,12 @@
 package com.huicang.wise.application.report;
 
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.domain.report.ReportExportRecord;
+import com.huicang.wise.domain.report.ReportTask;
+import com.huicang.wise.domain.repository.report.ReportExportRecordRepository;
+import com.huicang.wise.domain.repository.report.ReportTaskRepository;
+import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -8,9 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -18,14 +22,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.huicang.wise.common.api.ErrorCode;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.domain.report.ReportExportRecord;
-import com.huicang.wise.domain.report.ReportTask;
-import com.huicang.wise.domain.repository.report.ReportExportRecordRepository;
-import com.huicang.wise.domain.repository.report.ReportTaskRepository;
-import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 
 /**
  * 类功能描述：报表应用服务
@@ -40,8 +36,9 @@ public class ReportApplicationService {
     private final ReportTaskRepository reportTaskRepository;
     private final ReportExportRecordRepository reportExportRecordRepository;
 
-    public ReportApplicationService(ReportTaskRepository reportTaskRepository,
-                                  ReportExportRecordRepository reportExportRecordRepository) {
+    public ReportApplicationService(
+            ReportTaskRepository reportTaskRepository,
+            ReportExportRecordRepository reportExportRecordRepository) {
         this.reportTaskRepository = reportTaskRepository;
         this.reportExportRecordRepository = reportExportRecordRepository;
     }
@@ -74,7 +71,7 @@ public class ReportApplicationService {
         entity.setUpdateTime(LocalDateTime.now());
 
         ReportTask saved = reportTaskRepository.save(entity);
-        
+
         return toReportTaskDTO(saved);
     }
 
@@ -86,15 +83,21 @@ public class ReportApplicationService {
     @Async
     @Transactional
     public void executeReportTask(Long taskId) {
-        ReportTask task = reportTaskRepository.findById(taskId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "报表任务不存在"));
+        ReportTask task =
+                reportTaskRepository
+                        .findById(taskId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "报表任务不存在"));
 
         try {
             task.setStatus((short) 1);
             reportTaskRepository.save(task);
 
             byte[] fileData = generateInventoryReport(task);
-            String fileName = "库存台账报表_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".xlsx";
+            String fileName =
+                    "库存台账报表_"
+                            + LocalDateTime.now()
+                                    .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+                            + ".xlsx";
 
             task.setStatus((short) 2);
             task.setGenerateTime(LocalDateTime.now());
@@ -356,7 +359,8 @@ public class ReportApplicationService {
      * @param format 文件格式
      * @param createBy 创建者ID
      */
-    private void createExportRecord(Long taskId, String fileName, Long fileSize, Integer format, Long createBy) {
+    private void createExportRecord(
+            Long taskId, String fileName, Long fileSize, Integer format, Long createBy) {
         ReportExportRecord record = new ReportExportRecord();
         record.setTaskId(taskId);
         record.setExportUserId(createBy);
@@ -394,11 +398,14 @@ public class ReportApplicationService {
      * @return 报表任务列表
      */
     public List<ReportTaskDTO> listReportTasks(Short status) {
-        List<ReportTask> entities = reportTaskRepository.findAll().stream()
-                .filter(e -> status == null || status.equals(e.getStatus()))
-                .collect(java.util.stream.Collectors.toList());
+        List<ReportTask> entities =
+                reportTaskRepository.findAll().stream()
+                        .filter(e -> status == null || status.equals(e.getStatus()))
+                        .collect(java.util.stream.Collectors.toList());
 
-        return entities.stream().map(this::toReportTaskDTO).collect(java.util.stream.Collectors.toList());
+        return entities.stream()
+                .map(this::toReportTaskDTO)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     /**
@@ -409,8 +416,10 @@ public class ReportApplicationService {
      */
     @Cacheable(prefix = "report:task", key = "#taskId", timeout = 1800)
     public ReportTaskDTO getReportTask(Long taskId) {
-        ReportTask entity = reportTaskRepository.findById(taskId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "报表任务不存在"));
+        ReportTask entity =
+                reportTaskRepository
+                        .findById(taskId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "报表任务不存在"));
         return toReportTaskDTO(entity);
     }
 
@@ -422,7 +431,9 @@ public class ReportApplicationService {
      */
     public List<ReportExportRecordDTO> listExportRecords(Long taskId) {
         List<ReportExportRecord> entities = reportExportRecordRepository.findByTaskId(taskId);
-        return entities.stream().map(this::toReportExportRecordDTO).collect(java.util.stream.Collectors.toList());
+        return entities.stream()
+                .map(this::toReportExportRecordDTO)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     /**

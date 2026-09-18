@@ -1,57 +1,54 @@
 package com.huicang.wise.api.controller;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-
-import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
-import com.huicang.wise.api.config.JpaConfiguration;
 import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
 import com.huicang.wise.application.user.UserDTO;
 import com.huicang.wise.application.user.UserPageDTO;
 import com.huicang.wise.application.user.UserUpdateRequest;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
-
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(controllers = UserController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
+@WebMvcTest(
+        controllers = UserController.class,
+        excludeFilters =
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern =
+                                "com\\.huicang\\.wise\\.(application|infrastructure|domain)\\..*"))
 public class UserControllerTest extends AbstractWebMvcSliceTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private UserApplicationService userApplicationService;
+    @MockBean private UserApplicationService userApplicationService;
 
-    @MockBean
-    private AuthApplicationService authApplicationService;
+    @MockBean private AuthApplicationService authApplicationService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -73,10 +70,11 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
 
         when(userApplicationService.createUser(any(UserCreateRequest.class))).thenReturn(userDTO);
 
-        mockMvc.perform(post("/api/users")
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/users")
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
@@ -97,10 +95,11 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
 
         when(userApplicationService.updateUser(any(UserUpdateRequest.class))).thenReturn(userDTO);
 
-        mockMvc.perform(put("/api/users/{userId}", userId)
-                .header("Authorization", "Bearer token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        put("/api/users/{userId}", userId)
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.email").value("updated@example.com"));
@@ -115,8 +114,7 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
 
         when(userApplicationService.getUser(userId)).thenReturn(userDTO);
 
-        mockMvc.perform(get("/api/users/{userId}", userId)
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(get("/api/users/{userId}", userId).header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.userId").value(1));
@@ -133,8 +131,7 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
 
         when(userApplicationService.listUsers(any(), any())).thenReturn(pageDTO);
 
-        mockMvc.perform(get("/api/users")
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(get("/api/users").header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.items[0].userId").value(1));
@@ -145,8 +142,9 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
         Long userId = 1L;
         doNothing().when(userApplicationService).deleteUser(userId);
 
-        mockMvc.perform(delete("/api/users/{userId}", userId)
-                .header("Authorization", "Bearer token"))
+        mockMvc.perform(
+                        delete("/api/users/{userId}", userId)
+                                .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"));
     }

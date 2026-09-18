@@ -1,11 +1,8 @@
 package com.huicang.wise.domain.inspection;
 
 import java.io.Serializable;
-import java.util.Map;
 
-/**
- * 巡检进度更新事件
- */
+/** 巡检进度更新事件 */
 public class InspectionProgressEvent implements Serializable {
     private Long taskId;
     private Integer progress;
@@ -15,7 +12,12 @@ public class InspectionProgressEvent implements Serializable {
 
     public InspectionProgressEvent() {}
 
-    public InspectionProgressEvent(Long taskId, Integer progress, String status, Integer totalScanned, Integer totalExpected) {
+    public InspectionProgressEvent(
+            Long taskId,
+            Integer progress,
+            String status,
+            Integer totalScanned,
+            Integer totalExpected) {
         this.taskId = taskId;
         this.progress = progress;
         this.status = status;
