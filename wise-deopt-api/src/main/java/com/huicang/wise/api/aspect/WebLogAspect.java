@@ -17,10 +17,24 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
  * 类功能描述：Web请求日志切面
+ *
+ * <p>P5-06（M-17 派生）：请求/响应日志必须**脱敏**后再打印。此前这里直接输出
+ * {@code objectMapper.writeValueAsString(args)}，登录、注册、改密等接口的明文口令、
+ * 令牌会整段写进日志文件，属于"全量请求体日志"这一类的安全事故面。
+ *
+ * <p>脱敏规则（见 {@link #maskSensitive(String)}）：
+ * <ol>
+ *   <li>按**字段名**命中：password / passwd / pwd / token / refreshToken / secret /
+ *       signature / authorization / apiKey / captcha / pin 等；</li>
+ *   <li>按**值形态**兜底：任何以 {@code eyJ} 开头的 JWT（即使字段名不认识）也掩码。</li>
+ * </ol>
+ * 掩码只影响日志文本，不改变返回给客户端的数据。
  *
  * @author xingchentye
  * @date 2026-01-23
@@ -30,6 +44,40 @@ import java.util.stream.Collectors;
 public class WebLogAspect {
 
     private static final Logger log = LoggerFactory.getLogger(WebLogAspect.class);
+
+    /**
+     * 命中敏感字段名时，把其字符串值替换为 ***（保持 JSON 结构，便于日志比对）。
+     *
+     * <p>两类写法：无歧义的词根允许**前后缀**（覆盖 {@code X-Signature}、{@code signatureSecret}、
+     * {@code newPassword} 这类命名）；有歧义的短词只做**全词**匹配（{@code pin} 不该命中
+     * {@code shipping}）。只匹配字符串值，因此 {@code tokenCount: 3} 这类数字字段不受影响。
+     *
+     * <p>新增敏感字段名时，请同时补 {@code WebLogAspectMaskTest} 用例。
+     */
+    private static final Pattern SENSITIVE_FIELD_PATTERN = Pattern.compile(
+            "\"((?:[A-Za-z0-9_-]*(?:password|passwd|token|secret|signature|apikey|privatekey"
+                    + "|authorization|captcha)[A-Za-z0-9_-]*)|(?:pwd|pin|nfcuid))\"\\s*:\\s*\"[^\"]*\"",
+            Pattern.CASE_INSENSITIVE);
+
+    /** 值形态兜底：JWT（header.payload.signature）无论挂在哪个字段名下都掩码。 */
+    private static final Pattern JWT_VALUE_PATTERN = Pattern.compile(
+            "\"eyJ[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]*\"");
+
+    /**
+     * 对即将写入日志的 JSON 文本做脱敏（纯函数，便于单测）。
+     *
+     * @param json 序列化后的请求参数/响应体，可为 null
+     * @return 脱敏后的文本；入参为 null 时返回 null
+     */
+    public static String maskSensitive(String json) {
+        if (json == null || json.isEmpty()) {
+            return json;
+        }
+        String masked = SENSITIVE_FIELD_PATTERN.matcher(json)
+                .replaceAll(match -> "\"" + match.group(1) + "\":\"***\"");
+        masked = JWT_VALUE_PATTERN.matcher(masked).replaceAll("\"***\"");
+        return masked;
+    }
 
     /**
      * 使用 Spring 管理的 ObjectMapper（包含 JavaTimeModule 等配置），避免日志序列化时频繁出现
@@ -99,7 +147,7 @@ public class WebLogAspect {
                          })
                          .collect(Collectors.toList());
                      
-                     log.info("Request Args : {}", objectMapper.writeValueAsString(logArgs));
+                     log.info("Request Args : {}", maskSensitive(objectMapper.writeValueAsString(logArgs)));
                  } catch (Exception e) {
                      log.warn("Request Args : Unable to serialize args");
                  }
@@ -129,7 +177,8 @@ public class WebLogAspect {
             } else if (result instanceof MultipartFile) {
                 log.info("Response     : MultipartFile");
             } else {
-                log.info("Response     : {}", objectMapper.writeValueAsString(result));
+                // 登录/注册等接口的响应体里带 token / refreshToken，同样必须脱敏（P5-06）
+                log.info("Response     : {}", maskSensitive(objectMapper.writeValueAsString(result)));
             }
         } catch (Exception e) {
             log.warn("Response     : Unable to serialize result");
