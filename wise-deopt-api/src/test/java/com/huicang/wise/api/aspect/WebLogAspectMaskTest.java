@@ -22,8 +22,9 @@ class WebLogAspectMaskTest {
     @Test
     @DisplayName("登录请求：password 被掩码，username 原样保留")
     void masksLoginPassword() {
-        String masked = WebLogAspect.maskSensitive(
-                "{\"username\":\"admin\",\"password\":\"Wise-Admin-2026!\"}");
+        String masked =
+                WebLogAspect.maskSensitive(
+                        "{\"username\":\"admin\",\"password\":\"Wise-Admin-2026!\"}");
 
         assertFalse(masked.contains("Wise-Admin-2026!"), "明文口令不得出现在日志文本里");
         assertTrue(masked.contains("\"password\":\"***\""), "password 字段应被替换为 ***");
@@ -33,8 +34,13 @@ class WebLogAspectMaskTest {
     @Test
     @DisplayName("登录响应：token / refreshToken 均被掩码")
     void masksTokensInResponse() {
-        String masked = WebLogAspect.maskSensitive(
-                "{\"code\":\"RES-0000\",\"data\":{\"token\":\"" + JWT + "\",\"refreshToken\":\"" + JWT + "\"}}");
+        String masked =
+                WebLogAspect.maskSensitive(
+                        "{\"code\":\"RES-0000\",\"data\":{\"token\":\""
+                                + JWT
+                                + "\",\"refreshToken\":\""
+                                + JWT
+                                + "\"}}");
 
         assertFalse(masked.contains(JWT), "JWT 不得出现在日志文本里");
         assertTrue(masked.contains("\"token\":\"***\""));
@@ -54,11 +60,12 @@ class WebLogAspectMaskTest {
     @Test
     @DisplayName("字段名大小写不敏感，且覆盖 secret/signature/apiKey/pin/captcha")
     void masksByFieldNameCaseInsensitively() {
-        String masked = WebLogAspect.maskSensitive(
-                "{\"Password\":\"p1\",\"signatureSecret\":\"s1\",\"X-Signature\":\"s2\","
-                        + "\"apiKey\":\"k1\",\"pin\":\"1234\",\"captcha\":\"9876\"}");
+        String masked =
+                WebLogAspect.maskSensitive(
+                        "{\"Password\":\"p1\",\"signatureSecret\":\"s1\",\"X-Signature\":\"s2\","
+                                + "\"apiKey\":\"k1\",\"pin\":\"1234\",\"captcha\":\"9876\"}");
 
-        for (String plain : new String[]{"p1", "s1", "s2", "k1", "1234", "9876"}) {
+        for (String plain : new String[] {"p1", "s1", "s2", "k1", "1234", "9876"}) {
             assertFalse(masked.contains("\"" + plain + "\""), "值 " + plain + " 不应以明文出现");
         }
     }
@@ -75,7 +82,8 @@ class WebLogAspectMaskTest {
     @Test
     @DisplayName("幂等：对已脱敏文本再脱敏不产生变化")
     void isIdempotent() {
-        String once = WebLogAspect.maskSensitive("{\"password\":\"secret\",\"token\":\"" + JWT + "\"}");
+        String once =
+                WebLogAspect.maskSensitive("{\"password\":\"secret\",\"token\":\"" + JWT + "\"}");
         assertEquals(once, WebLogAspect.maskSensitive(once));
     }
 }
