@@ -75,7 +75,7 @@ public class AlertControllerTest extends AbstractWebMvcSliceTest {
                         post("/api/alerts")
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.eventId").value(1))
@@ -96,7 +96,7 @@ public class AlertControllerTest extends AbstractWebMvcSliceTest {
                         put("/api/alerts/{eventId}/status", eventId)
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"));
     }

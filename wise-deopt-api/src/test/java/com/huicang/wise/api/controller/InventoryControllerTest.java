@@ -71,7 +71,7 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
                         post("/api/inventories/products")
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.productId").value(1))
@@ -96,7 +96,7 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
                         put("/api/inventories/products/{productId}", productId)
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.productName").value("Updated Product"));
@@ -124,7 +124,7 @@ public class InventoryControllerTest extends AbstractWebMvcSliceTest {
         mockMvc.perform(post("/api/inventories")
                 .header("Authorization", "Bearer token")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.inventoryId").value(1));

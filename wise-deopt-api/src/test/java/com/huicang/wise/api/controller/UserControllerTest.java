@@ -76,7 +76,7 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
                         post("/api/users")
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(envelope(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
@@ -101,7 +101,7 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
                         put("/api/users/{userId}", userId)
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"))
                 .andExpect(jsonPath("$.payload.data.email").value("updated@example.com"));
@@ -170,7 +170,7 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
                         post("/api/users")
                                 .header("Authorization", "Bearer token")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(envelope(request)))
                 .andExpect(status().is4xxClientError());
     }
 }

@@ -34,14 +34,14 @@ public class MqttReportListener {
             logger.info("Received inspection report from MQTT topic: {}", topic);
             logger.debug("Report payload: {}", raw);
 
-            // 决策 8A（2026-02-27）：MQTT 也支持统一信封——有 header+payload 就取 payload.data，
-            // 否则按旧扁平报文处理并打 deprecated=true（与 HTTP 侧 GlobalRequestAdvice 的过渡期做法一致）。
+            // 决策 3（2026-02-27）：三端只支持统一信封——无信封报文直接拒绝并记录（不再走兼容分支）。
             EnvelopeUnwrapper.Unwrapped unwrapped = EnvelopeUnwrapper.unwrap(raw, objectMapper);
             if (unwrapped.legacy()) {
                 logger.warn(
-                        "收到无信封 MQTT 报文，已按兼容模式处理: deprecated=true, topic={}, bodyLength={}",
+                        "拒绝无信封 MQTT 报文（需 {header, payload} 结构，STD-CONTRACT-01）: topic={}, bodyLength={}",
                         topic,
                         raw == null ? 0 : raw.length());
+                return;
             }
 
             InspectionReportRequest request =

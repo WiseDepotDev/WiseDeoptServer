@@ -28,6 +28,10 @@ import com.huicang.wise.infrastructure.persistence.repository.oss.MinioFileRepos
 import com.huicang.wise.infrastructure.persistence.repository.user.UserAccessKeyRepository;
 import com.huicang.wise.infrastructure.security.JwtTokenProvider;
 import com.huicang.wise.infrastructure.security.RateLimiterService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.UUID;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 /**
@@ -103,4 +107,33 @@ public abstract class AbstractWebMvcSliceTest {
     @MockBean protected JwtTokenProvider jwtTokenProvider;
 
     @MockBean protected RateLimiterService rateLimiterService;
+
+    /**
+     * 把业务 DTO 包成统一信封（STD-CONTRACT-01）。
+     *
+     * <p>决策 3（三端只支持最新形状）之后，带 JSON 体的请求**必须**是 {@code {header, payload}} 结构：
+     * {@code GlobalRequestAdvice} 只把 {@code payload.data} 交给控制器，扁平体一律拒绝（400 + VAL-REQUEST-1001）。
+     * 测试统一走这个辅助方法，避免每个用例各拼一份信封。
+     *
+     * @param payload 业务请求 DTO
+     * @return 信封 JSON 文本
+     * @throws JsonProcessingException 序列化失败
+     */
+    protected String envelope(Object payload) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode header = mapper.createObjectNode();
+        header.put("request_id", "it-" + UUID.randomUUID());
+        header.put("packet_type", "TEST");
+        header.put("timestamp", 1772000000123L);
+
+        ObjectNode body = mapper.createObjectNode();
+        body.put("code", "RES-0000");
+        body.put("message", "请求");
+        body.set("data", mapper.valueToTree(payload));
+
+        ObjectNode root = mapper.createObjectNode();
+        root.set("header", header);
+        root.set("payload", body);
+        return mapper.writeValueAsString(root);
+    }
 }
