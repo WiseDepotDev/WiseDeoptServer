@@ -1,6 +1,9 @@
 /*
  * AUTO-GENERATED FROM 后端异常码对照表.csv — DO NOT EDIT
  * 生成器：WiseDeoptServer/tools/gen/gen-errorcodes.ps1（要改错误码请先改 CSV/manifest 再重新生成）
+ *
+ * 格式约束：本文件必须通过 `mvn -B spotless:check`（google-java-format），
+ * 因此枚举体首行不留空行（2026-02-27 实测：留空行会让 verify 阶段 BUILD FAILURE）。
  */
 package com.huicang.wise.common.api;
 
@@ -12,7 +15,6 @@ package com.huicang.wise.common.api;
  * @since 2026-02-27
  */
 public enum ErrorCode {
-
     SUCCESS("RES-0000", "处理成功", 200),
 
     PARAM_ERROR("VAL-0001", "请求参数不合法", 400),
