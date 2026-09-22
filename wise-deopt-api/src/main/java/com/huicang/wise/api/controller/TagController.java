@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "标签服务接口")
 @RestController
-@RequestMapping({"/api/tag", "/tag"})
+@RequestMapping("/api/tag")
 public class TagController {
 
     private final TagApplicationService tagApplicationService;

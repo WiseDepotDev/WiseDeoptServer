@@ -111,7 +111,6 @@ public class RequestSignatureFilter extends OncePerRequestFilter {
                uri.startsWith("/api/inventory/report") ||
                uri.startsWith("/api/rfid/report") ||
                uri.startsWith("/api/device") ||
-               uri.startsWith("/device") ||
                uri.startsWith("/api/inspection") ||
                uri.startsWith("/api/inventories/all");
     }

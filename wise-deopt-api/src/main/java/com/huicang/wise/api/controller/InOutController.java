@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "出入库管理接口")
 @RestController
-@RequestMapping({"/api/stock-orders", "/stock-order"})
+@RequestMapping("/api/stock-orders")
 public class InOutController {
 
     private final InOutApplicationService inOutApplicationService;

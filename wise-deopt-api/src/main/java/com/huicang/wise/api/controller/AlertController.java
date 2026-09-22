@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "告警管理接口")
 @RestController
-@RequestMapping({"/api/alerts", "/alert"})
+@RequestMapping("/api/alerts")
 public class AlertController {
 
     private final AlertApplicationService alertApplicationService;

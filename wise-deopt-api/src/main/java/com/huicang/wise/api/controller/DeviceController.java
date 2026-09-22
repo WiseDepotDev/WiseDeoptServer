@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "设备管理接口")
 @RestController
-@RequestMapping({"/api/device", "/device"})
+@RequestMapping("/api/device")
 public class DeviceController {
 
     private final DeviceApplicationService deviceApplicationService;
