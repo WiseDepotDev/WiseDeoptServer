@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "MinIO健康检查", description = "MinIO服务健康检查接口")
 @RestController
-@RequestMapping("/api/v1/health/minio")
+@RequestMapping("/api/health/minio")
 public class MinioHealthController {
 
     @Autowired(required = false)

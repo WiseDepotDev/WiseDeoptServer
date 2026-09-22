@@ -56,9 +56,10 @@ spring:
         bucket-name: ${WISE_MINIO_BUCKET:wise-depot}
         presigned-url-expiry: 3600
         max-file-size: 104857600
-    api:
-        version: v1
-        base-path: /api/v1
+    # 决策 1B（2026-02-27）：原 `api.version: v1` 与 `api.base-path: /api/v1` 已删除——
+    # 全仓没有任何代码或配置引用它们（实测 grep 0 命中），而 156/157 条路径实际都挂在 `/api` 下，
+    # 只有健康检查曾被硬编码为 `/api/v1/health/minio`（已归一为 `/api/health/minio`）。
+    # 正式前缀明确为 `/api`；若要版本化，走新增 `/api/v2` 路由，不再用"声明式前缀"。
     auth:
         admin:
             username: ${WISE_ADMIN_USERNAME:admin}
