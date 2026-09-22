@@ -41,8 +41,14 @@ const CODE_EXT = new Set([
     '.py', '.cs', '.go', '.rs', '.sh', '.ps1', '.sql', '.gradle', '.json',
 ]);
 
-/** 敏感字段名（不含 username：账号名本身不是凭据，避免噪声）。 */
-const SENSITIVE_KEY = /(password|passwd|secret-key|secretkey|secret|access-key|accesskey|api-key|apikey|private-key|privatekey|token|credential|salt|signing-key)/i;
+/** 敏感字段名（不含 username：账号名本身不是凭据，避免噪声）。
+ *
+ * 2026-02-27 补 `encryption-key`：P2-19 删除孤儿类 `DataEncryptionService` 时发现它带着
+ * `@Value("${encryption.key:<32 字节默认值>}")` —— 这是"占位符带非空默认值"（等于硬编码），
+ * 但原规则只认 password/secret/token 等词，`encryption.key` 既不匹配 SENSITIVE_KEY
+ * 也不匹配 CODE_ASSIGN，于是**漏检**。已补 `encryption[-_.]?key` 与 `jwt[-_.]?secret`。
+ */
+const SENSITIVE_KEY = /(password|passwd|secret-key|secretkey|secret|access-key|accesskey|api-key|apikey|private-key|privatekey|token|credential|salt|signing-key|encryption[-_.]?key|jwt[-_.]?secret)/i;
 
 /**
  * 规则命中豁免：路径 + 规则名 + 原因。每条豁免都必须说明原因。
@@ -130,7 +136,7 @@ const YAML_LINE = /^\s*(?:-\s*)?["']?([A-Za-z0-9_.\-]+)["']?\s*[:=]\s*(.*)$/;
 // 字段名大小写不敏感，覆盖 SECRET_KEY / access-key / token 等常见写法。
 // token 此前被排除以降低噪声；但当前规则要求"带引号的字面量"，`token = token.substring(7)`
 // 一类赋值不会命中，故可安全纳入（自测用例：String token = "9f2a-Kd81";）。
-const CODE_ASSIGN = /(?<![\w.])([A-Za-z0-9_$]*(?:password|passwd|secret[-_]?key|secretkey|secret|access[-_]?key|accesskey|api[-_]?key|apikey|private[-_]?key|privatekey|token|credential|salt)[A-Za-z0-9_$]*)\s*[:=]\s*(["'])((?:(?!\2)[^\n]){3,160}?)\2/gi;
+const CODE_ASSIGN = /(?<![\w.])([A-Za-z0-9_$]*(?:password|passwd|secret[-_]?key|secretkey|secret|access[-_]?key|accesskey|api[-_]?key|apikey|private[-_]?key|privatekey|token|credential|salt|encryption[-_.]?key|jwt[-_.]?secret)[A-Za-z0-9_$]*)\s*[:=]\s*(["'])((?:(?!\2)[^\n]){3,160}?)\2/gi;
 const INTERNAL_IP = /\b(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b/g;
 const KNOWN_SECRET = /(Key-1122|admin123|operator123|visitor123|qq18742489354|wise-depot-secret-key-for-jwt-token-generation-2024|wise-depot-secret-key-2026|wise-depot-secret)/g;
 // PIN 是纯数字凭据，会被"数字视为安全值"的通用判断放过，因此单独设规则：
