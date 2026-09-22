@@ -10,6 +10,8 @@ import com.huicang.wise.application.inspection.InspectionTaskCreateRequest;
 import com.huicang.wise.application.inspection.InspectionTaskDTO;
 import com.huicang.wise.application.inspection.InspectionTaskPageDTO;
 import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.protocol.ApiPacketType;
+import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -211,6 +213,7 @@ public class InspectionController {
     }
 
     @Operation(summary = "上报巡检结果与明细")
+    @ApiPacketType(PacketType.RFID_DATA_UPLOAD)
     @PostMapping("/report")
     public ApiResponse<InspectionResultDTO> reportResult(
             @Valid @RequestBody
