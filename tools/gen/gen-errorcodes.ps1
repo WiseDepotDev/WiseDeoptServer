@@ -99,24 +99,32 @@ if ($dupName) { throw ("清单中存在重复常量名：" + (($dupName | ForEac
 $dupCode = $resolved | Group-Object code | Where-Object { $_.Count -gt 1 }
 if ($dupCode) { throw ("清单中存在重复错误码：" + (($dupCode | ForEach-Object { $_.Name }) -join ', ')) }
 
-# ---------- 3. 渲染常量块（Java / Kotlin 语法一致）----------
-$sb = New-Object System.Text.StringBuilder
+# ---------- 3. 渲染常量块（Java / Kotlin 各一份，尾随分号写法不同）----------
+$sbJava = New-Object System.Text.StringBuilder
+$sbKotlin = New-Object System.Text.StringBuilder
 $groups = $resolved | Group-Object group | Sort-Object { [int]$_.Name }
 $groupIndex = 0
 $totalGroups = $groups.Count
 foreach ($g in $groups) {
-    if ($groupIndex -gt 0) { [void]$sb.AppendLine() }
+    if ($groupIndex -gt 0) {
+        [void]$sbJava.AppendLine()
+        [void]$sbKotlin.AppendLine()
+    }
     $groupIndex++
     $items = $g.Group
     for ($i = 0; $i -lt $items.Count; $i++) {
         $it = $items[$i]
         $isVeryLast = ($groupIndex -eq $totalGroups) -and ($i -eq $items.Count - 1)
-        $tail = if ($isVeryLast) { ');' } else { '),' }
-        [void]$sb.AppendLine(('    {0}("{1}", "{2}", {3}{4}' -f $it.name, $it.code, (Escape-Json $it.message), $it.httpStatus, $tail))
+        [void]$sbJava.AppendLine(('    {0}("{1}", "{2}", {3}){4}' -f $it.name, $it.code, (Escape-Json $it.message), $it.httpStatus, $(if ($isVeryLast) { ';' } else { ',' })))
+        # Kotlin：所有项都带尾随逗号（ktlint trailing-comma-on-declaration-site），
+        # 结束用的 `;` 由下面单独补一行。
+        [void]$sbKotlin.AppendLine(('    {0}("{1}", "{2}", {3}),' -f $it.name, $it.code, (Escape-Json $it.message), $it.httpStatus))
     }
 }
+[void]$sbKotlin.AppendLine('    ;')
 # 去掉末尾多余换行，模板尾自带换行
-$constants = $sb.ToString().TrimEnd("`r", "`n")
+$constantsJava = $sbJava.ToString().TrimEnd("`r", "`n")
+$constantsKotlin = $sbKotlin.ToString().TrimEnd("`r", "`n")
 
 # ---------- 4. 渲染设备端 C 头/.c ----------
 $cHeaderSb = New-Object System.Text.StringBuilder
@@ -233,11 +241,11 @@ foreach ($tpl in @($javaTplPath, $ktTplPath)) {
 
 $products += [pscustomobject]@{
     path    = Join-Path $Root $manifest.outputs.java
-    content = ([System.IO.File]::ReadAllText($javaTplPath)).Replace('@@CONSTANTS@@', $constants)
+    content = ([System.IO.File]::ReadAllText($javaTplPath)).Replace('@@CONSTANTS@@', $constantsJava)
 }
 $products += [pscustomobject]@{
     path    = Join-Path $Root $manifest.outputs.kotlin
-    content = ([System.IO.File]::ReadAllText($ktTplPath)).Replace('@@CONSTANTS@@', $constants)
+    content = ([System.IO.File]::ReadAllText($ktTplPath)).Replace('@@CONSTANTS@@', $constantsKotlin)
 }
 $products += [pscustomobject]@{
     path    = Join-Path $Root $manifest.outputs.cHeader

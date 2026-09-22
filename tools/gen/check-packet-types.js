@@ -129,12 +129,18 @@ for (const rule of SCAN_RULES) {
 
 if (!quiet) {
   console.log(`packet_type 一致性检查：枚举成员 ${known.size} 个，采集到跨端字面量 ${scanned} 处`);
+  // 按文件汇总（生成的大表可能有上百条，逐条打印会淹没输出）；明细只打印"有问题"的。
+  const byFile = new Map();
   for (const f of findings) {
-    const code = known.get(f.type);
-    console.log(
-      `  [${f.rule}] ${f.rel}:${f.line} ${f.type}` +
-        (f.problems.length === 0 ? `  -> ${code}` : `  ❌ ${f.problems.join('；')}`)
-    );
+    const key = `[${f.rule}] ${f.rel}`;
+    byFile.set(key, (byFile.get(key) || 0) + 1);
+  }
+  for (const [key, count] of byFile) {
+    console.log(`  ${key}: ${count} 处`);
+  }
+  const bad = findings.filter((f) => f.problems.length > 0);
+  for (const f of bad) {
+    console.log(`  ❌ ${f.rel}:${f.line} ${f.type} —— ${f.problems.join('；')}`);
   }
 }
 
