@@ -83,6 +83,9 @@ const ALLOWLIST = [
     { path: 'deploy/.env', rule: '*', reason: '本机真实中间件凭据，未入库（模板见 .env.example）' },
     { path: 'deploy/.env.local', rule: '*', reason: '本机 Docker 全栈凭据，未入库（模板见 .env.local.example）' },
     { path: 'deploy/mosquitto/passwd*', rule: '*', reason: 'MQTT 口令哈希文件，非明文凭据且本机生成' },
+    // 业务机应用栈的凭据文件：与 deploy/.env 同类（本机生成、.gitignore 排除、模板为 .env.example），
+    // 之所以要单独登记，是因为 deploy/*.env 这个忽略模式只覆盖 deploy/ 直属目录
+    { path: 'deploy/app/.env', rule: '*', reason: '业务机应用栈真实凭据，未入库（模板见 deploy/app/.env.example）' },
 ];
 
 /**
