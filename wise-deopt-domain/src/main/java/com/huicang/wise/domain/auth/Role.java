@@ -3,68 +3,39 @@ package com.huicang.wise.domain.auth;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 角色实体
- * 存储系统角色信息
+ * 角色实体 存储系统角色信息
  *
  * @author WiseDepot
  * @version 0.0.22
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "role", indexes = {
-    @Index(name = "uk_name", columnList = "name", unique = true)
-})
 public class Role {
 
-    /**
-     * 角色主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
+    /** 角色主键ID */
     private Long roleId;
 
-    /**
-     * 角色名称
-     */
+    /** 角色名称 */
     @NotBlank(message = "角色名称不能为空")
     @Size(max = 32, message = "角色名称长度不能超过32个字符")
-    @Column(name = "name", nullable = false, unique = true, length = 32)
     private String name;
 
-    /**
-     * 角色描述
-     */
+    /** 角色描述 */
     @Size(max = 255, message = "角色描述长度不能超过255个字符")
-    @Column(name = "description", length = 255)
     private String description;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 创建者ID
-     */
-    @Column(name = "create_by", nullable = false)
+    /** 创建者ID */
     private Long createBy;
 
-    /**
-     * 最后更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 最后更新时间 */
     private LocalDateTime updateTime;
 
-    /**
-     * 更新者ID
-     */
-    @Column(name = "update_by", nullable = false)
+    /** 更新者ID */
     private Long updateBy;
 
     /**

@@ -4,91 +4,51 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 用户安全信息实体
- * 存储用户的安全相关设置，如密码哈希、盐值等
+ * 用户安全信息实体 存储用户的安全相关设置，如密码哈希、盐值等
  *
  * @author WiseDepot
  * @version 0.0.24
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "user_security", indexes = {
-    @Index(name = "uk_user_id", columnList = "user_id", unique = true),
-    @Index(name = "uk_active_badge_id", columnList = "active_badge_id", unique = true),
-    @Index(name = "idx_last_login", columnList = "last_login_at")
-})
 public class UserSecurity {
 
-    /**
-     * 安全信息主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "security_id")
+    /** 安全信息主键ID */
     private Long securityId;
 
-    /**
-     * 关联的用户ID
-     */
+    /** 关联的用户ID */
     @NotNull(message = "用户ID不能为空")
-    @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
 
-    /**
-     * 密码盐值
-     */
+    /** 密码盐值 */
     @NotBlank(message = "密码盐值不能为空")
     @Size(max = 32, message = "密码盐值长度不能超过32个字符")
-    @Column(name = "salt", nullable = false, length = 32, columnDefinition = "char(32)")
     private String salt;
 
-    /**
-     * 密码哈希值
-     */
+    /** 密码哈希值 */
     @NotBlank(message = "密码哈希值不能为空")
     @Size(max = 128, message = "密码哈希值长度不能超过128个字符")
-    @Column(name = "password_hash", nullable = false, length = 128, columnDefinition = "char(128)")
     private String passwordHash;
 
-    /**
-     * 最后修改密码时间
-     */
-    @Column(name = "last_password_change_at")
+    /** 最后修改密码时间 */
     private LocalDateTime lastPasswordChangeAt;
 
-    /**
-     * 最后登录时间
-     */
-    @Column(name = "last_login_at")
+    /** 最后登录时间 */
     private LocalDateTime lastLoginAt;
 
-    /**
-     * 最后登录IP
-     */
+    /** 最后登录IP */
     @Size(max = 39, message = "最后登录IP长度不能超过39个字符")
-    @Column(name = "last_login_ip", length = 39)
     private String lastLoginIp;
 
-    /**
-     * 可用工牌ID
-     */
-    @Column(name = "active_badge_id", unique = true)
+    /** 可用工牌ID */
     private Long activeBadgeId;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     /**

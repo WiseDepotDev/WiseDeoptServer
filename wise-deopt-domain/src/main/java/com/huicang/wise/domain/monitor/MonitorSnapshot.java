@@ -5,55 +5,30 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
- * 视频截图记录实体
- * 对应monitor_snapshot表，存储视频截图信息
+ * 视频截图记录实体 对应monitor_snapshot表，存储视频截图信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "monitor_snapshot", indexes = {
-    @Index(name = "uk_snapshot_file_id", columnList = "file_id", unique = true),
-    @Index(name = "idx_snapshot_device_id", columnList = "device_id"),
-    @Index(name = "idx_snapshot_capture_time", columnList = "capture_time"),
-    @Index(name = "idx_snapshot_create_time", columnList = "create_time")
-})
 public class MonitorSnapshot {
 
-    /**
-     * 截图主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "snapshot_id")
+    /** 截图主键ID */
     private Long snapshotId;
 
-    /**
-     * 设备ID
-     */
+    /** 设备ID */
     @NotNull(message = "设备ID不能为空")
-    @Column(name = "device_id", nullable = false)
     private Long deviceId;
 
-    /**
-     * 截图文件ID（关联minio_file表）
-     */
+    /** 截图文件ID（关联minio_file表） */
     @NotNull(message = "截图文件ID不能为空")
-    @Column(name = "file_id", nullable = false, unique = true)
     private Long fileId;
 
-    /**
-     * 截图时间
-     */
+    /** 截图时间 */
     @NotNull(message = "截图时间不能为空")
-    @Column(name = "capture_time", nullable = false)
     private LocalDateTime captureTime;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
     /**

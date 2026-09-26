@@ -5,87 +5,47 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
- * 智能巡检小车设备实体
- * 对应device_inspection_robot表，存储巡检小车设备信息
+ * 智能巡检小车设备实体 对应device_inspection_robot表，存储巡检小车设备信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "device_inspection_robot", indexes = {
-    @Index(name = "idx_robot_last_task_time", columnList = "last_task_time"),
-    @Index(name = "idx_robot_create_time", columnList = "create_time")
-})
 public class DeviceInspectionRobot {
 
-    /**
-     * 设备ID（关联device_core表）
-     */
-    @Id
-    @Column(name = "device_id")
+    /** 设备ID（关联device_core表） */
     private Long deviceId;
 
-    /**
-     * 最近执行任务时间
-     */
-    @Column(name = "last_task_time")
+    /** 最近执行任务时间 */
     private LocalDateTime lastTaskTime;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新者ID
-     */
+    /** 更新者ID */
     @NotNull(message = "更新者ID不能为空")
-    @Column(name = "update_by", nullable = false)
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
-    /**
-     * 移动速度 (cm/s)
-     */
-    @Column(name = "move_speed_cm_s")
+    /** 移动速度 (cm/s) */
     private Float moveSpeedCmS;
 
-    /**
-     * 左前电机微调
-     */
-    @Column(name = "motor_trim_a")
+    /** 左前电机微调 */
     private Float motorTrimA;
 
-    /**
-     * 右前电机微调
-     */
-    @Column(name = "motor_trim_b")
+    /** 右前电机微调 */
     private Float motorTrimB;
 
-    /**
-     * 左后电机微调
-     */
-    @Column(name = "motor_trim_c")
+    /** 左后电机微调 */
     private Float motorTrimC;
 
-    /**
-     * 右后电机微调
-     */
-    @Column(name = "motor_trim_d")
+    /** 右后电机微调 */
     private Float motorTrimD;
 
     /**
@@ -99,6 +59,7 @@ public class DeviceInspectionRobot {
 
     /**
      * 获取移动速度
+     *
      * @return 移动速度
      */
     public Float getMoveSpeedCmS() {
@@ -107,6 +68,7 @@ public class DeviceInspectionRobot {
 
     /**
      * 设置移动速度
+     *
      * @param moveSpeedCmS 移动速度
      */
     public void setMoveSpeedCmS(Float moveSpeedCmS) {

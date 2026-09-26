@@ -34,6 +34,13 @@ spring:
         hibernate:
             ddl-auto: update
         show-sql: false
+        # P2-05（第四十三批）：领域实体的持久化映射已从注解搬到
+        # wise-deopt-infrastructure/src/main/resources/META-INF/orm.xml。
+        # **必须显式注册**：实测 Hibernate 6 的 MetadataSources **不会自动发现** META-INF/orm.xml
+        # （不注册时元模型里只剩仍带注解的那一个实体，33 个实体全部丢失 —— 已由
+        # DomainSchemaSnapshotTest 的"实体数必须为 34"断言当场证明）。
+        mapping-resources:
+            - META-INF/orm.xml
     data:
         redis:
             # 单一来源：wise.redis.*（RedisConfig 用 RedisProperties 构建连接工厂），

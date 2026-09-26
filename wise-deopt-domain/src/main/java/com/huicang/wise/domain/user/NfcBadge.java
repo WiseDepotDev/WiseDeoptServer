@@ -4,118 +4,67 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * NFC工牌信息实体
- * 存储NFC工牌的基本信息和状态
+ * NFC工牌信息实体 存储NFC工牌的基本信息和状态
  *
  * @author WiseDepot
  * @version 0.0.24
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "nfc_badge", indexes = {
-    @Index(name = "uk_nfc_uid", columnList = "nfc_uid", unique = true),
-    @Index(name = "uk_rfid", columnList = "rfid", unique = true),
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_create_time", columnList = "create_time")
-})
 public class NfcBadge {
 
-    /**
-     * 工牌主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "badge_id")
+    /** 工牌主键ID */
     private Long badgeId;
 
-    /**
-     * 关联的用户ID
-     */
+    /** 关联的用户ID */
     @NotNull(message = "用户ID不能为空")
-    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    /**
-     * NFC工牌芯片UID
-     */
+    /** NFC工牌芯片UID */
     @NotBlank(message = "NFC UID不能为空")
     @Size(max = 64, message = "NFC UID长度不能超过64个字符")
-    @Column(name = "nfc_uid", nullable = false, unique = true, length = 64)
     private String nfcUid;
 
-    /**
-     * RFID芯片UID
-     */
+    /** RFID芯片UID */
     @NotBlank(message = "RFID不能为空")
     @Size(max = 128, message = "RFID长度不能超过128个字符")
-    @Column(name = "rfid", nullable = false, unique = true, length = 128)
     private String rfid;
 
-    /**
-     * PIN码盐值
-     */
+    /** PIN码盐值 */
     @NotBlank(message = "PIN码盐值不能为空")
     @Size(max = 16, message = "PIN码盐值长度不能超过16个字符")
-    @Column(name = "pin_salt", nullable = false, length = 16, columnDefinition = "char(16)")
     private String pinSalt;
 
-    /**
-     * PIN码哈希值
-     */
+    /** PIN码哈希值 */
     @NotBlank(message = "PIN码哈希值不能为空")
     @Size(max = 64, message = "PIN码哈希值长度不能超过64个字符")
-    @Column(name = "pin_hash", nullable = false, length = 64, columnDefinition = "char(64)")
     private String pinHash;
 
-    /**
-     * 工牌状态：0：未激活 1：正常使用 2：挂失 3：损坏 4：停用 5：已作废
-     */
+    /** 工牌状态：0：未激活 1：正常使用 2：挂失 3：损坏 4：停用 5：已作废 */
     @NotNull(message = "工牌状态不能为空")
-    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short status = 0;
 
-    /**
-     * 状态变更原因
-     */
+    /** 状态变更原因 */
     @Size(max = 255, message = "状态变更原因长度不能超过255个字符")
-    @Column(name = "status_reason", length = 255)
     private String statusReason;
 
-    /**
-     * 最近一次成功使用时间
-     */
-    @Column(name = "last_success_use_time")
+    /** 最近一次成功使用时间 */
     private LocalDateTime lastSuccessUseTime;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
-    /**
-     * 更新者ID
-     */
+    /** 更新者ID */
     @NotNull(message = "更新者ID不能为空")
-    @Column(name = "update_by", nullable = false)
     private Long updateBy;
 
     /**

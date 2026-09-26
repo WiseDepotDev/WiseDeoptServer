@@ -1,6 +1,8 @@
 package com.huicang.wise.infrastructure.persistence;
 
 import jakarta.persistence.Entity;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,10 +12,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -55,6 +61,16 @@ class DomainSchemaSnapshotTest {
     /** 自建 orm.xml（P2-05 迁移落点）在 classpath 上的位置。 */
     private static final String ORM_XML = "META-INF/orm.xml";
 
+    /** orm.xml 里"声明一个实体"的字面量（用于推导判据，而不是硬编码实体数）。 */
+    private static final String ORM_ENTITY_DECL = "<entity class=\"";
+
+    /**
+     * 领域实体映射的**事实记录**（仅注释说明，不作判据 —— 判据见 {@link #readOrmXml()} 的推导）。
+     *
+     * <p>实测：domain 有 **35 个实体类**（{@code @Entity}），但只生成 **34 张表** —— 其中一个实体与另一实体 共用同一张表。批内一度按"表数
+     * 34"写死判据常量，于是**正确的映射被判成错误**（报"应为 34，实际 35"）。 教训：**判据不要由另一个数字反推**。
+     */
+
     /** 导出产物（相对模块目录；由门禁脚本读取并与检入快照比对）。 */
     private static final String OUTPUT = "target/p205-schema-snapshot.sql";
 
@@ -67,10 +83,10 @@ class DomainSchemaSnapshotTest {
 
     @Test
     void exportDomainSchemaSnapshot() throws Exception {
+        // 注解实体数**可以是 0**：第四十三批把 35 个实体全部搬进 orm.xml 之后，
+        // `com.huicang.wise.domain` 里已没有一个 `@Entity`。此处**不能**再把"扫不到注解实体"
+        // 当成错误（那正是迁移完成的标志）；映射是否到位由下面的"orm.xml 声明数"断言保证。
         final List<Class<?>> entities = scanDomainEntities();
-        if (entities.isEmpty()) {
-            throw new IllegalStateException("未扫描到任何领域实体，快照导出无意义：" + DOMAIN_PACKAGE);
-        }
 
         final StandardServiceRegistry registry =
                 new StandardServiceRegistryBuilder()
@@ -88,10 +104,87 @@ class DomainSchemaSnapshotTest {
             }
             final boolean hasOrmXml =
                     Thread.currentThread().getContextClassLoader().getResource(ORM_XML) != null;
+            // **必须显式 addResource**（第四十三批实测结论，与 JPA 规范的直觉相反）。
+            //
+            // 批内一度把这个调用去掉，想验证"orm.xml 能否被自动发现" —— 结果是**不能**：元模型里只剩 1 个
+            // 仍带注解的实体（DeviceCore），33 个走 orm.xml 的实体**全部丢失**，下面的断言当场报
+            // "实体数应为 34，实际 1"。所以这件事**不能靠推断**。
+            //
+            // 对应到生产：Spring Boot 侧同样需要显式注册，已配在 application.yml 的
+            // `spring.jpa.mapping-resources: META-INF/orm.xml` —— 它正是把这个 addResource 传给
+            // Spring 自己构建的那个 MetadataSources，**机制同一**（但仍属"机制同一"的论证，不是运行期实证）。
+            //
+            // 下面的"实体数必须等于 EXPECTED_ENTITIES"断言就是这个坑的护栏：任何一种映射来源失效，
+            // 它立刻失败，而不是悄悄少 33 张表。
             if (hasOrmXml) {
                 sources.addResource(ORM_XML);
             }
             final Metadata metadata = sources.buildMetadata();
+            final int mappedEntities = metadata.getEntityBindings().size();
+            /**
+             * 断言"orm.xml 里声明的实体**全部**进了元模型"。
+             *
+             * <p>为什么不用硬编码常量：批内我按"表数 34"写了 {@code EXPECTED_ENTITIES = 34}，结果实测是 **35 个实体绑定 / 34
+             * 张表**（domain 有 35 个实体类，其中一个与另一实体共用同一张表）—— 常量当场把正确的映射判成错误。**判据应当由来源推导，而不是由另一个数字反推**。
+             *
+             * <p>这里直接读 orm.xml，数它声明了几个 {@code <entity class=...>}，要求 元模型实体数 ≥ 注解实体数 + orm.xml
+             * 声明数。这样只要 orm.xml 没被加载（第四十三批实测： Hibernate 6 的 MetadataSources **不会自动发现**它），断言立刻失败。
+             */
+            final int declaredInOrmXml = countOccurrences(readOrmXml(), ORM_ENTITY_DECL);
+            final int expectedAtLeast = entities.size() + declaredInOrmXml;
+            if (mappedEntities < expectedAtLeast) {
+                throw new IllegalStateException(
+                        "元模型实体数 "
+                                + mappedEntities
+                                + " < 注解实体 "
+                                + entities.size()
+                                + " + orm.xml 声明 "
+                                + declaredInOrmXml
+                                + " = "
+                                + expectedAtLeast
+                                + "；说明映射来源失效（META-INF/orm.xml "
+                                + (hasOrmXml ? "在 classpath 上但未被加载" : "**不存在**")
+                                + "）");
+            }
+
+            /**
+             * **`dynamic-update` 必须由元模型证明，DDL 证明不了它。**
+             *
+             * <p>`@DynamicUpdate` 只影响 UPDATE 语句的生成方式（只更新变化的列），**不进入建表 DDL** —— 所以 DDL
+             * 快照门禁对它天然无感，这是一个只靠快照会**静默漏掉**的迁移风险。
+             *
+             * <p>期望值同样是**推导**出来的：注解侧带 `@DynamicUpdate` 的实体数 + orm.xml 里
+             * `<dynamic-update>true</dynamic-update>` 的声明数。批内一度只数 orm.xml 侧， 于是 `DeviceCore`（注解侧、仍带
+             * `@DynamicUpdate`）让断言误报 —— 与"判据不要由单一来源反推"同一教训。
+             */
+            int annotatedDynamicUpdate = 0;
+            for (final Class<?> entity : entities) {
+                if (entity.isAnnotationPresent(DynamicUpdate.class)) {
+                    annotatedDynamicUpdate++;
+                }
+            }
+            final int declaredDynamicUpdate =
+                    annotatedDynamicUpdate
+                            + countOccurrences(
+                                    readOrmXml(), "<dynamic-update>true</dynamic-update>");
+            int actualDynamicUpdate = 0;
+            for (final PersistentClass binding : metadata.getEntityBindings()) {
+                if (binding.useDynamicUpdate()) {
+                    actualDynamicUpdate++;
+                }
+            }
+            if (actualDynamicUpdate != declaredDynamicUpdate) {
+                throw new IllegalStateException(
+                        "期望 "
+                                + declaredDynamicUpdate
+                                + " 个实体开启动态更新（注解侧 "
+                                + annotatedDynamicUpdate
+                                + " + orm.xml 侧 "
+                                + (declaredDynamicUpdate - annotatedDynamicUpdate)
+                                + "），但元模型里实际只有 "
+                                + actualDynamicUpdate
+                                + " 个实体的 useDynamicUpdate() 为真（@DynamicUpdate 的 XML 等价物未生效）");
+            }
 
             final Path out = Paths.get(OUTPUT);
             Files.createDirectories(out.getParent());
@@ -138,6 +231,32 @@ class DomainSchemaSnapshotTest {
         }
         classes.sort((a, b) -> a.getName().compareTo(b.getName()));
         return classes;
+    }
+
+    /**
+     * 读 classpath 上的 {@code META-INF/orm.xml}（不存在时返回空串）。
+     *
+     * <p>用途是**推导判据**（而不是硬编码数字）：只要 orm.xml 没被加载进元模型，实体数就会少于 "注解实体 + orm.xml 声明"，测试立刻失败。第四十三批正是靠它发现
+     * **Hibernate 6 的 MetadataSources 不会自动发现 orm.xml**。
+     */
+    private static String readOrmXml() throws IOException {
+        try (InputStream in =
+                Thread.currentThread().getContextClassLoader().getResourceAsStream(ORM_XML)) {
+            return in == null ? "" : new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    /** 数一段文本里出现某字面量的次数（{@code Pattern.quote} 保证按字面量匹配）。 */
+    private static int countOccurrences(String text, String literal) {
+        if (text.isEmpty()) {
+            return 0;
+        }
+        final Matcher matcher = Pattern.compile(Pattern.quote(literal)).matcher(text);
+        int count = 0;
+        while (matcher.find()) {
+            count++;
+        }
+        return count;
     }
 
     /** 统一换行与行尾空白：快照只关心 DDL 内容，不关心平台差异。 */

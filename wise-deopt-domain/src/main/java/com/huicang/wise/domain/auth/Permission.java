@@ -3,78 +3,44 @@ package com.huicang.wise.domain.auth;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 权限实体
- * 存储系统权限信息
+ * 权限实体 存储系统权限信息
  *
  * @author WiseDepot
  * @version 0.0.22
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "permission", indexes = {
-    @Index(name = "uk_name", columnList = "name", unique = true),
-    @Index(name = "uk_code", columnList = "code", unique = true),
-    @Index(name = "idx_create_time", columnList = "create_time")
-})
 public class Permission {
 
-    /**
-     * 权限主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "permission_id")
+    /** 权限主键ID */
     private Long permissionId;
 
-    /**
-     * 权限名称
-     */
+    /** 权限名称 */
     @NotBlank(message = "权限名称不能为空")
     @Size(max = 64, message = "权限名称长度不能超过64个字符")
-    @Column(name = "name", nullable = false, unique = true, length = 64)
     private String name;
 
-    /**
-     * 权限编码，唯一标识权限
-     */
+    /** 权限编码，唯一标识权限 */
     @NotBlank(message = "权限编码不能为空")
     @Size(max = 128, message = "权限编码长度不能超过128个字符")
-    @Column(name = "code", nullable = false, unique = true, length = 128)
     private String code;
 
-    /**
-     * 权限描述
-     */
+    /** 权限描述 */
     @Size(max = 255, message = "权限描述长度不能超过255个字符")
-    @Column(name = "description", length = 255)
     private String description;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 创建者ID
-     */
-    @Column(name = "create_by", nullable = false)
+    /** 创建者ID */
     private Long createBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
-    /**
-     * 更新者ID
-     */
-    @Column(name = "update_by", nullable = false)
+    /** 更新者ID */
     private Long updateBy;
 
     /**

@@ -4,94 +4,52 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 用户核心信息实体
- * 存储用户的基本账户信息
+ * 用户核心信息实体 存储用户的基本账户信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "user_core", indexes = {
-    @Index(name = "uk_username", columnList = "username", unique = true),
-    @Index(name = "uk_owner_device_id", columnList = "owner_device_id", unique = true),
-    @Index(name = "idx_create_time", columnList = "create_time"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_user_type", columnList = "user_type")
-})
 public class UserCore {
 
-    /**
-     * 用户主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    /** 用户主键ID */
     private Long userId;
 
-    /**
-     * 用户名
-     */
+    /** 用户名 */
     @NotBlank(message = "用户名不能为空")
     @Size(max = 16, message = "用户名长度不能超过16个字符")
-    @Column(name = "username", nullable = false, unique = true, length = 16)
     private String username;
 
-    /**
-     * 用户类型：0：人工用户 1：设备用户
-     */
+    /** 用户类型：0：人工用户 1：设备用户 */
     @NotNull(message = "用户类型不能为空")
-    @Column(name = "user_type", nullable = false, columnDefinition = "tinyint unsigned")
     private Short userType;
 
-    /**
-     * 所属设备id
-     */
-    @Column(name = "owner_device_id", unique = true)
+    /** 所属设备id */
     private Long ownerDeviceId;
 
-    /**
-     * 用户状态：0：封禁 1：正常
-     */
+    /** 用户状态：0：封禁 1：正常 */
     @NotNull(message = "用户状态不能为空")
-    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short status = 1;
 
-    /**
-     * 是否删除：0：未删除 1：已删除
-     */
+    /** 是否删除：0：未删除 1：已删除 */
     @NotNull(message = "是否删除不能为空")
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint unsigned")
     private Short isDeleted = 0;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新者ID
-     */
+    /** 更新者ID */
     @NotNull(message = "更新者ID不能为空")
-    @Column(name = "update_by", nullable = false)
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     /**

@@ -5,61 +5,35 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
- * 库存信息实体
- * 存储产品的库存数量信息
+ * 库存信息实体 存储产品的库存数量信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "inventory", indexes = {
-    @Index(name = "uk_warehouse_product", columnList = "warehouse_id, product_id", unique = true),
-    @Index(name = "idx_update_time", columnList = "update_time")
-})
 public class Inventory {
 
-    /**
-     * 库存主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "inventory_id")
+    /** 库存主键ID */
     private Long inventoryId;
 
-    /**
-     * 仓库ID
-     */
+    /** 仓库ID */
     @NotNull(message = "仓库ID不能为空")
-    @Column(name = "warehouse_id", nullable = false)
     private Long warehouseId;
 
-    /**
-     * 产品ID
-     */
+    /** 产品ID */
     @NotNull(message = "产品ID不能为空")
-    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    /**
-     * 库存总量
-     */
+    /** 库存总量 */
     @NotNull(message = "库存总量不能为空")
-    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    /**
-     * 锁定库存数量
-     */
+    /** 锁定库存数量 */
     @NotNull(message = "锁定库存数量不能为空")
-    @Column(name = "locked_quantity", nullable = false)
     private Integer lockedQuantity;
 
-    /**
-     * 最后库存变动时间
-     */
+    /** 最后库存变动时间 */
     @NotNull(message = "最后库存变动时间不能为空")
-    @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
 
     /**

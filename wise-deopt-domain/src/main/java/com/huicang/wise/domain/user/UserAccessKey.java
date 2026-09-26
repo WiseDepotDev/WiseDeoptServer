@@ -4,94 +4,53 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 用户访问密钥实体
- * 存储用户的API访问密钥信息
+ * 用户访问密钥实体 存储用户的API访问密钥信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "user_access_key", indexes = {
-    @Index(name = "uk_access_key", columnList = "access_key", unique = true),
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_create_time", columnList = "create_time")
-})
 public class UserAccessKey {
 
-    /**
-     * 密钥主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "key_id")
+    /** 密钥主键ID */
     private Long keyId;
 
-    /**
-     * 关联的用户ID
-     */
+    /** 关联的用户ID */
     @NotNull(message = "用户ID不能为空")
-    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    /**
-     * 公钥标识
-     */
+    /** 公钥标识 */
     @NotBlank(message = "公钥标识不能为空")
     @Size(max = 32, message = "公钥标识长度不能超过32个字符")
-    @Column(name = "access_key", nullable = false, unique = true, length = 32, columnDefinition = "char(32)")
     private String accessKey;
 
-    /**
-     * 私钥密文
-     */
+    /** 私钥密文 */
     @NotBlank(message = "私钥密文不能为空")
-    @Column(name = "secret_key_enc", nullable = false, columnDefinition = "text")
     private String secretKeyEnc;
 
-    /**
-     * 状态：0：禁用 1：启用
-     */
+    /** 状态：0：禁用 1：启用 */
     @NotNull(message = "状态不能为空")
-    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short status = 1;
 
-    /**
-     * 用途说明
-     */
+    /** 用途说明 */
     @Size(max = 128, message = "用途说明长度不能超过128个字符")
-    @Column(name = "description", length = 128)
     private String description;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新者ID
-     */
+    /** 更新者ID */
     @NotNull(message = "更新者ID不能为空")
-    @Column(name = "update_by", nullable = false)
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     /**

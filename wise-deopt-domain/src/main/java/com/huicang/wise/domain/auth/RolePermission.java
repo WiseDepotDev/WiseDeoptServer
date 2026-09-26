@@ -4,51 +4,27 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * 角色权限关联实体
- * 存储角色与权限的关联关系
+ * 角色权限关联实体 存储角色与权限的关联关系
  *
  * @author WiseDepot
  * @version 0.0.22
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "role_permission", indexes = {
-    @Index(name = "idx_role_permission_role_id", columnList = "role_id"),
-    @Index(name = "idx_role_permission_permission_id", columnList = "permission_id"),
-    @Index(name = "uk_role_permission", columnList = "role_id,permission_id", unique = true)
-})
 public class RolePermission {
 
-    /**
-     * 关联主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    /** 关联主键ID */
     private Long id;
 
-    /**
-     * 角色ID
-     */
-    @Column(name = "role_id", nullable = false)
+    /** 角色ID */
     private Long roleId;
 
-    /**
-     * 权限ID
-     */
-    @Column(name = "permission_id", nullable = false)
+    /** 权限ID */
     private Long permissionId;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 创建者ID
-     */
-    @Column(name = "create_by", nullable = false)
+    /** 创建者ID */
     private Long createBy;
 
     /**

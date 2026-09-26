@@ -4,87 +4,51 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 产品信息实体
- * 存储产品的基本信息
+ * 产品信息实体 存储产品的基本信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "product", indexes = {
-    @Index(name = "idx_name", columnList = "name"),
-    @Index(name = "idx_create_time", columnList = "create_time")
-})
 public class Product {
 
-    /**
-     * 产品主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id")
+    /** 产品主键ID */
     private Long productId;
 
-    /**
-     * 产品名称
-     */
+    /** 产品名称 */
     @NotBlank(message = "产品名称不能为空")
     @Size(max = 128, message = "产品名称长度不能超过128个字符")
-    @Column(name = "name", nullable = false, length = 128)
     private String name;
 
-    /**
-     * 产品编码
-     */
+    /** 产品编码 */
     @NotBlank(message = "产品编码不能为空")
     @Size(max = 64, message = "产品编码长度不能超过64个字符")
-    @Column(name = "code", nullable = false, length = 64)
     private String code;
 
-    /**
-     * 规格型号
-     */
+    /** 规格型号 */
     @Size(max = 128, message = "规格型号长度不能超过128个字符")
-    @Column(name = "model", length = 128)
     private String model;
 
-    /**
-     * 计量单位
-     */
+    /** 计量单位 */
     @NotBlank(message = "计量单位不能为空")
     @Size(max = 8, message = "计量单位长度不能超过8个字符")
-    @Column(name = "unit", nullable = false, length = 8)
     private String unit = "个";
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新者ID
-     */
+    /** 更新者ID */
     @NotNull(message = "更新者ID不能为空")
-    @Column(name = "update_by", nullable = false)
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     /**

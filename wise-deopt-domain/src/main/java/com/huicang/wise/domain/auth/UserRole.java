@@ -1,55 +1,30 @@
 package com.huicang.wise.domain.auth;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 /**
- * 用户角色关联实体
- * 存储用户与角色的关联关系
+ * 用户角色关联实体 存储用户与角色的关联关系
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "user_role", indexes = {
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_role_id", columnList = "role_id"),
-    @Index(name = "uk_user_role", columnList = "user_id,role_id", unique = true)
-})
 public class UserRole {
 
-    /**
-     * 关联主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    /** 关联主键ID */
     private Long id;
 
-    /**
-     * 用户ID
-     */
-    @Column(name = "user_id", nullable = false)
+    /** 用户ID */
     private Long userId;
 
-    /**
-     * 角色ID
-     */
-    @Column(name = "role_id", nullable = false)
+    /** 角色ID */
     private Long roleId;
 
-    /**
-     * 创建者ID
-     */
-    @Column(name = "create_by", nullable = false)
+    /** 创建者ID */
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
     /**

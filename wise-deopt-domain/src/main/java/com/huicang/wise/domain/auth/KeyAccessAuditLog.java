@@ -3,95 +3,54 @@ package com.huicang.wise.domain.auth;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 密钥访问审计日志实体
- * 记录API密钥的访问日志，用于安全审计
+ * 密钥访问审计日志实体 记录API密钥的访问日志，用于安全审计
  *
  * @author WiseDepot
  * @version 0.0.24
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "key_access_audit_log", indexes = {
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_access_key", columnList = "access_key"),
-    @Index(name = "idx_request_time", columnList = "request_time"),
-    @Index(name = "idx_status_code", columnList = "status_code")
-})
 public class KeyAccessAuditLog {
 
-    /**
-     * 日志主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "log_id")
+    /** 日志主键ID */
     private Long logId;
 
-    /**
-     * 用户ID
-     */
-    @Column(name = "user_id", nullable = false)
+    /** 用户ID */
     private Long userId;
 
-    /**
-     * 使用的AccessKey
-     */
+    /** 使用的AccessKey */
     @NotBlank(message = "AccessKey不能为空")
     @Size(max = 32, message = "AccessKey长度不能超过32个字符")
-    @Column(name = "access_key", nullable = false, length = 32, columnDefinition = "char(32)")
     private String accessKey;
 
-    /**
-     * 请求路径
-     */
+    /** 请求路径 */
     @NotBlank(message = "请求路径不能为空")
     @Size(max = 255, message = "请求路径长度不能超过255个字符")
-    @Column(name = "request_uri", nullable = false, length = 255)
     private String requestUri;
 
-    /**
-     * 请求方法
-     */
+    /** 请求方法 */
     @NotBlank(message = "请求方法不能为空")
     @Size(max = 16, message = "请求方法长度不能超过16个字符")
-    @Column(name = "method", nullable = false, length = 16)
     private String method;
 
-    /**
-     * 来源IP地址
-     */
+    /** 来源IP地址 */
     @NotBlank(message = "IP地址不能为空")
     @Size(max = 39, message = "IP地址长度不能超过39个字符")
-    @Column(name = "ip_address", nullable = false, length = 39)
     private String ipAddress;
 
-    /**
-     * 响应状态码
-     */
-    @Column(name = "status_code", nullable = false, columnDefinition = "tinyint unsigned")
+    /** 响应状态码 */
     private Short statusCode;
 
-    /**
-     * 响应消息
-     */
+    /** 响应消息 */
     @Size(max = 255, message = "响应消息长度不能超过255个字符")
-    @Column(name = "result_message", length = 255)
     private String resultMessage;
 
-    /**
-     * 请求耗时（毫秒）
-     */
-    @Column(name = "duration_ms", nullable = false)
+    /** 请求耗时（毫秒） */
     private Integer durationMs;
 
-    /**
-     * 请求时间
-     */
-    @Column(name = "request_time", nullable = false, updatable = false)
+    /** 请求时间 */
     private LocalDateTime requestTime;
 
     /**

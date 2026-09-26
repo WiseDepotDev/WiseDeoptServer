@@ -5,62 +5,34 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
- * 录像文件记录实体
- * 对应monitor_record表，存储录像文件信息
+ * 录像文件记录实体 对应monitor_record表，存储录像文件信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "monitor_record", indexes = {
-    @Index(name = "uk_record_file_id", columnList = "file_id", unique = true),
-    @Index(name = "idx_record_device_id", columnList = "device_id"),
-    @Index(name = "idx_record_time_range", columnList = "start_time,end_time"),
-    @Index(name = "idx_record_create_time", columnList = "create_time")
-})
 public class MonitorRecord {
 
-    /**
-     * 记录主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "record_id")
+    /** 记录主键ID */
     private Long recordId;
 
-    /**
-     * 设备ID
-     */
+    /** 设备ID */
     @NotNull(message = "设备ID不能为空")
-    @Column(name = "device_id", nullable = false)
     private Long deviceId;
 
-    /**
-     * 录像文件ID（关联minio_file表）
-     */
+    /** 录像文件ID（关联minio_file表） */
     @NotNull(message = "录像文件ID不能为空")
-    @Column(name = "file_id", nullable = false, unique = true)
     private Long fileId;
 
-    /**
-     * 录像开始时间
-     */
+    /** 录像开始时间 */
     @NotNull(message = "录像开始时间不能为空")
-    @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
-    /**
-     * 录像结束时间
-     */
+    /** 录像结束时间 */
     @NotNull(message = "录像结束时间不能为空")
-    @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
     /**

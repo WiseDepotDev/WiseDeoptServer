@@ -2,77 +2,42 @@ package com.huicang.wise.domain.inout;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDateTime;
 
 /**
- * 出入库单明细实体
- * 对应stock_order_item表，存储出入库单据明细信息
+ * 出入库单明细实体 对应stock_order_item表，存储出入库单据明细信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "stock_order_item", indexes = {
-    @Index(name = "idx_order_id", columnList = "order_id"),
-    @Index(name = "idx_tag_id", columnList = "tag_id"),
-    @Index(name = "idx_product_id", columnList = "product_id"),
-    @Index(name = "idx_create_time", columnList = "create_time")
-})
 public class StockOrderItem {
 
-    /**
-     * 出入库单明细主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "item_id")
+    /** 出入库单明细主键ID */
     private Long itemId;
 
-    /**
-     * 关联的出入库单ID
-     */
+    /** 关联的出入库单ID */
     @NotNull(message = "出入库单ID不能为空")
-    @Column(name = "order_id", nullable = false)
     private Long orderId;
 
-    /**
-     * 标签ID
-     */
-    @Column(name = "tag_id", nullable = true)
+    /** 标签ID */
     private Long tagId;
 
-    /**
-     * 产品ID
-     */
+    /** 产品ID */
     @NotNull(message = "产品ID不能为空")
-    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    /**
-     * 数量
-     */
-    @Column(name = "quantity", nullable = true)
+    /** 数量 */
     private Integer quantity;
 
-    /**
-     * 库位编码
-     */
-    @Column(name = "location_code", nullable = true)
+    /** 库位编码 */
     private String locationCode;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
     /**

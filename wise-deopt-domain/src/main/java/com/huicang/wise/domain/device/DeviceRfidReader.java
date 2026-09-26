@@ -7,65 +7,37 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * RFID读写器设备实体
- * 对应device_rfid_reader表，存储RFID读写器设备信息
+ * RFID读写器设备实体 对应device_rfid_reader表，存储RFID读写器设备信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "device_rfid_reader", indexes = {
-    @Index(name = "idx_rfid_reader_location", columnList = "location"),
-    @Index(name = "idx_rfid_reader_create_time", columnList = "create_time")
-})
 public class DeviceRfidReader {
 
-    /**
-     * 设备ID（关联device_core表）
-     */
-    @Id
-    @Column(name = "device_id")
+    /** 设备ID（关联device_core表） */
     private Long deviceId;
 
-    /**
-     * 安装位置
-     */
+    /** 安装位置 */
     @NotBlank(message = "安装位置不能为空")
     @Size(max = 100, message = "安装位置长度不能超过100个字符")
-    @Column(name = "location", nullable = false, length = 100)
     private String location;
 
-    /**
-     * 读取距离（单位：厘米）
-     */
-    @Column(name = "read_range")
+    /** 读取距离（单位：厘米） */
     private Integer readRange;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新者ID
-     */
+    /** 更新者ID */
     @NotNull(message = "更新者ID不能为空")
-    @Column(name = "update_by", nullable = false)
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     /**

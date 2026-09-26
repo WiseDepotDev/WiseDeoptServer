@@ -2,141 +2,72 @@ package com.huicang.wise.domain.inspection;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDateTime;
 
 /**
- * 巡检任务实体
- * 对应inspection_task表，存储巡检任务执行信息
+ * 巡检任务实体 对应inspection_task表，存储巡检任务执行信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "inspection_task", indexes = {
-    @Index(name = "idx_plan_id", columnList = "plan_id"),
-    @Index(name = "idx_device_id", columnList = "device_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_create_time", columnList = "create_time"),
-    @Index(name = "idx_start_time", columnList = "start_time"),
-    @Index(name = "idx_task_type", columnList = "task_type")
-})
 public class InspectionTask {
 
-    /**
-     * 巡检任务主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "task_id")
+    /** 巡检任务主键ID */
     private Long taskId;
 
-    /**
-     * 关联的巡检计划ID
-     */
-    @Column(name = "plan_id")
+    /** 关联的巡检计划ID */
     private Long planId;
 
-    /**
-     * 仓库ID
-     */
-    @Column(name = "warehouse_id")
+    /** 仓库ID */
     private Long warehouseId;
 
-    /**
-     * 巡检任务类型
-     * 0：定时任务 1：手动任务
-     */
+    /** 巡检任务类型 0：定时任务 1：手动任务 */
     @NotNull(message = "任务类型不能为空")
-    @Column(name = "task_type", nullable = false, columnDefinition = "tinyint unsigned")
     private Short taskType;
 
-    /**
-     * 执行巡检设备ID
-     */
+    /** 执行巡检设备ID */
     @NotNull(message = "执行巡检设备ID不能为空")
-    @Column(name = "device_id", nullable = false)
     private Long deviceId;
 
-    /**
-     * 巡检目标距离（cm）
-     */
-    @Column(name = "target_distance", nullable = true)
+    /** 巡检目标距离（cm） */
     private Float targetDistance;
 
-    /**
-     * 任务状态
-     * 0：待执行 1：执行中 2：已完成 3：异常终止
-     */
+    /** 任务状态 0：待执行 1：执行中 2：已完成 3：异常终止 */
     @NotNull(message = "任务状态不能为空")
-    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short status = 0;
 
-    /**
-     * 任务开始时间
-     */
-    @Column(name = "start_time")
+    /** 任务开始时间 */
     private LocalDateTime startTime;
 
-    /**
-     * 任务结束时间
-     */
-    @Column(name = "end_time")
+    /** 任务结束时间 */
     private LocalDateTime endTime;
 
-    /**
-     * 任务进度 (0-100)
-     */
-    @Column(name = "progress")
+    /** 任务进度 (0-100) */
     private Integer progress = 0;
 
-    /**
-     * 总项数
-     */
-    @Column(name = "total_items")
+    /** 总项数 */
     private Integer totalItems = 0;
 
-    /**
-     * 已盘项数
-     */
-    @Column(name = "inspected_items")
+    /** 已盘项数 */
     private Integer inspectedItems = 0;
 
-    /**
-     * 正常项数
-     */
-    @Column(name = "normal_items")
+    /** 正常项数 */
     private Integer normalItems = 0;
 
-    /**
-     * 异常项数
-     */
-    @Column(name = "abnormal_items")
+    /** 异常项数 */
     private Integer abnormalItems = 0;
 
-    /**
-     * 盘亏项数
-     */
-    @Column(name = "missing_items")
+    /** 盘亏项数 */
     private Integer missingItems = 0;
 
-    /**
-     * 盘盈项数
-     */
-    @Column(name = "extra_items")
+    /** 盘盈项数 */
     private Integer extraItems = 0;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     /**
@@ -303,6 +234,7 @@ public class InspectionTask {
 
     /**
      * 获取任务进度
+     *
      * @return 进度 (0-100)
      */
     public Integer getProgress() {
@@ -311,29 +243,60 @@ public class InspectionTask {
 
     /**
      * 设置任务进度
+     *
      * @param progress 进度
      */
     public void setProgress(Integer progress) {
         this.progress = progress;
     }
 
-    public Integer getTotalItems() { return totalItems; }
-    public void setTotalItems(Integer totalItems) { this.totalItems = totalItems; }
+    public Integer getTotalItems() {
+        return totalItems;
+    }
 
-    public Integer getInspectedItems() { return inspectedItems; }
-    public void setInspectedItems(Integer inspectedItems) { this.inspectedItems = inspectedItems; }
+    public void setTotalItems(Integer totalItems) {
+        this.totalItems = totalItems;
+    }
 
-    public Integer getNormalItems() { return normalItems; }
-    public void setNormalItems(Integer normalItems) { this.normalItems = normalItems; }
+    public Integer getInspectedItems() {
+        return inspectedItems;
+    }
 
-    public Integer getAbnormalItems() { return abnormalItems; }
-    public void setAbnormalItems(Integer abnormalItems) { this.abnormalItems = abnormalItems; }
+    public void setInspectedItems(Integer inspectedItems) {
+        this.inspectedItems = inspectedItems;
+    }
 
-    public Integer getMissingItems() { return missingItems; }
-    public void setMissingItems(Integer missingItems) { this.missingItems = missingItems; }
+    public Integer getNormalItems() {
+        return normalItems;
+    }
 
-    public Integer getExtraItems() { return extraItems; }
-    public void setExtraItems(Integer extraItems) { this.extraItems = extraItems; }
+    public void setNormalItems(Integer normalItems) {
+        this.normalItems = normalItems;
+    }
+
+    public Integer getAbnormalItems() {
+        return abnormalItems;
+    }
+
+    public void setAbnormalItems(Integer abnormalItems) {
+        this.abnormalItems = abnormalItems;
+    }
+
+    public Integer getMissingItems() {
+        return missingItems;
+    }
+
+    public void setMissingItems(Integer missingItems) {
+        this.missingItems = missingItems;
+    }
+
+    public Integer getExtraItems() {
+        return extraItems;
+    }
+
+    public void setExtraItems(Integer extraItems) {
+        this.extraItems = extraItems;
+    }
 
     /**
      * 获取创建时间

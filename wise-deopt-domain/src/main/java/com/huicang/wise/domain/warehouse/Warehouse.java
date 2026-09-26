@@ -11,36 +11,22 @@ import java.time.LocalDateTime;
  * @version 0.0.1
  * @since 2026-03-14
  */
-@Entity
-@Table(name = "warehouse", indexes = {
-    @Index(name = "idx_warehouse_name", columnList = "warehouse_name"),
-    @Index(name = "idx_warehouse_code", columnList = "warehouse_code", unique = true)
-})
 public class Warehouse {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "warehouse_id")
     private Long warehouseId;
 
     @NotNull(message = "仓库名称不能为空")
-    @Column(name = "warehouse_name", nullable = false)
     private String warehouseName;
 
     @NotNull(message = "仓库编码不能为空")
-    @Column(name = "warehouse_code", nullable = false)
     private String warehouseCode;
 
-    @Column(name = "description")
     private String description;
 
-    @Column(name = "address")
     private String address;
 
-    @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
 
-    @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
 
     public Long getWarehouseId() {

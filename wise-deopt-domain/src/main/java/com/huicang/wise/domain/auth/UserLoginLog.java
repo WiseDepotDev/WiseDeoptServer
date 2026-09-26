@@ -4,82 +4,46 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 用户登录日志实体
- * 记录用户的登录历史，用于安全审计
+ * 用户登录日志实体 记录用户的登录历史，用于安全审计
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "user_login_log", indexes = {
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_login_time", columnList = "login_time"),
-    @Index(name = "idx_success", columnList = "success"),
-    @Index(name = "idx_login_type", columnList = "login_type"),
-    @Index(name = "idx_ip_address", columnList = "ip_address")
-})
 public class UserLoginLog {
 
-    /**
-     * 日志主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "log_id")
+    /** 日志主键ID */
     private Long logId;
 
-    /**
-     * 用户ID
-     */
-    @Column(name = "user_id")
+    /** 用户ID */
     private Long userId;
 
-    /**
-     * 登录IP
-     */
+    /** 登录IP */
     @NotBlank(message = "登录IP不能为空")
     @Size(max = 39, message = "登录IP长度不能超过39个字符")
-    @Column(name = "ip_address", nullable = false, length = 39)
     private String ipAddress;
 
-    /**
-     * 用户代理
-     */
+    /** 用户代理 */
     @NotBlank(message = "用户代理不能为空")
-    @Column(name = "user_agent", nullable = false, columnDefinition = "text")
     private String userAgent;
 
-    /**
-     * 登录方式：0：用户名+密码 1：邮箱+密码 2：邮箱+验证码 3：NFC工牌+PIN码
-     */
+    /** 登录方式：0：用户名+密码 1：邮箱+密码 2：邮箱+验证码 3：NFC工牌+PIN码 */
     @NotNull(message = "登录方式不能为空")
-    @Column(name = "login_type", nullable = false, columnDefinition = "tinyint unsigned")
     private Short loginType;
 
-    /**
-     * 登录结果：0：失败 1：成功
-     */
+    /** 登录结果：0：失败 1：成功 */
     @NotNull(message = "登录结果不能为空")
-    @Column(name = "success", nullable = false, columnDefinition = "tinyint unsigned")
     private Short success;
 
-    /**
-     * 登录失败原因
-     */
+    /** 登录失败原因 */
     @Size(max = 255, message = "登录失败原因长度不能超过255个字符")
-    @Column(name = "failure_reason", length = 255)
     private String failureReason;
 
-    /**
-     * 登录时间
-     */
+    /** 登录时间 */
     @NotNull(message = "登录时间不能为空")
-    @Column(name = "login_time", nullable = false)
     private LocalDateTime loginTime;
 
     /**

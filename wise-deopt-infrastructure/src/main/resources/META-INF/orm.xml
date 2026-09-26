@@ -47,4 +47,1306 @@
         </attributes>
     </entity>
 
+    <entity class="com.huicang.wise.domain.alert.AlertEvent" access="FIELD">
+        <table name="alert_event">
+            <index name="idx_source_module" column-list="source_module"/>
+            <index name="idx_level" column-list="level"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_is_active" column-list="is_active"/>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="idx_resolved_time" column-list="resolved_time"/>
+            <index name="resolved_by" column-list="resolved_by"/>
+        </table>
+        <attributes>
+            <id name="eventId">
+                <column name="event_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="sourceModule">
+                <column name="source_module" nullable="false" length="50"/>
+            </basic>
+            <basic name="level">
+                <column name="level" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="title">
+                <column name="title" nullable="false" length="100"/>
+            </basic>
+            <basic name="message">
+                <column name="message" nullable="false" length="255"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="isActive">
+                <column name="is_active" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false"/>
+            </basic>
+            <basic name="resolvedTime">
+                <column name="resolved_time"/>
+            </basic>
+            <basic name="resolvedBy">
+                <column name="resolved_by"/>
+            </basic>
+            <basic name="extendedData">
+                <column name="extended_data" column-definition="json"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.alert.AlertHandleLog" access="FIELD">
+        <table name="alert_handle_log">
+            <index name="idx_event_id" column-list="event_id"/>
+            <index name="idx_handler_id" column-list="handler_id"/>
+            <index name="idx_handle_time" column-list="handle_time"/>
+            <index name="idx_goal_status" column-list="goal_status"/>
+        </table>
+        <attributes>
+            <id name="logId">
+                <column name="log_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="eventId">
+                <column name="event_id" nullable="false"/>
+            </basic>
+            <basic name="handlerId">
+                <column name="handler_id" nullable="false"/>
+            </basic>
+            <basic name="goalStatus">
+                <column name="goal_status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="remark">
+                <column name="remark" length="255"/>
+            </basic>
+            <basic name="handleTime">
+                <column name="handle_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.auth.KeyAccessAuditLog" access="FIELD">
+        <table name="key_access_audit_log">
+            <index name="idx_user_id" column-list="user_id"/>
+            <index name="idx_access_key" column-list="access_key"/>
+            <index name="idx_request_time" column-list="request_time"/>
+            <index name="idx_status_code" column-list="status_code"/>
+        </table>
+        <attributes>
+            <id name="logId">
+                <column name="log_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="userId">
+                <column name="user_id" nullable="false"/>
+            </basic>
+            <basic name="accessKey">
+                <column name="access_key" nullable="false" length="32" column-definition="char(32)"/>
+            </basic>
+            <basic name="requestUri">
+                <column name="request_uri" nullable="false" length="255"/>
+            </basic>
+            <basic name="method">
+                <column name="method" nullable="false" length="16"/>
+            </basic>
+            <basic name="ipAddress">
+                <column name="ip_address" nullable="false" length="39"/>
+            </basic>
+            <basic name="statusCode">
+                <column name="status_code" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="resultMessage">
+                <column name="result_message" length="255"/>
+            </basic>
+            <basic name="durationMs">
+                <column name="duration_ms" nullable="false"/>
+            </basic>
+            <basic name="requestTime">
+                <column name="request_time" nullable="false" updatable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.auth.Permission" access="FIELD">
+        <table name="permission">
+            <unique-constraint name="uk_name">
+                <column-name>name</column-name>
+            </unique-constraint>
+            <unique-constraint name="uk_code">
+                <column-name>code</column-name>
+            </unique-constraint>
+            <index name="idx_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="permissionId">
+                <column name="permission_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="name">
+                <column name="name" nullable="false" unique="true" length="64"/>
+            </basic>
+            <basic name="code">
+                <column name="code" nullable="false" unique="true" length="128"/>
+            </basic>
+            <basic name="description">
+                <column name="description" length="255"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.auth.Role" access="FIELD">
+        <table name="role">
+            <unique-constraint name="uk_name">
+                <column-name>name</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <id name="roleId">
+                <column name="role_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="name">
+                <column name="name" nullable="false" unique="true" length="32"/>
+            </basic>
+            <basic name="description">
+                <column name="description" length="255"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.auth.RolePermission" access="FIELD">
+        <table name="role_permission">
+            <index name="idx_role_permission_role_id" column-list="role_id"/>
+            <index name="idx_role_permission_permission_id" column-list="permission_id"/>
+            <unique-constraint name="uk_role_permission">
+                <column-name>role_id</column-name>
+                <column-name>permission_id</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="roleId">
+                <column name="role_id" nullable="false"/>
+            </basic>
+            <basic name="permissionId">
+                <column name="permission_id" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.auth.UserLoginLog" access="FIELD">
+        <table name="user_login_log">
+            <index name="idx_user_id" column-list="user_id"/>
+            <index name="idx_login_time" column-list="login_time"/>
+            <index name="idx_success" column-list="success"/>
+            <index name="idx_login_type" column-list="login_type"/>
+            <index name="idx_ip_address" column-list="ip_address"/>
+        </table>
+        <attributes>
+            <id name="logId">
+                <column name="log_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="userId">
+                <column name="user_id"/>
+            </basic>
+            <basic name="ipAddress">
+                <column name="ip_address" nullable="false" length="39"/>
+            </basic>
+            <basic name="userAgent">
+                <column name="user_agent" nullable="false" column-definition="text"/>
+            </basic>
+            <basic name="loginType">
+                <column name="login_type" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="success">
+                <column name="success" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="failureReason">
+                <column name="failure_reason" length="255"/>
+            </basic>
+            <basic name="loginTime">
+                <column name="login_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.auth.UserRole" access="FIELD">
+        <table name="user_role">
+            <index name="idx_user_id" column-list="user_id"/>
+            <index name="idx_role_id" column-list="role_id"/>
+            <unique-constraint name="uk_user_role">
+                <column-name>user_id</column-name>
+                <column-name>role_id</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="userId">
+                <column name="user_id" nullable="false"/>
+            </basic>
+            <basic name="roleId">
+                <column name="role_id" nullable="false"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.device.DeviceCamera" access="FIELD">
+        <table name="device_camera">
+            <unique-constraint name="uk_camera_stream_url">
+                <column-name>stream_url</column-name>
+            </unique-constraint>
+            <index name="idx_camera_location" column-list="location"/>
+            <index name="idx_camera_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="deviceId">
+                <column name="device_id"/>
+            </id>
+            <basic name="streamUrl">
+                <column name="stream_url" nullable="false" unique="true" length="255"/>
+            </basic>
+            <basic name="location">
+                <column name="location" nullable="false" length="100"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.device.DeviceInspectionRobot" access="FIELD">
+        <table name="device_inspection_robot">
+            <index name="idx_robot_last_task_time" column-list="last_task_time"/>
+            <index name="idx_robot_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="deviceId">
+                <column name="device_id"/>
+            </id>
+            <basic name="lastTaskTime">
+                <column name="last_task_time"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+            <basic name="moveSpeedCmS">
+                <column name="move_speed_cm_s"/>
+            </basic>
+            <basic name="motorTrimA">
+                <column name="motor_trim_a"/>
+            </basic>
+            <basic name="motorTrimB">
+                <column name="motor_trim_b"/>
+            </basic>
+            <basic name="motorTrimC">
+                <column name="motor_trim_c"/>
+            </basic>
+            <basic name="motorTrimD">
+                <column name="motor_trim_d"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.device.DeviceRfidReader" access="FIELD">
+        <table name="device_rfid_reader">
+            <index name="idx_rfid_reader_location" column-list="location"/>
+            <index name="idx_rfid_reader_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="deviceId">
+                <column name="device_id"/>
+            </id>
+            <basic name="location">
+                <column name="location" nullable="false" length="100"/>
+            </basic>
+            <basic name="readRange">
+                <column name="read_range"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inout.StockOrder" access="FIELD">
+        <table name="stock_order">
+            <unique-constraint name="uk_order_no">
+                <column-name>order_no</column-name>
+            </unique-constraint>
+            <index name="idx_warehouse_id" column-list="warehouse_id"/>
+            <index name="idx_type" column-list="type"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="idx_submit_time" column-list="submit_time"/>
+            <index name="create_by" column-list="create_by"/>
+            <index name="update_by" column-list="update_by"/>
+            <index name="submit_by" column-list="submit_by"/>
+        </table>
+        <attributes>
+            <id name="orderId">
+                <column name="order_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="orderNo">
+                <column name="order_no" nullable="false" length="64"/>
+            </basic>
+            <basic name="warehouseId">
+                <column name="warehouse_id" nullable="false"/>
+            </basic>
+            <basic name="type">
+                <column name="type" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="totalItems">
+                <column name="total_items" nullable="false"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="remark">
+                <column name="remark" length="255"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+            <basic name="submitTime">
+                <column name="submit_time"/>
+            </basic>
+            <basic name="submitBy">
+                <column name="submit_by"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inout.StockOrderDetail" access="FIELD">
+        <table name="stock_order_item">
+            <index name="idx_order_id" column-list="order_id"/>
+            <index name="idx_tag_id" column-list="tag_id"/>
+            <index name="idx_product_id" column-list="product_id"/>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="create_by" column-list="create_by"/>
+        </table>
+        <attributes>
+            <id name="itemId">
+                <column name="item_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="orderId">
+                <column name="order_id" nullable="false"/>
+            </basic>
+            <basic name="tagId">
+                <column name="tag_id"/>
+            </basic>
+            <basic name="quantity">
+                <column name="quantity"/>
+            </basic>
+            <basic name="locationCode">
+                <column name="location_code"/>
+            </basic>
+            <basic name="productId">
+                <column name="product_id" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inout.StockOrderItem" access="FIELD">
+        <table name="stock_order_item">
+            <index name="idx_order_id" column-list="order_id"/>
+            <index name="idx_tag_id" column-list="tag_id"/>
+            <index name="idx_product_id" column-list="product_id"/>
+            <index name="idx_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="itemId">
+                <column name="item_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="orderId">
+                <column name="order_id" nullable="false"/>
+            </basic>
+            <basic name="tagId">
+                <column name="tag_id"/>
+            </basic>
+            <basic name="productId">
+                <column name="product_id" nullable="false"/>
+            </basic>
+            <basic name="quantity">
+                <column name="quantity"/>
+            </basic>
+            <basic name="locationCode">
+                <column name="location_code"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inspection.InspectionDetail" access="FIELD">
+        <table name="inspection_detail">
+            <index name="idx_task_id" column-list="task_id"/>
+            <index name="idx_tag_id" column-list="tag_id"/>
+            <index name="idx_scan_time" column-list="scan_time"/>
+            <index name="idx_matched" column-list="matched"/>
+            <index name="idx_rfid" column-list="rfid"/>
+        </table>
+        <attributes>
+            <id name="detailId">
+                <column name="detail_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="taskId">
+                <column name="task_id" nullable="false"/>
+            </basic>
+            <basic name="tagId">
+                <column name="tag_id"/>
+            </basic>
+            <basic name="rfid">
+                <column name="rfid" nullable="false" length="128"/>
+            </basic>
+            <basic name="scanTime">
+                <column name="scan_time" nullable="false"/>
+            </basic>
+            <basic name="matched">
+                <column name="matched" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="status">
+                <column name="status" length="32"/>
+            </basic>
+            <basic name="tid">
+                <column name="tid" length="128"/>
+            </basic>
+            <basic name="remark">
+                <column name="remark" length="255"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inspection.InspectionDifference" access="FIELD">
+        <table name="inspection_difference">
+            <index name="idx_task_id" column-list="task_id"/>
+        </table>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="taskId">
+                <column name="task_id" nullable="false"/>
+            </basic>
+            <basic name="productId">
+                <column name="product_id" nullable="false"/>
+            </basic>
+            <basic name="productName">
+                <column name="product_name"/>
+            </basic>
+            <basic name="productCode">
+                <column name="product_code"/>
+            </basic>
+            <basic name="expectedQuantity">
+                <column name="expected_quantity"/>
+            </basic>
+            <basic name="scannedQuantity">
+                <column name="scanned_quantity"/>
+            </basic>
+            <basic name="difference">
+                <column name="difference"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inspection.InspectionPlan" access="FIELD">
+        <table name="inspection_plan">
+            <unique-constraint name="uk_plan_name">
+                <column-name>plan_name</column-name>
+            </unique-constraint>
+            <index name="idx_device_id" column-list="device_id"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="idx_last_execute_time" column-list="last_execute_time"/>
+        </table>
+        <attributes>
+            <id name="planId">
+                <column name="plan_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="planName">
+                <column name="plan_name" nullable="false" unique="true" length="100"/>
+            </basic>
+            <basic name="deviceId">
+                <column name="device_id" nullable="false"/>
+            </basic>
+            <basic name="cronExpression">
+                <column name="cron_expression" nullable="false" length="100"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="lastExecuteTime">
+                <column name="last_execute_time"/>
+            </basic>
+            <basic name="nettExecuteTime">
+                <column name="nett_execute_time"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inspection.InspectionResultSummary" access="FIELD">
+        <table name="inspection_result_summary">
+            <unique-constraint name="uk_task_id">
+                <column-name>task_id</column-name>
+            </unique-constraint>
+            <index name="idx_compare_time" column-list="compare_time"/>
+            <index name="idx_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="resultId">
+                <column name="result_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="taskId">
+                <column name="task_id" nullable="false" unique="true"/>
+            </basic>
+            <basic name="totalExpected">
+                <column name="total_expected" nullable="false"/>
+            </basic>
+            <basic name="totalScanned">
+                <column name="total_scanned" nullable="false"/>
+            </basic>
+            <basic name="matchedCount">
+                <column name="matched_count" nullable="false"/>
+            </basic>
+            <basic name="missingCount">
+                <column name="missing_count" nullable="false"/>
+            </basic>
+            <basic name="extraCount">
+                <column name="extra_count" nullable="false"/>
+            </basic>
+            <basic name="compareTime">
+                <column name="compare_time" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inspection.InspectionTask" access="FIELD">
+        <table name="inspection_task">
+            <index name="idx_plan_id" column-list="plan_id"/>
+            <index name="idx_device_id" column-list="device_id"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="idx_start_time" column-list="start_time"/>
+            <index name="idx_task_type" column-list="task_type"/>
+        </table>
+        <attributes>
+            <id name="taskId">
+                <column name="task_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="planId">
+                <column name="plan_id"/>
+            </basic>
+            <basic name="warehouseId">
+                <column name="warehouse_id"/>
+            </basic>
+            <basic name="taskType">
+                <column name="task_type" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="deviceId">
+                <column name="device_id" nullable="false"/>
+            </basic>
+            <basic name="targetDistance">
+                <column name="target_distance"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="startTime">
+                <column name="start_time"/>
+            </basic>
+            <basic name="endTime">
+                <column name="end_time"/>
+            </basic>
+            <basic name="progress">
+                <column name="progress"/>
+            </basic>
+            <basic name="totalItems">
+                <column name="total_items"/>
+            </basic>
+            <basic name="inspectedItems">
+                <column name="inspected_items"/>
+            </basic>
+            <basic name="normalItems">
+                <column name="normal_items"/>
+            </basic>
+            <basic name="abnormalItems">
+                <column name="abnormal_items"/>
+            </basic>
+            <basic name="missingItems">
+                <column name="missing_items"/>
+            </basic>
+            <basic name="extraItems">
+                <column name="extra_items"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inventory.Inventory" access="FIELD">
+        <table name="inventory">
+            <unique-constraint name="uk_warehouse_product">
+                <column-name>warehouse_id</column-name>
+                <column-name>product_id</column-name>
+            </unique-constraint>
+            <index name="idx_update_time" column-list="update_time"/>
+        </table>
+        <attributes>
+            <id name="inventoryId">
+                <column name="inventory_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="warehouseId">
+                <column name="warehouse_id" nullable="false"/>
+            </basic>
+            <basic name="productId">
+                <column name="product_id" nullable="false"/>
+            </basic>
+            <basic name="quantity">
+                <column name="quantity" nullable="false"/>
+            </basic>
+            <basic name="lockedQuantity">
+                <column name="locked_quantity" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.inventory.Product" access="FIELD">
+        <table name="product">
+            <index name="idx_name" column-list="name"/>
+            <index name="idx_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="productId">
+                <column name="product_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="name">
+                <column name="name" nullable="false" length="128"/>
+            </basic>
+            <basic name="code">
+                <column name="code" nullable="false" length="64"/>
+            </basic>
+            <basic name="model">
+                <column name="model" length="128"/>
+            </basic>
+            <basic name="unit">
+                <column name="unit" nullable="false" length="8"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.monitor.MonitorRecord" access="FIELD">
+        <table name="monitor_record">
+            <unique-constraint name="uk_record_file_id">
+                <column-name>file_id</column-name>
+            </unique-constraint>
+            <index name="idx_record_device_id" column-list="device_id"/>
+            <index name="idx_record_time_range" column-list="start_time,end_time"/>
+            <index name="idx_record_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="recordId">
+                <column name="record_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="deviceId">
+                <column name="device_id" nullable="false"/>
+            </basic>
+            <basic name="fileId">
+                <column name="file_id" nullable="false" unique="true"/>
+            </basic>
+            <basic name="startTime">
+                <column name="start_time" nullable="false"/>
+            </basic>
+            <basic name="endTime">
+                <column name="end_time" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.monitor.MonitorSnapshot" access="FIELD">
+        <table name="monitor_snapshot">
+            <unique-constraint name="uk_snapshot_file_id">
+                <column-name>file_id</column-name>
+            </unique-constraint>
+            <index name="idx_snapshot_device_id" column-list="device_id"/>
+            <index name="idx_snapshot_capture_time" column-list="capture_time"/>
+            <index name="idx_snapshot_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="snapshotId">
+                <column name="snapshot_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="deviceId">
+                <column name="device_id" nullable="false"/>
+            </basic>
+            <basic name="fileId">
+                <column name="file_id" nullable="false" unique="true"/>
+            </basic>
+            <basic name="captureTime">
+                <column name="capture_time" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.oss.MinioFile" access="FIELD">
+        <table name="minio_file">
+            <unique-constraint name="uk_bucket_path">
+                <column-name>bucket_name</column-name>
+                <column-name>file_path</column-name>
+            </unique-constraint>
+            <index name="idx_upload_time" column-list="upload_time"/>
+            <index name="idx_upload_by" column-list="upload_by"/>
+        </table>
+        <attributes>
+            <id name="fileId">
+                <column name="file_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="bucketName">
+                <column name="bucket_name" nullable="false" length="64"/>
+            </basic>
+            <basic name="filePath">
+                <column name="file_path" nullable="false" length="255"/>
+            </basic>
+            <basic name="fileSize">
+                <column name="file_size" nullable="false"/>
+            </basic>
+            <basic name="uploadTime">
+                <column name="upload_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="uploadBy">
+                <column name="upload_by" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.report.ReportExportRecord" access="FIELD">
+        <table name="report_export_record">
+            <index name="idx_task_id" column-list="task_id"/>
+            <index name="idx_export_user_id" column-list="export_user_id"/>
+            <index name="idx_export_time" column-list="export_time"/>
+            <index name="idx_export_format" column-list="export_format"/>
+            <unique-constraint name="uk_export_file_id">
+                <column-name>export_file_id</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <id name="recordId">
+                <column name="record_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="taskId">
+                <column name="task_id" nullable="false"/>
+            </basic>
+            <basic name="exportUserId">
+                <column name="export_user_id" nullable="false"/>
+            </basic>
+            <basic name="exportFormat">
+                <column name="export_format" nullable="false" length="10"/>
+            </basic>
+            <basic name="exportTime">
+                <column name="export_time" nullable="false"/>
+            </basic>
+            <basic name="exportFileId">
+                <column name="export_file_id" nullable="false"/>
+            </basic>
+            <basic name="remark">
+                <column name="remark" length="255"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.report.ReportTask" access="FIELD">
+        <table name="report_task">
+            <unique-constraint name="uk_report_name">
+                <column-name>report_name</column-name>
+            </unique-constraint>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="idx_time_range" column-list="time_range_start,time_range_end"/>
+            <index name="idx_generate_time" column-list="generate_time"/>
+            <index name="generate_file_id" column-list="generate_file_id"/>
+        </table>
+        <attributes>
+            <id name="taskId">
+                <column name="task_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="reportName">
+                <column name="report_name" nullable="false" length="100"/>
+            </basic>
+            <basic name="timeRangeStart">
+                <column name="time_range_start" nullable="false"/>
+            </basic>
+            <basic name="timeRangeEnd">
+                <column name="time_range_end" nullable="false"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="generateTime">
+                <column name="generate_time"/>
+            </basic>
+            <basic name="generateFileId">
+                <column name="generate_file_id"/>
+            </basic>
+            <basic name="remark">
+                <column name="remark" length="255"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.tag.ProductTag" access="FIELD">
+        <table name="product_tag">
+            <index name="idx_product_id" column-list="product_id"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="tagId">
+                <column name="tag_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="productId">
+                <column name="product_id"/>
+            </basic>
+            <basic name="barcode">
+                <column name="barcode" unique="true" length="100"/>
+            </basic>
+            <basic name="nfcUid">
+                <column name="nfc_uid" unique="true" length="100"/>
+            </basic>
+            <basic name="rfid">
+                <column name="rfid" unique="true" length="100"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.user.NfcBadge" access="FIELD">
+        <table name="nfc_badge">
+            <unique-constraint name="uk_nfc_uid">
+                <column-name>nfc_uid</column-name>
+            </unique-constraint>
+            <unique-constraint name="uk_rfid">
+                <column-name>rfid</column-name>
+            </unique-constraint>
+            <index name="idx_user_id" column-list="user_id"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="badgeId">
+                <column name="badge_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="userId">
+                <column name="user_id" nullable="false"/>
+            </basic>
+            <basic name="nfcUid">
+                <column name="nfc_uid" nullable="false" unique="true" length="64"/>
+            </basic>
+            <basic name="rfid">
+                <column name="rfid" nullable="false" unique="true" length="128"/>
+            </basic>
+            <basic name="pinSalt">
+                <column name="pin_salt" nullable="false" length="16" column-definition="char(16)"/>
+            </basic>
+            <basic name="pinHash">
+                <column name="pin_hash" nullable="false" length="64" column-definition="char(64)"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="statusReason">
+                <column name="status_reason" length="255"/>
+            </basic>
+            <basic name="lastSuccessUseTime">
+                <column name="last_success_use_time"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.user.UserAccessKey" access="FIELD">
+        <table name="user_access_key">
+            <unique-constraint name="uk_access_key">
+                <column-name>access_key</column-name>
+            </unique-constraint>
+            <index name="idx_user_id" column-list="user_id"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_create_time" column-list="create_time"/>
+        </table>
+        <attributes>
+            <id name="keyId">
+                <column name="key_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="userId">
+                <column name="user_id" nullable="false"/>
+            </basic>
+            <basic name="accessKey">
+                <column name="access_key" nullable="false" unique="true" length="32" column-definition="char(32)"/>
+            </basic>
+            <basic name="secretKeyEnc">
+                <column name="secret_key_enc" nullable="false" column-definition="text"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="description">
+                <column name="description" length="128"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.user.UserCore" access="FIELD">
+        <table name="user_core">
+            <unique-constraint name="uk_username">
+                <column-name>username</column-name>
+            </unique-constraint>
+            <unique-constraint name="uk_owner_device_id">
+                <column-name>owner_device_id</column-name>
+            </unique-constraint>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="idx_status" column-list="status"/>
+            <index name="idx_user_type" column-list="user_type"/>
+        </table>
+        <attributes>
+            <id name="userId">
+                <column name="user_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="username">
+                <column name="username" nullable="false" unique="true" length="16"/>
+            </basic>
+            <basic name="userType">
+                <column name="user_type" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="ownerDeviceId">
+                <column name="owner_device_id" unique="true"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="isDeleted">
+                <column name="is_deleted" nullable="false" column-definition="tinyint unsigned"/>
+            </basic>
+            <basic name="createBy">
+                <column name="create_by" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.user.UserProfile" access="FIELD">
+        <table name="user_profile">
+            <unique-constraint name="uk_user_id">
+                <column-name>user_id</column-name>
+            </unique-constraint>
+            <unique-constraint name="uk_email">
+                <column-name>email</column-name>
+            </unique-constraint>
+            <index name="idx_create_time" column-list="create_time"/>
+            <index name="avatar_file_id" column-list="avatar_file_id"/>
+        </table>
+        <attributes>
+            <id name="profileId">
+                <column name="profile_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="userId">
+                <column name="user_id" nullable="false" unique="true"/>
+            </basic>
+            <basic name="nickname">
+                <column name="nickname" nullable="false" length="16"/>
+            </basic>
+            <basic name="email">
+                <column name="email" nullable="false" unique="true" length="128"/>
+            </basic>
+            <basic name="avatarFileId">
+                <column name="avatar_file_id"/>
+            </basic>
+            <basic name="gender">
+                <column name="gender" nullable="false"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+            <basic name="updateBy">
+                <column name="update_by" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.user.UserSecurity" access="FIELD">
+        <table name="user_security">
+            <unique-constraint name="uk_user_id">
+                <column-name>user_id</column-name>
+            </unique-constraint>
+            <unique-constraint name="uk_active_badge_id">
+                <column-name>active_badge_id</column-name>
+            </unique-constraint>
+            <index name="idx_last_login" column-list="last_login_at"/>
+        </table>
+        <attributes>
+            <id name="securityId">
+                <column name="security_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="userId">
+                <column name="user_id" nullable="false" unique="true"/>
+            </basic>
+            <basic name="salt">
+                <column name="salt" nullable="false" length="32" column-definition="char(32)"/>
+            </basic>
+            <basic name="passwordHash">
+                <column name="password_hash" nullable="false" length="128" column-definition="char(128)"/>
+            </basic>
+            <basic name="lastPasswordChangeAt">
+                <column name="last_password_change_at"/>
+            </basic>
+            <basic name="lastLoginAt">
+                <column name="last_login_at"/>
+            </basic>
+            <basic name="lastLoginIp">
+                <column name="last_login_ip" length="39"/>
+            </basic>
+            <basic name="activeBadgeId">
+                <column name="active_badge_id" unique="true"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.huicang.wise.domain.warehouse.Warehouse" access="FIELD">
+        <table name="warehouse">
+            <index name="idx_warehouse_name" column-list="warehouse_name"/>
+            <unique-constraint name="idx_warehouse_code">
+                <column-name>warehouse_code</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <id name="warehouseId">
+                <column name="warehouse_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="warehouseName">
+                <column name="warehouse_name" nullable="false"/>
+            </basic>
+            <basic name="warehouseCode">
+                <column name="warehouse_code" nullable="false"/>
+            </basic>
+            <basic name="description">
+                <column name="description"/>
+            </basic>
+            <basic name="address">
+                <column name="address"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="updateTime">
+                <column name="update_time" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    
+
 </entity-mappings>

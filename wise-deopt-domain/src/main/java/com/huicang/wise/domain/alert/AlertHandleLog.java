@@ -6,64 +6,35 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * 告警处理日志实体
- * 对应alert_handle_log表，存储告警处理过程记录
+ * 告警处理日志实体 对应alert_handle_log表，存储告警处理过程记录
  *
  * @author WiseDepot
  * @version 0.0.24
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "alert_handle_log", indexes = {
-    @Index(name = "idx_event_id", columnList = "event_id"),
-    @Index(name = "idx_handler_id", columnList = "handler_id"),
-    @Index(name = "idx_handle_time", columnList = "handle_time"),
-    @Index(name = "idx_goal_status", columnList = "goal_status")
-})
 public class AlertHandleLog {
 
-    /**
-     * 处理日志主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "log_id")
+    /** 处理日志主键ID */
     private Long logId;
 
-    /**
-     * 关联告警id
-     */
+    /** 关联告警id */
     @NotNull(message = "关联告警id不能为空")
-    @Column(name = "event_id", nullable = false)
     private Long eventId;
 
-    /**
-     * 操作人id
-     */
+    /** 操作人id */
     @NotNull(message = "操作人id不能为空")
-    @Column(name = "handler_id", nullable = false)
     private Long handlerId;
 
-    /**
-     * 目标状态
-     * 0：未处理 1：处理中 2：已处理 3：已忽略
-     */
+    /** 目标状态 0：未处理 1：处理中 2：已处理 3：已忽略 */
     @NotNull(message = "目标状态不能为空")
-    @Column(name = "goal_status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short goalStatus;
 
-    /**
-     * 操作备注
-     */
+    /** 操作备注 */
     @Size(max = 255, message = "操作备注长度不能超过255个字符")
-    @Column(name = "remark", length = 255)
     private String remark;
 
-    /**
-     * 操作时间
-     */
+    /** 操作时间 */
     @NotNull(message = "操作时间不能为空")
-    @Column(name = "handle_time", nullable = false)
     private LocalDateTime handleTime;
 
     /**

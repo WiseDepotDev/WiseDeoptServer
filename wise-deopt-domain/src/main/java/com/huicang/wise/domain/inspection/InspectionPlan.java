@@ -4,101 +4,56 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 
 /**
- * 巡检计划实体
- * 对应inspection_plan表，存储巡检计划配置信息
+ * 巡检计划实体 对应inspection_plan表，存储巡检计划配置信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-03-03
  */
-@Entity
-@Table(name = "inspection_plan", indexes = {
-    @Index(name = "uk_plan_name", columnList = "plan_name", unique = true),
-    @Index(name = "idx_device_id", columnList = "device_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_create_time", columnList = "create_time"),
-    @Index(name = "idx_last_execute_time", columnList = "last_execute_time")
-})
 public class InspectionPlan {
 
-    /**
-     * 巡检计划主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "plan_id")
+    /** 巡检计划主键ID */
     private Long planId;
 
-    /**
-     * 计划名称
-     */
+    /** 计划名称 */
     @NotBlank(message = "计划名称不能为空")
     @Size(max = 100, message = "计划名称长度不能超过100个字符")
-    @Column(name = "plan_name", nullable = false, unique = true, length = 100)
     private String planName;
 
-    /**
-     * 执行巡检设备ID
-     */
+    /** 执行巡检设备ID */
     @NotNull(message = "执行巡检设备ID不能为空")
-    @Column(name = "device_id", nullable = false)
     private Long deviceId;
 
-    /**
-     * 定时表达式
-     */
+    /** 定时表达式 */
     @NotBlank(message = "定时表达式不能为空")
     @Size(max = 100, message = "定时表达式长度不能超过100个字符")
-    @Column(name = "cron_expression", nullable = false, length = 100)
     private String cronExpression;
 
-    /**
-     * 状态：0：禁用 1：启用
-     */
+    /** 状态：0：禁用 1：启用 */
     @NotNull(message = "状态不能为空")
-    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short status = 1;
 
-    /**
-     * 最近执行时间
-     */
-    @Column(name = "last_execute_time")
+    /** 最近执行时间 */
     private LocalDateTime lastExecuteTime;
 
-    /**
-     * 下次执行时间
-     */
-    @Column(name = "nett_execute_time")
+    /** 下次执行时间 */
     private LocalDateTime nettExecuteTime;
 
-    /**
-     * 创建者ID
-     */
+    /** 创建者ID */
     @NotNull(message = "创建者ID不能为空")
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 更新者ID
-     */
+    /** 更新者ID */
     @NotNull(message = "更新者ID不能为空")
-    @Column(name = "update_by", nullable = false)
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
-    @Column(name = "update_time", nullable = false)
+    /** 更新时间 */
     private LocalDateTime updateTime;
 
     /**

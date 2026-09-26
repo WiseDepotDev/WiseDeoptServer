@@ -7,103 +7,55 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * 告警事件实体
- * 对应alert_event表，存储系统告警事件信息
+ * 告警事件实体 对应alert_event表，存储系统告警事件信息
  *
  * @author WiseDepot
  * @version 0.0.24
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "alert_event", indexes = {
-    @Index(name = "idx_source_module", columnList = "source_module"),
-    @Index(name = "idx_level", columnList = "level"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_is_active", columnList = "is_active"),
-    @Index(name = "idx_create_time", columnList = "create_time"),
-    @Index(name = "idx_resolved_time", columnList = "resolved_time"),
-    @Index(name = "resolved_by", columnList = "resolved_by")
-})
 public class AlertEvent {
 
-    /**
-     * 告警事件主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "event_id")
+    /** 告警事件主键ID */
     private Long eventId;
 
-    /**
-     * 来源模块
-     */
+    /** 来源模块 */
     @NotBlank(message = "来源模块不能为空")
     @Size(max = 50, message = "来源模块长度不能超过50个字符")
-    @Column(name = "source_module", nullable = false, length = 50)
     private String sourceModule;
 
-    /**
-     * 告警等级
-     * 1：提示 2：一般 3：严重 4：紧急
-     */
+    /** 告警等级 1：提示 2：一般 3：严重 4：紧急 */
     @NotNull(message = "告警等级不能为空")
-    @Column(name = "level", nullable = false, columnDefinition = "tinyint unsigned")
     private Short level;
 
-    /**
-     * 告警标题
-     */
+    /** 告警标题 */
     @NotBlank(message = "告警标题不能为空")
     @Size(max = 100, message = "告警标题长度不能超过100个字符")
-    @Column(name = "title", nullable = false, length = 100)
     private String title;
 
-    /**
-     * 告警内容
-     */
+    /** 告警内容 */
     @NotBlank(message = "告警内容不能为空")
     @Size(max = 255, message = "告警内容长度不能超过255个字符")
-    @Column(name = "message", nullable = false, length = 255)
     private String message;
 
-    /**
-     * 告警状态
-     * 0：未处理 1：处理中 2：已处理 3：已忽略
-     */
+    /** 告警状态 0：未处理 1：处理中 2：已处理 3：已忽略 */
     @NotNull(message = "告警状态不能为空")
-    @Column(name = "status", nullable = false, columnDefinition = "tinyint unsigned")
     private Short status = 0;
 
-    /**
-     * 是否仍处于活跃状态
-     */
+    /** 是否仍处于活跃状态 */
     @NotNull(message = "活跃状态不能为空")
-    @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    /**
-     * 产生时间
-     */
+    /** 产生时间 */
     @NotNull(message = "产生时间不能为空")
-    @Column(name = "create_time", nullable = false)
     private LocalDateTime createTime;
 
-    /**
-     * 解除时间
-     */
-    @Column(name = "resolved_time")
+    /** 解除时间 */
     private LocalDateTime resolvedTime;
 
-    /**
-     * 解除者id
-     */
-    @Column(name = "resolved_by")
+    /** 解除者id */
     private Long resolvedBy;
 
-    /**
-     * 扩展信息
-     */
-    @Column(name = "extended_data", columnDefinition = "json")
+    /** 扩展信息 */
     private String extendedData;
 
     /**

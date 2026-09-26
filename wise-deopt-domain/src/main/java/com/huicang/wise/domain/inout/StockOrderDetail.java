@@ -3,40 +3,22 @@ package com.huicang.wise.domain.inout;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "stock_order_item", indexes = {
-    @Index(name = "idx_order_id", columnList = "order_id"),
-    @Index(name = "idx_tag_id", columnList = "tag_id"),
-    @Index(name = "idx_product_id", columnList = "product_id"),
-    @Index(name = "idx_create_time", columnList = "create_time"),
-    @Index(name = "create_by", columnList = "create_by")
-})
 public class StockOrderDetail {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "item_id")
     private Long itemId;
 
-    @Column(name = "order_id", nullable = false)
     private Long orderId;
 
-    @Column(name = "tag_id", nullable = true)
     private Long tagId;
 
-    @Column(name = "quantity", nullable = true)
     private Integer quantity;
 
-    @Column(name = "location_code", nullable = true)
     private String locationCode;
 
-    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
 
-    @Column(name = "create_by", nullable = false)
     private Long createBy;
 
     public Long getItemId() {

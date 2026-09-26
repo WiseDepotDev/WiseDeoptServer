@@ -7,63 +7,36 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * MinIO文件元数据实体
- * 对应minio_file表，存储文件元数据信息
+ * MinIO文件元数据实体 对应minio_file表，存储文件元数据信息
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "minio_file", indexes = {
-    @Index(name = "uk_bucket_path", columnList = "bucket_name,file_path", unique = true),
-    @Index(name = "idx_upload_time", columnList = "upload_time"),
-    @Index(name = "idx_upload_by", columnList = "upload_by")
-})
 public class MinioFile {
 
-    /**
-     * 文件主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "file_id")
+    /** 文件主键ID */
     private Long fileId;
 
-    /**
-     * 存储桶名称
-     */
+    /** 存储桶名称 */
     @NotBlank(message = "存储桶名称不能为空")
     @Size(max = 64, message = "存储桶名称长度不能超过64个字符")
-    @Column(name = "bucket_name", nullable = false, length = 64)
     private String bucketName;
 
-    /**
-     * 文件路径
-     */
+    /** 文件路径 */
     @NotBlank(message = "文件路径不能为空")
     @Size(max = 255, message = "文件路径长度不能超过255个字符")
-    @Column(name = "file_path", nullable = false, length = 255)
     private String filePath;
 
-    /**
-     * 文件大小（字节）
-     */
+    /** 文件大小（字节） */
     @NotNull(message = "文件大小不能为空")
-    @Column(name = "file_size", nullable = false)
     private Long fileSize;
 
-    /**
-     * 上传时间
-     */
-    @Column(name = "upload_time", nullable = false, updatable = false)
+    /** 上传时间 */
     private LocalDateTime uploadTime;
 
-    /**
-     * 上传者ID
-     */
+    /** 上传者ID */
     @NotNull(message = "上传者ID不能为空")
-    @Column(name = "upload_by", nullable = false)
     private Long uploadBy;
 
     /**
