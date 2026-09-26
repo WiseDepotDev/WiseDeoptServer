@@ -428,8 +428,10 @@ public class InspectionApplicationService {
             }
         }
 
-        // Save differences (server-side authoritative calculation)
-        // 设备端上传的 differences 可能基于不同口径（例如把 EPC 与条码对比导致 scanned=0），因此这里统一以服务端规则计算并落库。
+        // 差异落库：**注意这里落的是 getInspectionDifferences 返回的硬编码演示数据**（见该方法的 javadoc），
+        // 并非按本任务真实库存计算的结果；missing/extra 也随之由这批数据推出。
+        // 原注释写"统一以服务端规则计算并落库"、"设备端上传的 differences 口径可能不同"，
+        // 会让人以为此处是权威真实计算 —— 已按实际行为更正（《基线记录.md》§141.2 的 F1/F2）。
         if (taskId != null && task != null) {
             inspectionDifferenceRepository.deleteByTaskId(taskId);
             List<InspectionDifferenceVO> diffs =
@@ -448,7 +450,9 @@ public class InspectionApplicationService {
                 inspectionDifferenceRepository.save(diff);
             }
 
-            // 同步任务统计（以服务端差异为准）
+            // 同步任务统计：沿用上面按差异分类算出的值。**但请注意那批差异本身是演示数据**
+            // （见 getInspectionDifferences），所以这里"以服务端差异为准"实际是"以演示数据为准"。
+            // 原注释未点明这点，已更正（《基线记录.md》§141.2 的 F2/F4）。
             int missing =
                     diffs.stream()
                             .filter(d -> "MISSING".equals(d.getStatus()))
@@ -523,7 +527,8 @@ public class InspectionApplicationService {
 
         InspectionResultDTO result = convertToResultDTO(summary);
 
-        // Publish progress event
+        // 发布进度事件：**条件是 taskId 解析成功，不要求任务真的存在**（决策 13 选项 C 的说明）。
+        // 任务不存在时事件里的 progress/status 取自"退回请求值"的汇总，可能为 null（《基线记录.md》§141.2 的 F7）。
         if (taskId != null) {
             InspectionProgressEvent event =
                     new InspectionProgressEvent(
@@ -655,32 +660,40 @@ public class InspectionApplicationService {
             }
         }
 
-        // Recalculate missing/extra based on total and inspected
-        int total = task.getTotalItems() != null ? task.getTotalItems() : 0;
-        int inspected = task.getInspectedItems() != null ? task.getInspectedItems() : 0;
-
-        if (total > inspected) {
-            task.setMissingItems(total - inspected);
-            task.setExtraItems(0);
-        } else {
-            task.setExtraItems(inspected - total);
-            task.setMissingItems(0);
-        }
-
-        task.setProgress(100);
+        // 注意（决策 13 选项 B，2026-09-26）：这里**不再**重算 missing/extra、也**不再**设置 progress。
+        // 原因：本方法只被 reportResult 调用，而进入本方法时必有 task != null ⇒ 差异统计已在
+        // reportResult 里按差异分类算好（MISSING/EXTRA 各自求和），进度也已按扫描比例算出。
+        // 旧实现用 `missing = total - inspected / extra = 0` 覆盖它、并无条件 setProgress(100)，
+        // 会造成两处语义损坏：① missing 与 extra 不可能同时非 0；② 出现 progress=100 但状态仍是
+        // IN_PROGRESS、且没有 endTime 的自相矛盾状态（详见《基线记录.md》§141 的 F3/F4）。
+        // 本方法现在只做**兜底补齐**（inspectedItems / totalItems 为空时从明细与库存回填）。
     }
 
+    /**
+     * 按 resultId 取巡检结果 —— **当前返回固定演示数据，不查数据库、也不带缓存语义**（决策 13 选项 C）。
+     *
+     * <p>返回值恒为：{@code taskId=1}、total 7 / scanned 6 / normal 6 / missing 1 / extra 0、 {@code
+     * status=COMPLETED}；入参 {@code resultId} 只被回显。 原实现没有任何说明，接口名 + {@code @Cacheable} 会让人以为这是真实查询 ——
+     * 已补充说明 （《基线记录.md》§141.2 的 F5）。
+     */
     @Cacheable(prefix = "inspection:result", key = "#resultId", timeout = 3600)
     public InspectionResultDTO getResult(Long resultId) {
         return buildFakeResult(resultId);
     }
 
+    /**
+     * 按条件列出巡检结果 —— **当前忽略全部筛选参数，恒返回 1 条固定演示数据**（决策 13 选项 C）。
+     *
+     * <p>{@code taskId} / {@code warehouseId} / {@code status} 三个入参都未被使用；
+     * 换了筛选条件结果集也不变（《基线记录.md》§141.2 的 F6）。
+     */
     public List<InspectionResultDTO> listResults(Long taskId, Long warehouseId, String status) {
         List<InspectionResultDTO> results = new ArrayList<>();
         results.add(buildFakeResult(1L));
         return results;
     }
 
+    /** 构造一条**固定的演示结果**（决策 13 选项 C）——不读数据库、不依赖入参除 resultId 外的任何信息。 */
     private InspectionResultDTO buildFakeResult(Long resultId) {
         InspectionResultDTO dto = new InspectionResultDTO();
         dto.setResultId(resultId);
@@ -698,6 +711,15 @@ public class InspectionApplicationService {
         return dto;
     }
 
+    /**
+     * 差异列表 —— **当前返回硬编码的演示数据，不是真实计算**（决策 13 选项 C，2026-09-26）。
+     *
+     * <p><b>调用方注意</b>：这里返回的 7 条记录与任何任务的真实库存/标签绑定**无关**，且**忽略入参 {@code taskId}**。{@code
+     * reportResult} 会把它们落库并据此得出 missing/extra， {@code recalculateTaskResult} 也复用同一批数据。
+     *
+     * <p>原注释写"fallback 会按库存 + ProductTag 绑定计算"，与实现不符，已按实际行为更正 —— 避免下一位读者照着注释理解（详见《基线记录.md》§141.2 的
+     * F1/F2）。 补齐为真实计算属决策 13 的选项 A/B 范围，尚未实施。
+     */
     public List<InspectionDifferenceVO> getInspectionDifferences(Long taskId) {
         // 返回假数据用于测试
         List<InspectionDifferenceVO> diffs = new ArrayList<>();

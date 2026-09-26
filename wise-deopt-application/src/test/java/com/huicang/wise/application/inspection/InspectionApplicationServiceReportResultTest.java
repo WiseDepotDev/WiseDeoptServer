@@ -147,8 +147,8 @@ class InspectionApplicationServiceReportResultTest {
     // ---------------------------------------------------------------- 进度与状态
 
     @Test
-    @DisplayName("⚠现状固定：进度<100 的任务最终 progress=100、状态仍是 IN_PROGRESS、且不写 endTime（自相矛盾）")
-    void reportResultExposesProgressOverwriteDefect() {
+    @DisplayName("进度<100 时保留真实进度、状态置 IN_PROGRESS、不写 endTime（决策 13 选项 B 修复后的行为）")
+    void reportResultShouldKeepComputedProgressWhenPartiallyScanned() {
         InspectionTask task = task(1L, (short) 0); // PENDING
         when(inspectionTaskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(inspectionTaskRepository.save(any(InspectionTask.class)))
@@ -156,14 +156,14 @@ class InspectionApplicationServiceReportResultTest {
         when(inspectionDifferenceRepository.save(any(InspectionDifference.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        // 10 件里只扫了 5 件（进度本应是 50）
+        // 10 件里只扫了 5 件 ⇒ 进度 50
         service.reportResult(request("1", 10, 5));
 
-        // reportResult 内先算出 50 并把 PENDING 置为 IN_PROGRESS；
-        // 随后 calculateTaskResult 无条件 setProgress(100) ⇒ 出现"progress=100 但状态仍是进行中、没有结束时间"
-        assertEquals(100, task.getProgress(), "calculateTaskResult 无条件把进度写成 100（已登记缺陷）");
-        assertEquals((short) 1, task.getStatus(), "状态没有被同步成 COMPLETED");
-        assertNull(task.getEndTime(), "进度 100 却没有结束时间，状态自相矛盾");
+        // 修复前：calculateTaskResult 无条件 setProgress(100)，于是出现"进度 100 但状态仍进行中、无结束时间"。
+        // 修复后：进度保持按扫描比例算出的 50，状态由 PENDING 转 IN_PROGRESS，且**不写 endTime** —— 三者自洽。
+        assertEquals(50, task.getProgress(), "进度应反映真实扫描比例，不能被强制写成 100");
+        assertEquals((short) 1, task.getStatus(), "未扫满 ⇒ IN_PROGRESS");
+        assertNull(task.getEndTime(), "未完成就不应有结束时间");
     }
 
     @Test
@@ -201,8 +201,8 @@ class InspectionApplicationServiceReportResultTest {
     }
 
     @Test
-    @DisplayName("⚠现状固定：missing/extra 由 total-inspected 净差得出，而不是按差异逐类统计（后者被覆盖）")
-    void reportResultExposesMissingExtraOverwriteDefect() {
+    @DisplayName("missing/extra 按**差异分类**统计而非净差（决策 13 选项 B 修复后的行为）—— 值本身仍是演示数据")
+    void reportResultShouldDeriveMissingExtraFromDifferencesNotNetDifference() {
         InspectionTask task = task(4L, (short) 1);
         when(inspectionTaskRepository.findById(4L)).thenReturn(Optional.of(task));
         when(inspectionTaskRepository.save(any(InspectionTask.class)))
@@ -210,11 +210,15 @@ class InspectionApplicationServiceReportResultTest {
         when(inspectionDifferenceRepository.save(any(InspectionDifference.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        // 期望 10、扫描 6 ⇒ 净差 4，全部记到 missing、extra 记 0
+        // 期望 10、扫描 6 ⇒ 净差是 4，但**修复后不再用净差**：改用差异分类求和。
         service.reportResult(request("4", 10, 6));
 
-        assertEquals(4, task.getMissingItems(), "按 net = total - inspected 得 4");
-        assertEquals(0, task.getExtraItems(), "本实现下 extra 恒为 0（与「多扫」场景无法并存）");
+        // 修复前：missing = 10-6 = 4、extra = 0（净差，且 extra 永远为 0）。
+        // 修复后：missing = 差异里唯一一条 MISSING（螺丝：期望 1 / 扫描 0）= 1；没有 EXTRA 行 ⇒ extra = 0。
+        // ⚠ 注意：这个 1 仍然来自 getInspectionDifferences 的**硬编码演示数据**（F1/F2 属决策 13 选项 A/B，
+        // 本批未实施）—— 修好的是"统计口径"，不是"差异来源"。
+        assertEquals(1, task.getMissingItems(), "按差异分类求和（当前差异来源仍是演示数据）");
+        assertEquals(0, task.getExtraItems());
     }
 
     // ---------------------------------------------------------------- 明细映射
