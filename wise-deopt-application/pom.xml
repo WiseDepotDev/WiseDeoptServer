@@ -27,8 +27,11 @@
                    出入库单状态机 submit/audit/withdraw 的合法与非法迁移、审核通过时的入库累加、
                    出库扣减、无库存与库存不足拒绝、明细数量为空按 1 计）。
           门槛随之 0.28 → 0.31（取实测略低，只许升不许降）。
+          第五十六批：32.73% → 38.62%（InventoryApplicationService 由 238 行未覆盖收到只剩 8 行，
+                   覆盖 96.6%：产品与库存 CRUD、锁定/解锁、低库存预警、库存统计，
+                   以及写库存路径的三处缓存副作用）。门槛 0.31 → 0.37。
         -->
-        <jacoco.min.line>0.31</jacoco.min.line>
+        <jacoco.min.line>0.37</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
