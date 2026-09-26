@@ -291,7 +291,12 @@ public class InspectionApplicationService {
             task.setProgress(100); // 确保完成时进度为100
 
             // Recalculate result if needed (e.g. manual completion without scanning)
-            calculateTaskResult(task);
+            // 决策 13 选项 B：**由调用方显式声明意图**，而不是让被调方靠"值是否为空"猜
+            // （`missingItems`/`extraItems` 字段带初始值 0，靠值判断根本区分不了"没算过"与"算出来是 0"）。
+            // 手工完成且**没有扫描数据**时，missing/extra 从未被差异计算覆盖过 ⇒ 允许用"总数 − 已扫"兜底；
+            // 一旦有扫描数据就保持不动（那是报告路径按差异分类算出的权威值）。
+            int inspectedForFill = task.getInspectedItems() != null ? task.getInspectedItems() : 0;
+            calculateTaskResult(task, inspectedForFill == 0);
         }
         task.setStatus(taskStatus);
         task.setUpdateTime(LocalDateTime.now());
@@ -492,7 +497,7 @@ public class InspectionApplicationService {
                 }
             }
 
-            calculateTaskResult(task);
+            calculateTaskResult(task, false);
 
             task = inspectionTaskRepository.save(task);
         }
@@ -567,7 +572,8 @@ public class InspectionApplicationService {
         task.setProgress(100);
 
         // Apply calculation logic for robustness
-        calculateTaskResult(task);
+        // 决策 13 选项 B：本方法上面已显式写入 missing/extra（来自入参）⇒ 传 false，绝不覆盖。
+        calculateTaskResult(task, false);
 
         inspectionTaskRepository.save(task);
 
@@ -625,7 +631,7 @@ public class InspectionApplicationService {
         }
     }
 
-    private void calculateTaskResult(InspectionTask task) {
+    private void calculateTaskResult(InspectionTask task, boolean fillMissingExtra) {
         // If inspectedItems is still 0/null, try to fetch from details repository as fallback
         if (task.getInspectedItems() == null || task.getInspectedItems() == 0) {
             List<InspectionDetail> existingDetails =
@@ -660,13 +666,25 @@ public class InspectionApplicationService {
             }
         }
 
-        // 注意（决策 13 选项 B，2026-09-26）：这里**不再**重算 missing/extra、也**不再**设置 progress。
-        // 原因：本方法只被 reportResult 调用，而进入本方法时必有 task != null ⇒ 差异统计已在
-        // reportResult 里按差异分类算好（MISSING/EXTRA 各自求和），进度也已按扫描比例算出。
-        // 旧实现用 `missing = total - inspected / extra = 0` 覆盖它、并无条件 setProgress(100)，
-        // 会造成两处语义损坏：① missing 与 extra 不可能同时非 0；② 出现 progress=100 但状态仍是
-        // IN_PROGRESS、且没有 endTime 的自相矛盾状态（详见《基线记录.md》§141 的 F3/F4）。
-        // 本方法现在只做**兜底补齐**（inspectedItems / totalItems 为空时从明细与库存回填）。
+        // 兜底（决策 13 选项 B，2026-09-26）：**仅当 missing/extra 尚未计算过（都是 null）时**，
+        // 才用"总数 − 已扫"给一个保守估计。这样保留 updateTaskStatus(COMPLETED) 那条"手工完成、
+        // 没有扫描数据"路径的补算意图，又**不会覆盖** reportResult 里按差异分类算出的权威值。
+        //
+        // 修复前的写法是**无条件**覆盖（missing = total − inspected、extra = 0）并且**无条件** setProgress(100)，
+        // 造成两处语义损坏：① missing 与 extra 不可能同时非 0；
+        // ② 出现 progress=100 但状态仍是 IN_PROGRESS、且没有 endTime 的自相矛盾状态
+        // （详见《基线记录.md》§141 的 F3/F4 与 §142）。
+        if (fillMissingExtra) {
+            int total = task.getTotalItems() != null ? task.getTotalItems() : 0;
+            int inspected = task.getInspectedItems() != null ? task.getInspectedItems() : 0;
+            if (total > inspected) {
+                task.setMissingItems(total - inspected);
+                task.setExtraItems(0);
+            } else {
+                task.setExtraItems(inspected - total);
+                task.setMissingItems(0);
+            }
+        }
     }
 
     /**
