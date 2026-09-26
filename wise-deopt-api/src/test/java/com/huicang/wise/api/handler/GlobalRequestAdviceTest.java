@@ -28,8 +28,8 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
  * <ul>
  *   <li><b>只处理 JSON 体</b>：Jackson 转换器 → 介入；String 转换器（设备日志 {@code text/plain}）→ 放行原样绑定。
  *       后者修掉了"纯文本日志上传必然 400"的既有缺陷。
- *   <li><b>只接受统一信封</b>：扁平体 / 半个信封一律拒绝（{@link HttpMessageNotReadableException}
- *       → 400 + {@code VAL-REQUEST-1001}）；信封则只把 {@code payload.data} 交给控制器。
+ *   <li><b>只接受统一信封</b>：扁平体 / 半个信封一律拒绝（{@link HttpMessageNotReadableException} → 400 + {@code
+ *       VAL-REQUEST-1001}）；信封则只把 {@code payload.data} 交给控制器。
  * </ul>
  */
 class GlobalRequestAdviceTest {
@@ -61,7 +61,8 @@ class GlobalRequestAdviceTest {
 
     private String unwrapped(String body) throws IOException {
         HttpInputMessage out =
-                advice.beforeBodyRead(message(body), null, null, MappingJackson2HttpMessageConverter.class);
+                advice.beforeBodyRead(
+                        message(body), null, null, MappingJackson2HttpMessageConverter.class);
         return new String(out.getBody().readAllBytes(), StandardCharsets.UTF_8);
     }
 
@@ -89,9 +90,7 @@ class GlobalRequestAdviceTest {
     @Test
     @DisplayName("信封里 data 缺失或为 null：绑定空对象")
     void unwrapsMissingDataToEmptyObject() throws IOException {
-        assertEquals(
-                "{}",
-                unwrapped("{\"header\":{},\"payload\":{\"code\":\"RES-0000\"}}"));
+        assertEquals("{}", unwrapped("{\"header\":{},\"payload\":{\"code\":\"RES-0000\"}}"));
         assertEquals(
                 "{}",
                 unwrapped("{\"header\":{},\"payload\":{\"code\":\"RES-0000\",\"data\":null}}"));

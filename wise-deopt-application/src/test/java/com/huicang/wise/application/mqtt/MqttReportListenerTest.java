@@ -35,7 +35,8 @@ class MqttReportListenerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final InspectionApplicationService service = mock(InspectionApplicationService.class);
-    private final InspectionProgressPublisher progressPublisher = mock(InspectionProgressPublisher.class);
+    private final InspectionProgressPublisher progressPublisher =
+            mock(InspectionProgressPublisher.class);
 
     private MqttReportListener listener;
 
@@ -64,10 +65,12 @@ class MqttReportListenerTest {
     @DisplayName("标准信封：解包 payload.data 后交给应用服务，taskId 正确")
     void processesEnvelopePayload() {
         AtomicReference<InspectionReportRequest> captured = new AtomicReference<>();
-        when(service.reportResult(any())).thenAnswer(inv -> {
-            captured.set(inv.getArgument(0));
-            return result();
-        });
+        when(service.reportResult(any()))
+                .thenAnswer(
+                        inv -> {
+                            captured.set(inv.getArgument(0));
+                            return result();
+                        });
 
         String envelope =
                 "{\"header\":{\"request_id\":\"r-1\",\"packet_type\":\"RFID_DATA_UPLOAD\","
@@ -96,7 +99,8 @@ class MqttReportListenerTest {
     @DisplayName("半个信封（只有 payload）同样被拒绝")
     void rejectsHalfEnvelope() {
         listener.handleInspectionReport(
-                new GenericMessage<>("{\"payload\":{\"code\":\"RES-0000\",\"data\":{\"taskId\":\"1\"}}}"));
+                new GenericMessage<>(
+                        "{\"payload\":{\"code\":\"RES-0000\",\"data\":{\"taskId\":\"1\"}}}"));
 
         verify(service, never()).reportResult(any());
         assertTrue(true);

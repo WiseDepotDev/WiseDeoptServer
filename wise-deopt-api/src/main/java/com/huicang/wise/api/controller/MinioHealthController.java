@@ -1,7 +1,7 @@
 package com.huicang.wise.api.controller;
 
-import com.huicang.wise.common.log.ErrorLogStorageService;
 import com.huicang.wise.common.api.ApiResponse;
+import com.huicang.wise.common.log.ErrorLogStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;

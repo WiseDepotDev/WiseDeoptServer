@@ -209,7 +209,16 @@
                 <executions>
                     <execution>
                         <id>spotless-check</id>
-                        <phase>verify</phase>
+                        <!--
+                          第四十二批修正：原先绑在 `verify`，而本项目的服务端基线命令是 `mvn -B clean test`
+                          —— 于是**格式化门禁根本不在基线路径上**。实测后果：提交 49ad14d（2026-09-22）改了
+                          `EnvelopeUnwrapper` 与它的测试却没跑 `spotless:apply`，`mvn test` 一路绿灯，
+                          红灯一直留到今天（第四十二批实测：8 个文件 / 4 个模块违规）。
+                          改绑 `validate`（最短路径）：任何 `mvn test` / `package` / `install` 都会先被拦下。
+                          代价可忽略 —— 门禁本身就是 ratchet（只查 format-baseline-20260227 之后改动的文件），
+                          未改动文件走缓存不产生全量扫描。
+                        -->
+                        <phase>validate</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>

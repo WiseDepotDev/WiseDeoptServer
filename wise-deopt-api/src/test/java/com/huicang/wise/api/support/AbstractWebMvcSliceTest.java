@@ -1,5 +1,8 @@
 package com.huicang.wise.api.support;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.huicang.wise.application.accesskey.AccessKeyApplicationService;
 import com.huicang.wise.application.alert.AlertApplicationService;
 import com.huicang.wise.application.alert.AlertRuleService;
@@ -28,9 +31,6 @@ import com.huicang.wise.infrastructure.persistence.repository.oss.MinioFileRepos
 import com.huicang.wise.infrastructure.persistence.repository.user.UserAccessKeyRepository;
 import com.huicang.wise.infrastructure.security.JwtTokenProvider;
 import com.huicang.wise.infrastructure.security.RateLimiterService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.UUID;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -111,8 +111,8 @@ public abstract class AbstractWebMvcSliceTest {
     /**
      * 把业务 DTO 包成统一信封（STD-CONTRACT-01）。
      *
-     * <p>决策 3（三端只支持最新形状）之后，带 JSON 体的请求**必须**是 {@code {header, payload}} 结构：
-     * {@code GlobalRequestAdvice} 只把 {@code payload.data} 交给控制器，扁平体一律拒绝（400 + VAL-REQUEST-1001）。
+     * <p>决策 3（三端只支持最新形状）之后，带 JSON 体的请求**必须**是 {@code {header, payload}} 结构： {@code
+     * GlobalRequestAdvice} 只把 {@code payload.data} 交给控制器，扁平体一律拒绝（400 + VAL-REQUEST-1001）。
      * 测试统一走这个辅助方法，避免每个用例各拼一份信封。
      *
      * @param payload 业务请求 DTO

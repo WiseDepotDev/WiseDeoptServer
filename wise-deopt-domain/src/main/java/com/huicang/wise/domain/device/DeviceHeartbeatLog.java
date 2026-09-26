@@ -1,52 +1,36 @@
 package com.huicang.wise.domain.device;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * 设备心跳日志实体
- * 对应device_heartbeat_log表，记录设备心跳信息
+ * 设备心跳日志实体 对应device_heartbeat_log表，记录设备心跳信息
+ *
+ * <p>**映射位置（P2-05 第四十二批）**：本类的持久化映射已搬到 infrastructure 的 {@code META-INF/orm.xml} （JPA 标准允许 XML
+ * 覆盖/替代注解映射），因此这里**不再有** {@code jakarta.persistence} 依赖。
+ * 保留在此的是**领域不变式**（{@code @NotNull}/{@code @Size}）—— 那属于领域层的正当职责，不是 ORM 耦合。 改动映射后必须跑 {@code node
+ * tools/p205-schema-gate.js} 证明 DDL 未变。
  *
  * @author WiseDepot
  * @version 0.0.23
  * @since 2026-02-27
  */
-@Entity
-@Table(name = "device_heartbeat_log", indexes = {
-    @Index(name = "idx_heartbeat_device_id", columnList = "device_id"),
-    @Index(name = "idx_heartbeat_time", columnList = "heartbeat_time")
-})
 public class DeviceHeartbeatLog {
 
-    /**
-     * 日志主键ID
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "log_id")
+    /** 日志主键ID */
     private Long logId;
 
-    /**
-     * 设备ID
-     */
+    /** 设备ID */
     @NotNull(message = "设备ID不能为空")
-    @Column(name = "device_id", nullable = false)
     private Long deviceId;
 
-    /**
-     * 心跳时间
-     */
+    /** 心跳时间 */
     @NotNull(message = "心跳时间不能为空")
-    @Column(name = "heartbeat_time", nullable = false)
     private LocalDateTime heartbeatTime;
 
-    /**
-     * 附加信息
-     */
+    /** 附加信息 */
     @Size(max = 255, message = "附加信息长度不能超过255个字符")
-    @Column(name = "remark", length = 255)
     private String remark;
 
     /**

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 /**
  * {@link EnvelopeUnwrapper} 单测（决策 8A）。
  *
- * <p>判定口径必须与 HTTP 侧 {@code GlobalRequestAdvice} 一致：根节点同时含 {@code header} 与
- * {@code payload} 对象才算信封；其余一律 legacy（按扁平处理并打 deprecated=true），不猜测。
+ * <p>判定口径必须与 HTTP 侧 {@code GlobalRequestAdvice} 一致：根节点同时含 {@code header} 与 {@code payload}
+ * 对象才算信封；其余一律 legacy（按扁平处理并打 deprecated=true），不猜测。
  */
 class EnvelopeUnwrapperTest {
 
@@ -67,7 +67,8 @@ class EnvelopeUnwrapperTest {
     @DisplayName("只有 header 或只有 payload：不算信封（避免半个信封被误判）")
     void requiresBothHeaderAndPayload() {
         assertTrue(EnvelopeUnwrapper.unwrap("{\"header\":{}}", mapper).legacy());
-        assertTrue(EnvelopeUnwrapper.unwrap("{\"payload\":{\"code\":\"RES-0000\"}}", mapper).legacy());
+        assertTrue(
+                EnvelopeUnwrapper.unwrap("{\"payload\":{\"code\":\"RES-0000\"}}", mapper).legacy());
         // header/payload 存在但不是对象（例如字符串）同样不算
         assertTrue(EnvelopeUnwrapper.unwrap("{\"header\":\"x\",\"payload\":{}}", mapper).legacy());
     }

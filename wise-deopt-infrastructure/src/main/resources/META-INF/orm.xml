@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  P2-05 领域层去 ORM：把原本写在 `com.huicang.wise.domain` 实体上的持久化映射搬到这里。
+
+  为什么这么做（第四十二批）：
+    - 领域层不该依赖持久化技术。改动前 `wise-deopt-domain/pom.xml` 直接声明 `spring-boot-starter-data-jpa`，
+      35 个实体带着 580 处 ORM 注解（`@Entity`/`@Table`/`@Index`/`@Id`/`@GeneratedValue`/`@Column`/`@DynamicUpdate`）。
+    - JPA 标准允许**用 XML 覆盖/替代注解映射**，且 XML 可以放在**基础设施层**：实体类仍在 domain（仓库层
+      与所有既有代码的类型引用都不用改），映射知识归位到 infrastructure。
+    - 本文件是**分批迁移**的落点：注解与 XML 可以共存（XML 优先），所以可以一个实体一个实体地搬。
+
+  改动纪律：
+    1. **DDL 必须逐字节不变** —— 由 `tools/p205-schema-gate.js` 比对 `tools/p205-schema-snapshot.sql` 判定；
+       映射搬家最容易出的错是列名/类型/可空性/长度/唯一约束/索引静默漂移。
+    2. 只搬**持久化**注解。Bean Validation（`@NotNull`/`@Size`/`@NotBlank`/`@Pattern`）是**领域不变式**，留在实体上。
+    3. 实体的 `import jakarta.persistence.*;` 必须删除，否则 `p205-domain-orm-gate.js` 的 D2 不会下降。
+
+  已迁移：DeviceHeartbeatLog（第四十二批首个切片，用于验证机制）
+  待迁移：其余 34 个实体（棘轮登记见 `tools/p205-domain-orm-gate.js`）
+-->
+<entity-mappings
+    xmlns="https://jakarta.ee/xml/ns/persistence/orm"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_0.xsd"
+    version="3.0">
+
+    <!-- 设备心跳日志：对应 device_heartbeat_log（原 domain.device.DeviceHeartbeatLog 上的注解搬到这里） -->
+    <entity class="com.huicang.wise.domain.device.DeviceHeartbeatLog" access="FIELD">
+        <table name="device_heartbeat_log">
+            <index name="idx_heartbeat_device_id" column-list="device_id"/>
+            <index name="idx_heartbeat_time" column-list="heartbeat_time"/>
+        </table>
+        <attributes>
+            <id name="logId">
+                <column name="log_id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="deviceId">
+                <column name="device_id" nullable="false"/>
+            </basic>
+            <basic name="heartbeatTime">
+                <column name="heartbeat_time" nullable="false"/>
+            </basic>
+            <basic name="remark">
+                <column name="remark" length="255"/>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>
