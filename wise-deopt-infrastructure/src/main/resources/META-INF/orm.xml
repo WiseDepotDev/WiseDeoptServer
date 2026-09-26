@@ -14,9 +14,18 @@
        映射搬家最容易出的错是列名/类型/可空性/长度/唯一约束/索引静默漂移。
     2. 只搬**持久化**注解。Bean Validation（`@NotNull`/`@Size`/`@NotBlank`/`@Pattern`）是**领域不变式**，留在实体上。
     3. 实体的 `import jakarta.persistence.*;` 必须删除，否则 `p205-domain-orm-gate.js` 的 D2 不会下降。
+    4. **必须显式注册才生效**：Hibernate 6 的 `MetadataSources` **不会自动发现** `META-INF/orm.xml`
+       （去掉注册后元模型只剩仍带注解的那一个实体、其余全部静默丢失）。生产配置在
+       `wise-deopt-api/src/main/resources/application.yml` 的 `spring.jpa.mapping-resources`。见《基线记录.md》§132.3。
+    5. 用 `tools/p205-migrate-entity-mapping.js` 生成，**不要手写**（手抄 570 处注解必然出错且不编译报错）。
 
-  已迁移：DeviceHeartbeatLog（第四十二批首个切片，用于验证机制）
-  待迁移：其余 34 个实体（棘轮登记见 `tools/p205-domain-orm-gate.js`）
+  迁移进度（第四十三批）：
+    - **已迁移：34 个实体**（含 `DeviceHeartbeatLog`）
+    - **刻意不迁移：`DeviceCore`** —— 它带 `@DynamicUpdate`，而该注解在 **JPA 的 orm.xml 里无法表达**
+      （`org/hibernate/jpa/orm_3_1.xsd` 完全没有 `dynamic`，也不 import Hibernate 命名空间；
+      `<dynamic-update>` 只存在于 Hibernate 自有命名空间 `mapping-3.1.0`）。
+      **用户已拍板（决策 11，选项 A）**：保持注解、不做行为变更 ⇒ 代价是 `wise-deopt-domain` 永久保留
+      `spring-boot-starter-data-jpa`（门禁 D1 登记为 1，不再视为待还欠账）。见《待确认决策清单.md》决策 11。
 -->
 <entity-mappings
     xmlns="https://jakarta.ee/xml/ns/persistence/orm"
@@ -1346,7 +1355,5 @@
             </basic>
         </attributes>
     </entity>
-
-    
 
 </entity-mappings>
