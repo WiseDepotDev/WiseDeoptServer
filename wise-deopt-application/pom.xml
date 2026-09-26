@@ -24,7 +24,7 @@
           注意：应用层是本次重构风险最高的层；且巡检结果链路存在一组"假数据实现"（见《基线记录.md》§141），
           本批的测试把它逐条钉住 —— 修那些缺陷时这些断言会失败，属预期。
         -->
-        <jacoco.min.line>0.20</jacoco.min.line>
+        <jacoco.min.line>0.23</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
