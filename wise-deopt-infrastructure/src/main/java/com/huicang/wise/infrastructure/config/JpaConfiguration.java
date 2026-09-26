@@ -31,12 +31,24 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  *   <li>原文写"同一批 26 张表" —— 实测与线上 schema 重叠 **27** 张（{@code tools/p205-schema-snapshot.sql} 共 34 张表）。
  * </ul>
  *
- * <p>**该隐患已上闸**：{@code tools/p205-legacy-po-gate.js}（第四十四批）把下面四件事变成可执行判据， 反证 4/4：
+ * <p>**该隐患已上闸**：{@code tools/p205-legacy-po-gate.js} 把下面几件事变成可执行判据，反证 4/4：
  * {@code @EntityScan}/{@code @EnableJpaRepositories} 的范围必须**精确**等于本类声明的两个包 · 任何扫描声明里不得出现遗留包 ·
- * **活适配器 {@code UserRepositoryImpl} 必须仍在位且被扫描** · 遗留 {@code *JpaEntity} 文件数只许降。 只靠注释守不住决定（本项目一贯教训）。
+ * **活适配器 {@code UserRepositoryImpl} 必须仍在位且被扫描** · 遗留 {@code *JpaEntity} 文件数棘轮 ·
+ * **遗留包的文件集合必须精确等于登记值**。只靠注释守不住决定（本项目一贯教训）。
  *
- * <p>遗留文件的**删/留**仍是决策项（见《待确认决策清单.md》决策 12）：实测可删 32 个（零引用）， 但 **{@code UserRepositoryImpl} 必须保留** ——
- * 它不是中间物，而是当前生效的适配器。
+ * <p>**第四十五批：隐患已结构性消除（决策 12 选项 A）**。按实测的存活闭包删除了 **33 个零引用文件** （32 个遗留文件 + 包外零消费者的 {@code
+ * converter.UserEntityConverter}），**保留唯一的活适配器 {@code UserRepositoryImpl}**。删除后：
+ *
+ * <ul>
+ *   <li>遗留包里**只剩** {@code user/UserRepositoryImpl.java}，已无任何 {@code @Entity} ⇒ 表重叠由 **27/27 归零为
+ *       0/0**， "一表两份列定义"的隐患**不再存在**（而不是"靠扫描范围规避"）。
+ *   <li>删除前先重算了**传递性死亡**：{@code UserCoreJpaEntity} 只被零引用的 {@code UserEntityConverter} 引用， 而后者带
+ *       {@code @Component}（是活 bean）—— 两者必须**一起**删，否则会留下一个悬空的 PO。
+ *   <li>删除的**判定依据是静态引用闭包**（先剥注释再匹配引用），并由 {@code mvn -B clean verify} 全绿背书。
+ *   <li>删除器自身带安全闸：拒绝删除任何判定为活的文件、拒绝删除 {@code UserRepositoryImpl}、 保留集与登记值不符时**整体不写入**（fail-loud）。
+ * </ul>
+ *
+ * <p>删除/保留的完整证据见《基线记录.md》§134/§135 与《待确认决策清单.md》决策 12。
  *
  * <p>同时移除了对本就不存在的 {@code com.huicang.wise.domain.request} 的扫描声明（失效引用）。
  *
