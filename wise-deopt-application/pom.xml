@@ -15,14 +15,14 @@
     <properties>
         <!--
           覆盖率防回退门槛（P2-11）。
-          第四十七批：6.31% → 8.72%（role 包：RoleApplicationServiceTest 16 例 + RoleMapperTest 5 例）。
-          第四十八批：8.72% → 10.15%（inspection 的 Plan 子切片：InspectionApplicationServicePlanTest 13 例）。
-          门槛随之 0.05 → 0.08 → 0.10（取实测略低，只许升不许降）。
-          注意：应用层是本次重构风险最高的层，10.15% 仍远低于目标；剩余大头是
-          InspectionApplicationService 的 reportResult/createTask、DeviceApplicationService、
-          InOutApplicationService 等大编排方法，按包/按方法分批补齐并继续抬门槛。
+          第四十七批：6.31% → 8.72%（role 包）。
+          第四十八批：8.72% → 10.15%（inspection 的 Plan 子切片）。
+          第四十九批：10.15% → 15.28%（InspectionApplicationService.reportResult，单块最大路径约 200 行）。
+          门槛随之 0.05 → 0.08 → 0.10 → 0.14（取实测略低，只许升不许降）。
+          注意：应用层是本次重构风险最高的层；且巡检结果链路存在一组"假数据实现"（见《基线记录.md》§141），
+          本批的测试把它逐条钉住 —— 修那些缺陷时这些断言会失败，属预期。
         -->
-        <jacoco.min.line>0.10</jacoco.min.line>
+        <jacoco.min.line>0.14</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
