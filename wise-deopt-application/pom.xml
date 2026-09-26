@@ -23,8 +23,12 @@
           门槛随之 0.05 → 0.08 → 0.10 → 0.14 → 0.18（取实测略低，只许升不许降）。
           注意：应用层是本次重构风险最高的层；且巡检结果链路存在一组"假数据实现"（见《基线记录.md》§141），
           本批的测试把它逐条钉住 —— 修那些缺陷时这些断言会失败，属预期。
+          第五十五批：29.70% → 32.73%（inout 的 InOutApplicationService 由 0 覆盖到 118/269 行：
+                   出入库单状态机 submit/audit/withdraw 的合法与非法迁移、审核通过时的入库累加、
+                   出库扣减、无库存与库存不足拒绝、明细数量为空按 1 计）。
+          门槛随之 0.28 → 0.31（取实测略低，只许升不许降）。
         -->
-        <jacoco.min.line>0.28</jacoco.min.line>
+        <jacoco.min.line>0.31</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
