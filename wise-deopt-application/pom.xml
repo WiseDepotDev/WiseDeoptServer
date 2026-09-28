@@ -30,8 +30,13 @@
           第五十六批：32.73% → 38.62%（InventoryApplicationService 由 238 行未覆盖收到只剩 8 行，
                    覆盖 96.6%：产品与库存 CRUD、锁定/解锁、低库存预警、库存统计，
                    以及写库存路径的三处缓存副作用）。门槛 0.31 → 0.37。
+          第五十七批：38.62% → 41.67%（ReportApplicationService 0/229 → 119 行：
+                    任务创建校验、执行状态机 0/1/2/3、列表内存过滤、导出记录映射）。
+                    注意：该类剩余的 110 行**不可达** —— 4 个报表生成器只有 1 个被公开入口调用，
+                    另 3 个生成器 + 3 个数据源方法 + getFileExtension 的 1/2/default 分支都是死代码。
+                    门槛 0.37 → 0.40。
         -->
-        <jacoco.min.line>0.37</jacoco.min.line>
+        <jacoco.min.line>0.40</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
