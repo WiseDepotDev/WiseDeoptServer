@@ -1,0 +1,483 @@
+package com.huicang.wise.application.alert;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
+import com.huicang.wise.domain.alert.AlertEvent;
+import com.huicang.wise.domain.alert.AlertHandleLog;
+import com.huicang.wise.infrastructure.persistence.repository.alert.AlertHandleLogRepository;
+import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
+
+/**
+ * 告警应用服务的单元测试：创建校验与缓存副作用、分页筛选、确认与状态流转、处理日志、统计口径。
+ *
+ * <p>本批把两个**现状缺陷**用断言固定下来（修好之后这些断言会失败，属预期）： ① {@code listAlertEvents} 的 {@code level} 与 {@code
+ * status} 筛选用的是 {@code Integer.equals(Short)}， 恒为 false ⇒ **一旦传入这两个筛选条件就永远返回空表**； ② 告警级别/处理日志里的
+ * {@code levelDescription}、{@code statusDescription}、{@code handlerName}、 {@code
+ * goalStatusDescription} 恒被写成空串（占位，从未真正填充）。
+ */
+@ExtendWith(MockitoExtension.class)
+class AlertApplicationServiceTest {
+
+    private static final long EVENT_ID = 88L;
+
+    @Mock private AlertRepository alertRepository;
+    @Mock private AlertHandleLogRepository alertHandleLogRepository;
+    @Mock private StringRedisTemplate stringRedisTemplate;
+    @Mock private ListOperations<String, String> listOperations;
+
+    private AlertApplicationService service;
+
+    @BeforeEach
+    void setUp() {
+        service =
+                new AlertApplicationService(
+                        alertRepository, alertHandleLogRepository, stringRedisTemplate);
+    }
+
+    private AlertEvent event(Short status, Short level, String sourceModule, Boolean active) {
+        AlertEvent entity = new AlertEvent();
+        entity.setStatus(status);
+        entity.setLevel(level);
+        entity.setSourceModule(sourceModule);
+        entity.setIsActive(active);
+        entity.setTitle("标题");
+        return entity;
+    }
+
+    private void stubRedisList() {
+        lenient().when(stringRedisTemplate.opsForList()).thenReturn(listOperations);
+    }
+
+    private AlertCreateRequest createRequest(String level) {
+        AlertCreateRequest request = new AlertCreateRequest();
+        request.setAlertType("MANUAL");
+        request.setAlertLevel(level);
+        request.setDescription("温度过高");
+        return request;
+    }
+
+    // ---------------- 创建 ----------------
+
+    @Test
+    @DisplayName("创建告警：类型为空被拒")
+    void createAlertRejectsBlankType() {
+        AlertCreateRequest request = createRequest("1");
+        request.setAlertType("  ");
+
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.createAlert(request));
+
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        verify(alertRepository, never()).save(any(AlertEvent.class));
+    }
+
+    @Test
+    @DisplayName("创建告警：类型为 null 被拒")
+    void createAlertRejectsNullType() {
+        AlertCreateRequest request = createRequest("1");
+        request.setAlertType(null);
+
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.createAlert(request));
+
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("创建告警：来源缺省为 MANUAL，初始状态 0 且有效")
+    void createAlertDefaultsSourceModule() {
+        stubRedisList();
+        when(alertRepository.save(any(AlertEvent.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertNotNull(service.createAlert(createRequest("2")));
+
+        ArgumentCaptor<AlertEvent> captor = ArgumentCaptor.forClass(AlertEvent.class);
+        verify(alertRepository).save(captor.capture());
+        AlertEvent saved = captor.getValue();
+        assertEquals("MANUAL", saved.getSourceModule());
+        assertEquals((short) 2, saved.getLevel());
+        assertEquals((short) 0, saved.getStatus());
+        assertEquals(Boolean.TRUE, saved.getIsActive());
+        assertEquals("手动告警", saved.getTitle());
+        assertEquals("温度过高", saved.getMessage());
+        assertNotNull(saved.getCreateTime());
+    }
+
+    @Test
+    @DisplayName("创建告警：级别非法时抛的是 NumberFormatException（未包装成 PARAM_ERROR，现状固定）")
+    void createAlertInvalidLevelLeaksNumberFormatException() {
+        AlertCreateRequest request = createRequest("高");
+
+        assertThrows(NumberFormatException.class, () -> service.createAlert(request));
+        verify(alertRepository, never()).save(any(AlertEvent.class));
+    }
+
+    @Test
+    @DisplayName("创建告警：写入未处理列表并清总览缓存")
+    void createAlertWritesCache() {
+        stubRedisList();
+        when(alertRepository.save(any(AlertEvent.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.createAlert(createRequest("3"));
+
+        verify(listOperations).leftPush("alert:unhandled:list", "null|MANUAL|3");
+        verify(stringRedisTemplate).expire("alert:unhandled:list", Duration.ofHours(6));
+        verify(stringRedisTemplate).delete("dashboard:kpi");
+    }
+
+    // ---------------- 按级别查询 ----------------
+
+    @Test
+    @DisplayName("按级别查询：级别为空或空串时查全部（条件为 null）")
+    void listAlertsByLevelWithoutLevel() {
+        when(alertRepository.findByLevel(null))
+                .thenReturn(List.of(event((short) 0, (short) 1, "X", true)));
+
+        assertEquals(1, service.listAlertsByLevel(null).size());
+        assertEquals(1, service.listAlertsByLevel("").size());
+    }
+
+    @Test
+    @DisplayName("按级别查询：非数字被吞掉，退化为查全部")
+    void listAlertsByLevelSwallowsNonNumeric() {
+        when(alertRepository.findByLevel(null)).thenReturn(List.of());
+
+        assertEquals(0, service.listAlertsByLevel("abc").size());
+    }
+
+    @Test
+    @DisplayName("按级别查询：数字级别透传并映射")
+    void listAlertsByLevelParsesNumber() {
+        when(alertRepository.findByLevel(2))
+                .thenReturn(List.of(event((short) 0, (short) 2, "DEVICE", true)));
+
+        List<AlertDTO> rows = service.listAlertsByLevel("2");
+
+        assertEquals(1, rows.size());
+        assertEquals(2, rows.get(0).getLevel());
+        assertEquals("DEVICE", rows.get(0).getSourceModule());
+    }
+
+    // ---------------- 分页筛选 ----------------
+
+    @Test
+    @DisplayName("告警分页：页码与页大小兜底，且切片正确")
+    void listAlertEventsDefaultsAndSlices() {
+        List<AlertEvent> all =
+                List.of(
+                        event((short) 0, (short) 1, "DEVICE", true),
+                        event((short) 0, (short) 1, "DEVICE", true),
+                        event((short) 0, (short) 1, "DEVICE", true));
+        when(alertRepository.findAll()).thenReturn(all);
+
+        AlertEventPageDTO result = service.listAlertEvents(0, 0, null, null, null, null);
+
+        assertEquals(3L, result.getTotal());
+        assertEquals(3, result.getRows().size());
+    }
+
+    @Test
+    @DisplayName("告警分页：页码越界时返回空行但保留 total")
+    void listAlertEventsOutOfRangePage() {
+        when(alertRepository.findAll())
+                .thenReturn(List.of(event((short) 0, (short) 1, "DEVICE", true)));
+
+        AlertEventPageDTO result = service.listAlertEvents(5, 10, null, null, null, null);
+
+        assertEquals(1L, result.getTotal());
+        assertEquals(0, result.getRows().size());
+    }
+
+    @Test
+    @DisplayName("告警分页：现状缺陷 —— 传 level 筛选恒返回空表（Integer.equals(Short) 恒 false）")
+    void listAlertEventsLevelFilterAlwaysEmpty() {
+        when(alertRepository.findAll())
+                .thenReturn(List.of(event((short) 0, (short) 0, "DEVICE", true)));
+
+        AlertEventPageDTO result = service.listAlertEvents(1, 10, null, 0, null, null);
+
+        // 实测（首版预期写错后按实测更正）：level 筛选不是"条件不匹配"，而是把全部数据都过滤掉，
+        // 因此 total 也随之变成 0 —— 该筛选一旦传入就是"清空结果"开关，而不是筛选。
+        assertEquals(0L, result.getTotal(), "level 筛选一旦传入就恒为空（现状缺陷）");
+        assertEquals(0, result.getRows().size());
+    }
+
+    @Test
+    @DisplayName("告警分页：现状缺陷 —— 传 status 筛选恒返回空表")
+    void listAlertEventsStatusFilterAlwaysEmpty() {
+        when(alertRepository.findAll())
+                .thenReturn(List.of(event((short) 0, (short) 1, "DEVICE", true)));
+
+        AlertEventPageDTO result = service.listAlertEvents(1, 10, null, null, 0, null);
+
+        assertEquals(0, result.getRows().size(), "status 筛选一旦传入就恒为空（现状缺陷）");
+    }
+
+    @Test
+    @DisplayName("告警分页：来源模块筛选生效（空串视为不过滤）")
+    void listAlertEventsFiltersBySourceModule() {
+        when(alertRepository.findAll())
+                .thenReturn(
+                        List.of(
+                                event((short) 0, (short) 1, "DEVICE", true),
+                                event((short) 0, (short) 1, "SYSTEM", true)));
+
+        assertEquals(
+                1, service.listAlertEvents(1, 10, "DEVICE", null, null, null).getRows().size());
+        assertEquals(2, service.listAlertEvents(1, 10, "  ", null, null, null).getRows().size());
+    }
+
+    @Test
+    @DisplayName("告警分页：是否有效筛选生效")
+    void listAlertEventsFiltersByIsActive() {
+        when(alertRepository.findAll())
+                .thenReturn(
+                        List.of(
+                                event((short) 0, (short) 1, "DEVICE", true),
+                                event((short) 2, (short) 1, "DEVICE", false)));
+
+        assertEquals(
+                1,
+                service.listAlertEvents(1, 10, null, null, null, Boolean.FALSE).getRows().size());
+    }
+
+    // ---------------- 详情 / 确认 / 状态流转 ----------------
+
+    @Test
+    @DisplayName("告警详情：不存在抛 NOT_FOUND")
+    void getAlertMissing() {
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.empty());
+
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.getAlert(EVENT_ID));
+
+        assertEquals(ErrorCode.NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("告警详情：命中返回完整视图")
+    void getAlertFound() {
+        when(alertRepository.findById(EVENT_ID))
+                .thenReturn(Optional.of(event((short) 0, (short) 3, "DEVICE", true)));
+
+        AlertDTO dto = service.getAlert(EVENT_ID);
+
+        assertEquals(3, dto.getLevel());
+        assertEquals(0, dto.getStatus());
+        assertEquals(Boolean.TRUE, dto.getIsActive());
+    }
+
+    @Test
+    @DisplayName("确认告警：不存在抛 NOT_FOUND")
+    void acknowledgeMissing() {
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.empty());
+
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.acknowledgeAlert(EVENT_ID));
+
+        assertEquals(ErrorCode.NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("确认告警：已处理过的直接早退，不落库、不写日志、不清缓存")
+    void acknowledgeAlreadyHandledIsNoop() {
+        when(alertRepository.findById(EVENT_ID))
+                .thenReturn(Optional.of(event((short) 1, (short) 1, "DEVICE", true)));
+
+        service.acknowledgeAlert(EVENT_ID);
+
+        verify(alertRepository, never()).save(any(AlertEvent.class));
+        verify(alertHandleLogRepository, never()).save(any(AlertHandleLog.class));
+        verify(stringRedisTemplate, never()).delete(any(String.class));
+    }
+
+    @Test
+    @DisplayName("确认告警：状态置 1 并写一条“快速确认”日志")
+    void acknowledgeMovesToStatusOneAndLogs() {
+        AlertEvent entity = event((short) 0, (short) 2, "DEVICE", true);
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
+
+        service.acknowledgeAlert(EVENT_ID);
+
+        assertEquals((short) 1, entity.getStatus());
+        verify(alertRepository).save(entity);
+        ArgumentCaptor<AlertHandleLog> captor = ArgumentCaptor.forClass(AlertHandleLog.class);
+        verify(alertHandleLogRepository).save(captor.capture());
+        AlertHandleLog log = captor.getValue();
+        assertEquals(EVENT_ID, log.getEventId());
+        assertEquals(1L, log.getHandlerId());
+        assertEquals((short) 1, log.getGoalStatus());
+        assertEquals("快速确认", log.getRemark());
+        assertNotNull(log.getHandleTime());
+        verify(stringRedisTemplate).delete("dashboard:kpi");
+    }
+
+    @Test
+    @DisplayName("确认告警：状态为 null 时按未处理处理")
+    void acknowledgeTreatsNullStatusAsUnhandled() {
+        AlertEvent entity = event(null, (short) 2, "DEVICE", true);
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
+
+        service.acknowledgeAlert(EVENT_ID);
+
+        assertEquals((short) 1, entity.getStatus());
+    }
+
+    @Test
+    @DisplayName("更新状态：请求或状态为空被拒")
+    void updateAlertStatusRejectsMissingRequest() {
+        BusinessException ex1 =
+                assertThrows(
+                        BusinessException.class,
+                        () -> service.updateAlertStatus(EVENT_ID, new UpdateAlertStatusRequest()));
+        assertEquals(ErrorCode.PARAM_ERROR, ex1.getErrorCode());
+
+        BusinessException ex2 =
+                assertThrows(
+                        BusinessException.class, () -> service.updateAlertStatus(EVENT_ID, null));
+        assertEquals(ErrorCode.PARAM_ERROR, ex2.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("更新状态：告警不存在抛 NOT_FOUND")
+    void updateAlertStatusMissingAlert() {
+        UpdateAlertStatusRequest request = new UpdateAlertStatusRequest();
+        request.setStatus(1);
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.empty());
+
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> service.updateAlertStatus(EVENT_ID, request));
+
+        assertEquals(ErrorCode.NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("更新状态为 2（已处理）：写解决人/解决时间并置为无效")
+    void updateAlertStatusToResolved() {
+        AlertEvent entity = event((short) 1, (short) 2, "DEVICE", true);
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
+        UpdateAlertStatusRequest request = new UpdateAlertStatusRequest();
+        request.setStatus(2);
+        request.setHandlerId(9L);
+        request.setRemark("已修复");
+
+        service.updateAlertStatus(EVENT_ID, request);
+
+        assertEquals((short) 2, entity.getStatus());
+        assertEquals(request.getHandlerId(), entity.getResolvedBy());
+        assertNotNull(entity.getResolvedTime());
+        assertEquals(Boolean.FALSE, entity.getIsActive());
+        ArgumentCaptor<AlertHandleLog> captor = ArgumentCaptor.forClass(AlertHandleLog.class);
+        verify(alertHandleLogRepository).save(captor.capture());
+        assertEquals((short) 2, captor.getValue().getGoalStatus());
+        assertEquals("已修复", captor.getValue().getRemark());
+    }
+
+    @Test
+    @DisplayName("更新状态为 1（处理中）：不动解决人/解决时间/有效性")
+    void updateAlertStatusToHandlingKeepsResolutionFields() {
+        AlertEvent entity = event((short) 0, (short) 2, "DEVICE", true);
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
+        UpdateAlertStatusRequest request = new UpdateAlertStatusRequest();
+        request.setStatus(1);
+
+        service.updateAlertStatus(EVENT_ID, request);
+
+        assertEquals((short) 1, entity.getStatus());
+        assertNull(entity.getResolvedTime());
+        assertNull(entity.getResolvedBy());
+        assertEquals(Boolean.TRUE, entity.getIsActive());
+    }
+
+    // ---------------- 处理日志 / 统计 ----------------
+
+    @Test
+    @DisplayName("处理日志：映射并给出 total；处理人姓名与状态描述恒为空串（占位）")
+    void listAlertHandleLogsMapsRows() {
+        AlertHandleLog log = new AlertHandleLog();
+        log.setEventId(EVENT_ID);
+        log.setHandlerId(9L);
+        log.setGoalStatus((short) 2);
+        log.setRemark("已修复");
+        when(alertHandleLogRepository.findByEventId(EVENT_ID)).thenReturn(List.of(log));
+
+        AlertHandleLogPageDTO page = service.listAlertHandleLogs(EVENT_ID);
+
+        assertEquals(1L, page.getTotal());
+        assertEquals(1, page.getRows().size());
+        assertEquals("", page.getRows().get(0).getHandlerName());
+        assertEquals("", page.getRows().get(0).getGoalStatusDescription());
+        assertEquals(2, page.getRows().get(0).getGoalStatus());
+    }
+
+    @Test
+    @DisplayName("告警摘要：级别与状态描述恒为空串（占位，从未填充）")
+    void summaryDescriptionsArePlaceholders() {
+        when(alertRepository.findAll())
+                .thenReturn(List.of(event((short) 0, (short) 3, "DEVICE", true)));
+
+        AlertEventPageDTO page = service.listAlertEvents(1, 10, null, null, null, null);
+
+        assertEquals(1, page.getRows().size());
+        assertEquals("", page.getRows().get(0).getLevelDescription());
+        assertEquals("", page.getRows().get(0).getStatusDescription());
+        assertEquals(3, page.getRows().get(0).getLevel());
+    }
+
+    @Test
+    @DisplayName("告警统计：按状态、级别、来源模块分别计数（待处理=未处理+处理中）")
+    void getAlertStatisticsCountsByStatusLevelAndModule() {
+        when(alertRepository.findAll())
+                .thenReturn(
+                        List.of(
+                                event((short) 0, (short) 3, "DEVICE", true),
+                                event((short) 1, (short) 2, "INVENTORY", true),
+                                event((short) 2, (short) 0, "SYSTEM", false),
+                                event((short) 3, (short) 1, "RFID_VIDEO", true),
+                                event(null, null, null, null)));
+
+        Map<String, Object> statistics = service.getAlertStatistics();
+
+        assertEquals(5L, statistics.get("totalAlerts"));
+        assertEquals(1L, statistics.get("unhandledAlerts"));
+        assertEquals(1L, statistics.get("handlingAlerts"));
+        assertEquals(1L, statistics.get("handledAlerts"));
+        assertEquals(1L, statistics.get("ignoredAlerts"));
+        // 只统计"未处理 + 处理中"这两条
+        assertEquals(1L, statistics.get("criticalAlerts"));
+        assertEquals(1L, statistics.get("severeAlerts"));
+        assertEquals(0L, statistics.get("warningAlerts"));
+        assertEquals(0L, statistics.get("infoAlerts"));
+        assertEquals(1L, statistics.get("deviceAlerts"));
+        assertEquals(1L, statistics.get("inventoryAlerts"));
+        assertEquals(0L, statistics.get("securityAlerts"));
+        assertEquals(0L, statistics.get("systemAlerts"));
+    }
+}

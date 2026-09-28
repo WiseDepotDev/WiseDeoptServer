@@ -35,8 +35,11 @@
                     注意：该类剩余的 110 行**不可达** —— 4 个报表生成器只有 1 个被公开入口调用，
                     另 3 个生成器 + 3 个数据源方法 + getFileExtension 的 1/2/default 分支都是死代码。
                     门槛 0.37 → 0.40。
+          第五十八批：41.67% → 47.31%（AlertApplicationService 0/220 → **220/220 行，该类已 100% 覆盖**：
+                    创建校验与缓存副作用、分页筛选、确认与状态流转、处理日志、13 项统计口径）。
+                    门槛 0.40 → 0.45。
         -->
-        <jacoco.min.line>0.40</jacoco.min.line>
+        <jacoco.min.line>0.45</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
