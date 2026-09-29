@@ -2,7 +2,6 @@ package com.huicang.wise.application.user;
 
 import com.huicang.wise.application.captcha.CaptchaApplicationService;
 import com.huicang.wise.application.common.DeleteWithCaptchaRequest;
-import com.huicang.wise.application.oss.FileStorageApplicationService;
 import com.huicang.wise.application.password.ChangePasswordRequest;
 import com.huicang.wise.application.password.PasswordApplicationService;
 import com.huicang.wise.application.role.RoleDTO;
@@ -48,7 +47,6 @@ public class UserApplicationService {
     private final NfcBadgeRepository nfcBadgeRepository;
     private final KeyAccessAuditLogRepository keyAccessAuditLogRepository;
     private final UserLoginLogRepository userLoginLogRepository;
-    private final FileStorageApplicationService fileStorageApplicationService;
     private final CaptchaApplicationService captchaApplicationService;
 
     public UserApplicationService(
@@ -62,7 +60,6 @@ public class UserApplicationService {
             NfcBadgeRepository nfcBadgeRepository,
             KeyAccessAuditLogRepository keyAccessAuditLogRepository,
             UserLoginLogRepository userLoginLogRepository,
-            FileStorageApplicationService fileStorageApplicationService,
             CaptchaApplicationService captchaApplicationService) {
         this.userCoreRepository = userCoreRepository;
         this.userProfileRepository = userProfileRepository;
@@ -74,7 +71,6 @@ public class UserApplicationService {
         this.nfcBadgeRepository = nfcBadgeRepository;
         this.keyAccessAuditLogRepository = keyAccessAuditLogRepository;
         this.userLoginLogRepository = userLoginLogRepository;
-        this.fileStorageApplicationService = fileStorageApplicationService;
         this.captchaApplicationService = captchaApplicationService;
     }
 
@@ -85,7 +81,8 @@ public class UserApplicationService {
         }
 
         UserCore user = new UserCore();
-        user.setUserId(System.nanoTime() + (long) (Math.random() * 1000));
+        // 主键交给数据库 IDENTITY 生成（DDL：user_core.user_id 为 auto_increment）；
+        // 不再在应用层用 System.nanoTime() 造主键 —— 跨 JVM 不唯一，且其符号位在 JDK 规范上未定义。
         user.setUsername(request.getUsername());
         user.setUserType((short) 0);
         user.setStatus((short) 1);
@@ -132,7 +129,8 @@ public class UserApplicationService {
             try {
                 profile.setAvatarFileId(Long.parseLong(request.getAvatar()));
             } catch (NumberFormatException e) {
-                profile.setAvatarFileId(null);
+                throw new BusinessException(
+                        ErrorCode.PARAM_ERROR, "头像ID格式不正确: " + request.getAvatar());
             }
         }
         if (request.getEnabled() != null) {
@@ -244,8 +242,7 @@ public class UserApplicationService {
     }
 
     private void updateRole(Long userId, String roleCode) {
-        userRoleApplicationService.removeUserRoles(userId);
-
+        // 先解析角色、再删旧角色：反过来会在"角色名不存在"时把用户角色删空（只靠事务回滚兜底）。
         String roleName = mapRoleCodeToName(roleCode);
         com.huicang.wise.domain.auth.Role role =
                 roleRepository
@@ -254,6 +251,8 @@ public class UserApplicationService {
                                 () ->
                                         new BusinessException(
                                                 ErrorCode.NOT_FOUND, "角色不存在: " + roleCode));
+
+        userRoleApplicationService.removeUserRoles(userId);
 
         com.huicang.wise.domain.auth.UserRole userRole =
                 new com.huicang.wise.domain.auth.UserRole();

@@ -231,7 +231,7 @@ public class TagApplicationService {
             try {
                 statusValue = Short.parseShort(status);
             } catch (NumberFormatException e) {
-                statusValue = null;
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "标签状态格式不正确: " + status);
             }
         }
 
@@ -260,7 +260,7 @@ public class TagApplicationService {
         int actualPageSize = pageSize != null && pageSize > 0 ? pageSize : 10;
         int pageNum = actualPage - 1;
 
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
         Pageable pageable = PageRequest.of(pageNum, actualPageSize, sort);
 
         Page<ProductTag> pageResult = tagRepository.findByProductId(productId, pageable);

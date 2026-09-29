@@ -45,8 +45,12 @@
           第六十批：52.74% → 56.69%（UserApplicationService 0/150 → 148/150 行：
                     创建/更新/查询/删除/级联清理、角色码映射、改密码转交、验证码前置校验）。
                     门槛 0.50 → 0.55。
+          第六十一批（集中修）：56.69% → 58.17%（可覆盖行 3902 → 3815 —— 删掉 179 行不可达报表代码）。
+                    修掉 P0 排序属性 createdAt、Alert 的 level/status 筛选清空开关、User 的
+                    应用层自造主键 / updateRole 先删后查 / 静默吞非法值，补齐告警描述与处理人姓名，
+                    并删除死依赖与不可达报表生成器。门槛 0.55 → 0.57。
         -->
-        <jacoco.min.line>0.55</jacoco.min.line>
+        <jacoco.min.line>0.57</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 

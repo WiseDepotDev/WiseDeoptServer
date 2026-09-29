@@ -4,8 +4,10 @@ import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
 import com.huicang.wise.domain.alert.AlertHandleLog;
+import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertHandleLogRepository;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
+import com.huicang.wise.infrastructure.persistence.repository.user.UserCoreRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -29,14 +31,17 @@ public class AlertApplicationService {
 
     private final AlertRepository alertRepository;
     private final AlertHandleLogRepository alertHandleLogRepository;
+    private final UserCoreRepository userCoreRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
     public AlertApplicationService(
             AlertRepository alertRepository,
             AlertHandleLogRepository alertHandleLogRepository,
+            UserCoreRepository userCoreRepository,
             StringRedisTemplate stringRedisTemplate) {
         this.alertRepository = alertRepository;
         this.alertHandleLogRepository = alertHandleLogRepository;
+        this.userCoreRepository = userCoreRepository;
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
@@ -82,7 +87,7 @@ public class AlertApplicationService {
             try {
                 level = Integer.parseInt(alertLevel);
             } catch (NumberFormatException e) {
-                level = null;
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "告警级别格式不正确: " + alertLevel);
             }
         }
         List<AlertEvent> entities = alertRepository.findByLevel(level);
@@ -105,8 +110,8 @@ public class AlertApplicationService {
                                         sourceModule == null
                                                 || sourceModule.isBlank()
                                                 || sourceModule.equals(entity.getSourceModule()))
-                        .filter(entity -> level == null || level.equals(entity.getLevel()))
-                        .filter(entity -> status == null || status.equals(entity.getStatus()))
+                        .filter(entity -> matchesNumber(level, entity.getLevel()))
+                        .filter(entity -> matchesNumber(status, entity.getStatus()))
                         .filter(entity -> isActive == null || isActive.equals(entity.getIsActive()))
                         .collect(Collectors.toList());
         int total = filtered.size();
@@ -217,6 +222,54 @@ public class AlertApplicationService {
         return dto;
     }
 
+    /** 按数值比较可空枚举：{@code Integer.equals(Short)} 恒为 false，曾把筛选变成"清空开关"。 */
+    private static boolean matchesNumber(Integer expected, Number actual) {
+        return expected == null || (actual != null && expected.intValue() == actual.intValue());
+    }
+
+    private static String levelDescription(Short level) {
+        if (level == null) {
+            return null;
+        }
+        switch (level) {
+            case 0:
+                return "提示";
+            case 1:
+                return "警告";
+            case 2:
+                return "严重";
+            case 3:
+                return "紧急";
+            default:
+                return "未知";
+        }
+    }
+
+    private static String statusDescription(Short status) {
+        if (status == null) {
+            return null;
+        }
+        switch (status) {
+            case 0:
+                return "未处理";
+            case 1:
+                return "处理中";
+            case 2:
+                return "已处理";
+            case 3:
+                return "已忽略";
+            default:
+                return "未知";
+        }
+    }
+
+    private String resolveHandlerName(Long handlerId) {
+        if (handlerId == null) {
+            return null;
+        }
+        return userCoreRepository.findById(handlerId).map(UserCore::getUsername).orElse(null);
+    }
+
     private AlertDTO toAlertDTO(AlertEvent entity) {
         AlertDTO dto = new AlertDTO();
         dto.setEventId(entity.getEventId());
@@ -238,11 +291,11 @@ public class AlertApplicationService {
         dto.setEventId(entity.getEventId());
         dto.setSourceModule(entity.getSourceModule());
         dto.setLevel(entity.getLevel() != null ? entity.getLevel().intValue() : null);
-        dto.setLevelDescription("");
+        dto.setLevelDescription(levelDescription(entity.getLevel()));
         dto.setTitle(entity.getTitle());
         dto.setMessage(entity.getMessage());
         dto.setStatus(entity.getStatus() != null ? entity.getStatus().intValue() : null);
-        dto.setStatusDescription("");
+        dto.setStatusDescription(statusDescription(entity.getStatus()));
         dto.setIsActive(entity.getIsActive());
         dto.setCreateTime(entity.getCreateTime());
         dto.setResolvedTime(entity.getResolvedTime());
@@ -256,10 +309,10 @@ public class AlertApplicationService {
         dto.setLogId(entity.getLogId());
         dto.setEventId(entity.getEventId());
         dto.setHandlerId(entity.getHandlerId());
-        dto.setHandlerName("");
+        dto.setHandlerName(resolveHandlerName(entity.getHandlerId()));
         dto.setGoalStatus(
                 entity.getGoalStatus() != null ? entity.getGoalStatus().intValue() : null);
-        dto.setGoalStatusDescription("");
+        dto.setGoalStatusDescription(statusDescription(entity.getGoalStatus()));
         dto.setRemark(entity.getRemark());
         dto.setHandleTime(entity.getHandleTime());
         return dto;

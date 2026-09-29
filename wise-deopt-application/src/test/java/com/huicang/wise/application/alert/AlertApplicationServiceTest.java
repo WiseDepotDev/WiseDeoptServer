@@ -14,8 +14,10 @@ import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
 import com.huicang.wise.domain.alert.AlertHandleLog;
+import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertHandleLogRepository;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
+import com.huicang.wise.infrastructure.persistence.repository.user.UserCoreRepository;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,7 @@ class AlertApplicationServiceTest {
 
     @Mock private AlertRepository alertRepository;
     @Mock private AlertHandleLogRepository alertHandleLogRepository;
+    @Mock private UserCoreRepository userCoreRepository;
     @Mock private StringRedisTemplate stringRedisTemplate;
     @Mock private ListOperations<String, String> listOperations;
 
@@ -54,7 +57,10 @@ class AlertApplicationServiceTest {
     void setUp() {
         service =
                 new AlertApplicationService(
-                        alertRepository, alertHandleLogRepository, stringRedisTemplate);
+                        alertRepository,
+                        alertHandleLogRepository,
+                        userCoreRepository,
+                        stringRedisTemplate);
     }
 
     private AlertEvent event(Short status, Short level, String sourceModule, Boolean active) {
@@ -163,11 +169,13 @@ class AlertApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("按级别查询：非数字被吞掉，退化为查全部")
-    void listAlertsByLevelSwallowsNonNumeric() {
-        when(alertRepository.findByLevel(null)).thenReturn(List.of());
+    @DisplayName("按级别查询：非数字改为抛 PARAM_ERROR（不再静默退化为查全部）")
+    void listAlertsByLevelRejectsNonNumeric() {
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.listAlertsByLevel("abc"));
 
-        assertEquals(0, service.listAlertsByLevel("abc").size());
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        verify(alertRepository, never()).findByLevel(any());
     }
 
     @Test
@@ -214,28 +222,34 @@ class AlertApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("告警分页：现状缺陷 —— 传 level 筛选恒返回空表（Integer.equals(Short) 恒 false）")
-    void listAlertEventsLevelFilterAlwaysEmpty() {
+    @DisplayName("告警分页：level 筛选生效（修复 Integer.equals(Short) 恒 false）")
+    void listAlertEventsFiltersByLevel() {
         when(alertRepository.findAll())
-                .thenReturn(List.of(event((short) 0, (short) 0, "DEVICE", true)));
+                .thenReturn(
+                        List.of(
+                                event((short) 0, (short) 0, "DEVICE", true),
+                                event((short) 0, (short) 2, "DEVICE", true)));
 
         AlertEventPageDTO result = service.listAlertEvents(1, 10, null, 0, null, null);
 
-        // 实测（首版预期写错后按实测更正）：level 筛选不是"条件不匹配"，而是把全部数据都过滤掉，
-        // 因此 total 也随之变成 0 —— 该筛选一旦传入就是"清空结果"开关，而不是筛选。
-        assertEquals(0L, result.getTotal(), "level 筛选一旦传入就恒为空（现状缺陷）");
-        assertEquals(0, result.getRows().size());
+        assertEquals(1L, result.getTotal());
+        assertEquals(1, result.getRows().size());
+        assertEquals(0, result.getRows().get(0).getLevel());
     }
 
     @Test
-    @DisplayName("告警分页：现状缺陷 —— 传 status 筛选恒返回空表")
-    void listAlertEventsStatusFilterAlwaysEmpty() {
+    @DisplayName("告警分页：status 筛选生效（修复后不再返回空表）")
+    void listAlertEventsFiltersByStatus() {
         when(alertRepository.findAll())
-                .thenReturn(List.of(event((short) 0, (short) 1, "DEVICE", true)));
+                .thenReturn(
+                        List.of(
+                                event((short) 0, (short) 1, "DEVICE", true),
+                                event((short) 2, (short) 1, "DEVICE", false)));
 
         AlertEventPageDTO result = service.listAlertEvents(1, 10, null, null, 0, null);
 
-        assertEquals(0, result.getRows().size(), "status 筛选一旦传入就恒为空（现状缺陷）");
+        assertEquals(1L, result.getTotal());
+        assertEquals(0, result.getRows().get(0).getStatus());
     }
 
     @Test
@@ -419,7 +433,7 @@ class AlertApplicationServiceTest {
     // ---------------- 处理日志 / 统计 ----------------
 
     @Test
-    @DisplayName("处理日志：映射并给出 total；处理人姓名与状态描述恒为空串（占位）")
+    @DisplayName("处理日志：映射并给出 total；处理人姓名与状态描述已真实填充")
     void listAlertHandleLogsMapsRows() {
         AlertHandleLog log = new AlertHandleLog();
         log.setEventId(EVENT_ID);
@@ -427,28 +441,28 @@ class AlertApplicationServiceTest {
         log.setGoalStatus((short) 2);
         log.setRemark("已修复");
         when(alertHandleLogRepository.findByEventId(EVENT_ID)).thenReturn(List.of(log));
+        UserCore handler = new UserCore();
+        handler.setUsername("zhang");
+        when(userCoreRepository.findById(9L)).thenReturn(Optional.of(handler));
 
         AlertHandleLogPageDTO page = service.listAlertHandleLogs(EVENT_ID);
 
         assertEquals(1L, page.getTotal());
-        assertEquals(1, page.getRows().size());
-        assertEquals("", page.getRows().get(0).getHandlerName());
-        assertEquals("", page.getRows().get(0).getGoalStatusDescription());
+        assertEquals("zhang", page.getRows().get(0).getHandlerName());
+        assertEquals("已处理", page.getRows().get(0).getGoalStatusDescription());
         assertEquals(2, page.getRows().get(0).getGoalStatus());
     }
 
     @Test
-    @DisplayName("告警摘要：级别与状态描述恒为空串（占位，从未填充）")
-    void summaryDescriptionsArePlaceholders() {
+    @DisplayName("告警摘要：级别与状态描述已真实映射（不再是空串占位）")
+    void summaryDescriptionsAreMapped() {
         when(alertRepository.findAll())
                 .thenReturn(List.of(event((short) 0, (short) 3, "DEVICE", true)));
 
         AlertEventPageDTO page = service.listAlertEvents(1, 10, null, null, null, null);
 
-        assertEquals(1, page.getRows().size());
-        assertEquals("", page.getRows().get(0).getLevelDescription());
-        assertEquals("", page.getRows().get(0).getStatusDescription());
-        assertEquals(3, page.getRows().get(0).getLevel());
+        assertEquals("紧急", page.getRows().get(0).getLevelDescription());
+        assertEquals("未处理", page.getRows().get(0).getStatusDescription());
     }
 
     @Test

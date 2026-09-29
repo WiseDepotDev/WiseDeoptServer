@@ -365,15 +365,14 @@ class TagApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("标签列表：非法状态被吞成 null（退化为不筛选）")
-    void listTagsSwallowsInvalidStatus() {
-        when(tagRepository.findTags(any(), any(), any(), any())).thenReturn(Page.empty());
+    @DisplayName("标签列表：非法状态改为抛 PARAM_ERROR（不再静默退化为不筛选）")
+    void listTagsRejectsInvalidStatus() {
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class, () -> service.listTags(null, "启用", null, 1, 10));
 
-        service.listTags(null, "启用", null, 1, 10);
-
-        ArgumentCaptor<Short> captor = ArgumentCaptor.forClass(Short.class);
-        verify(tagRepository).findTags(any(), captor.capture(), any(), any());
-        assertNull(captor.getValue());
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        verify(tagRepository, never()).findTags(any(), any(), any(), any());
     }
 
     @Test
@@ -390,8 +389,8 @@ class TagApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("按产品查标签：现状不一致 —— 排序属性是 createdAt 而非 createTime")
-    void listTagsByProductSortsByInconsistentProperty() {
+    @DisplayName("按产品查标签：排序属性与实体字段一致（createTime）")
+    void listTagsByProductSortsByCreateTime() {
         when(tagRepository.findByProductId(any(), any())).thenReturn(Page.empty());
 
         service.listTagsByProduct(PRODUCT_ID, 0, 0);
@@ -401,9 +400,11 @@ class TagApplicationServiceTest {
         assertEquals(0, captor.getValue().getPageNumber());
         assertEquals(10, captor.getValue().getPageSize());
         assertNotNull(
+                captor.getValue().getSort().getOrderFor("createTime"),
+                "修复后：排序属性必须与 ProductTag 的实体字段 createTime 一致");
+        assertNull(
                 captor.getValue().getSort().getOrderFor("createdAt"),
-                "现状：这里的排序属性是 createdAt，与本类其它方法与实体字段 createTime 不一致");
-        assertNull(captor.getValue().getSort().getOrderFor("createTime"));
+                "createdAt 在实体上不存在，传下去会让 Spring Data 抛 PropertyReferenceException");
     }
 
     @Test

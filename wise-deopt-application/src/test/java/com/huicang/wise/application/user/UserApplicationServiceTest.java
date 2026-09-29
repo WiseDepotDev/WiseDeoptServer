@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 
 import com.huicang.wise.application.captcha.CaptchaApplicationService;
 import com.huicang.wise.application.common.DeleteWithCaptchaRequest;
-import com.huicang.wise.application.oss.FileStorageApplicationService;
 import com.huicang.wise.application.password.ChangePasswordRequest;
 import com.huicang.wise.application.password.PasswordApplicationService;
 import com.huicang.wise.application.role.RoleDTO;
@@ -68,7 +67,6 @@ class UserApplicationServiceTest {
     @Mock private NfcBadgeRepository nfcBadgeRepository;
     @Mock private KeyAccessAuditLogRepository keyAccessAuditLogRepository;
     @Mock private UserLoginLogRepository userLoginLogRepository;
-    @Mock private FileStorageApplicationService fileStorageApplicationService;
     @Mock private CaptchaApplicationService captchaApplicationService;
 
     private UserApplicationService service;
@@ -87,7 +85,6 @@ class UserApplicationServiceTest {
                         nfcBadgeRepository,
                         keyAccessAuditLogRepository,
                         userLoginLogRepository,
-                        fileStorageApplicationService,
                         captchaApplicationService);
     }
 
@@ -144,7 +141,7 @@ class UserApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("创建用户：新用户默认启用、未删除、类型 0")
+    @DisplayName("创建用户：新用户默认启用、未删除、类型 0，资料挂到数据库赋予的ID 上")
     void createUserFillsDefaults() {
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername("zhang");
@@ -152,7 +149,13 @@ class UserApplicationServiceTest {
         request.setEmail("z@example.com");
         when(userCoreRepository.findByUsername("zhang")).thenReturn(Optional.empty());
         when(userCoreRepository.save(any(UserCore.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(
+                        invocation -> {
+                            UserCore toSave = invocation.getArgument(0);
+                            assertNull(toSave.getUserId(), "主键必须留给数据库生成");
+                            toSave.setUserId(USER_ID);
+                            return toSave;
+                        });
         when(userProfileRepository.save(any(UserProfile.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -170,8 +173,7 @@ class UserApplicationServiceTest {
         ArgumentCaptor<UserProfile> profileCaptor = ArgumentCaptor.forClass(UserProfile.class);
         verify(userProfileRepository).save(profileCaptor.capture());
         UserProfile savedProfile = profileCaptor.getValue();
-        // 资料必须挂到"刚刚新建的那个用户 ID"上 —— 而该 ID 是应用层自造的（见下一条用例）
-        assertEquals(savedUser.getUserId().longValue(), savedProfile.getUserId().longValue());
+        assertEquals(USER_ID, savedProfile.getUserId().longValue());
         assertEquals("张三", savedProfile.getNickname());
         assertEquals(1L, savedProfile.getUpdateBy());
 
@@ -180,23 +182,25 @@ class UserApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("创建用户：现状固定 —— 主键由应用层自造（落库前实体上已有 userId）")
-    void createUserAssignsPrimaryKeyInApplicationLayer() {
+    @DisplayName("创建用户：不再由应用层自造主键（DDL 中 user_core.user_id 为 auto_increment）")
+    void createUserLetsDatabaseAssignPrimaryKey() {
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername("zhang");
         when(userCoreRepository.findByUsername("zhang")).thenReturn(Optional.empty());
         when(userCoreRepository.save(any(UserCore.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(
+                        invocation -> {
+                            UserCore toSave = invocation.getArgument(0);
+                            assertNull(toSave.getUserId(), "落库前不该有主键");
+                            toSave.setUserId(USER_ID);
+                            return toSave;
+                        });
         when(userProfileRepository.save(any(UserProfile.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         service.createUser(request);
 
-        ArgumentCaptor<UserCore> captor = ArgumentCaptor.forClass(UserCore.class);
-        verify(userCoreRepository).save(captor.capture());
-        assertNotNull(
-                captor.getValue().getUserId(),
-                "现状：userId 是应用层用 System.nanoTime()+随机数生成的，不是数据库 IDENTITY");
+        verify(userCoreRepository).save(any(UserCore.class));
     }
 
     // ---------------- 更新 ----------------
@@ -255,17 +259,19 @@ class UserApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("更新用户：非数字头像被静默吞掉并置 null（现状）")
-    void updateUserSwallowsInvalidAvatar() {
+    @DisplayName("更新用户：非数字头像改为抛 PARAM_ERROR（不再静默清空已有头像）")
+    void updateUserRejectsInvalidAvatar() {
         UserCore user = user((short) 1);
         UserProfile profile = profile(999L);
         stubUpdateHappyPath(user, profile);
         UserUpdateRequest request = updateRequest();
         request.setAvatar("不是一个数字");
 
-        service.updateUser(request);
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.updateUser(request));
 
-        assertNull(profile.getAvatarFileId(), "现状：解析失败会把已有头像静默清空");
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        assertEquals(999L, profile.getAvatarFileId(), "失败时不得改动原有头像");
     }
 
     @Test
@@ -332,7 +338,7 @@ class UserApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("更新用户：映射出的角色在库里不存在时抛 NOT_FOUND（但角色已被先清空）")
+    @DisplayName("更新用户：角色名不存在时抛 NOT_FOUND，且不得先清空用户角色")
     void updateUserMissingRole() {
         UserCore user = user((short) 1);
         UserProfile profile = profile(null);
@@ -345,8 +351,7 @@ class UserApplicationServiceTest {
                 assertThrows(BusinessException.class, () -> service.updateUser(request));
 
         assertEquals(ErrorCode.NOT_FOUND, ex.getErrorCode());
-        // 现状：先删角色再查角色，失败时删除动作已发生（靠事务回滚兜底）
-        verify(userRoleApplicationService).removeUserRoles(USER_ID);
+        verify(userRoleApplicationService, never()).removeUserRoles(any());
         verify(userRoleRepository, never()).save(any(UserRole.class));
     }
 
