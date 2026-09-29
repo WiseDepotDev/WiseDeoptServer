@@ -53,8 +53,13 @@
                     上传校验与失败补偿、下载与临时链接、列表/详情/删除；并钉住 STD-DATA-01 的三条语义 ——
                     "只有对象已落盘才回收""回收失败不得掩盖原始失败原因""对象删不掉不得先删记录"）。
                     门槛 0.57 → 0.60。
+          第六十三批：61.63% → 64.94%（UserProfileApplicationService 0/126 → **127/127 行，该类 100% 覆盖**：
+                    资料读写、设置读写、头像上传/删除，以及头像读取的**授权判定**（本人或管理员；
+                    管理员按 ADMIN 大小写不敏感 / 超级管理员 / 管理员 三种角色名判）；
+                    顺带修掉 updateUserSettings 新建资料行漏 setUserId 的缺陷）。
+                    门槛 0.60 → 0.63。
         -->
-        <jacoco.min.line>0.60</jacoco.min.line>
+        <jacoco.min.line>0.63</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 

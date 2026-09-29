@@ -156,6 +156,9 @@ public class UserProfileApplicationService {
             if (settings.containsKey("nickname")) {
                 profile.setNickname(settings.get("nickname"));
             }
+            // 与 updateUserProfile 保持一致：新建资料时必须挂上 userId，
+            // 否则会写入一条 userId 为空的资料行（user_profile.user_id 非空约束会直接报错）。
+            profile.setUserId(user.getUserId());
             profile.setUpdateTime(LocalDateTime.now());
             profile.setUpdateBy(user.getUserId());
             userProfileRepository.save(profile);
