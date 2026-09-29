@@ -58,8 +58,12 @@
                     管理员按 ADMIN 大小写不敏感 / 超级管理员 / 管理员 三种角色名判）；
                     顺带修掉 updateUserSettings 新建资料行漏 setUserId 的缺陷）。
                     门槛 0.60 → 0.63。
+          第六十四批：补齐 AuthApplicationService 的授权与节流语义（登录 / NFC / NFC+PIN / 刷新 / 校验 /
+                    权限 / 登出）：验证码校验与账号锁定、IP 封禁判定必须发生在查库之前；用户不存在与
+                    口令错误返回同一错误码；令牌必须区分 access/refresh；管理员按角色名三种写法放行。
+                    门槛 0.63 → 0.66。
         -->
-        <jacoco.min.line>0.63</jacoco.min.line>
+        <jacoco.min.line>0.66</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
