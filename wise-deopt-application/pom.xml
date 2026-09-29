@@ -74,8 +74,12 @@
           第六十七批：70.09% → 72.30%（CaptchaApplicationService 0/89 → 86/89 行：强制校验的
                     "缺失即失败"、开关关闭时跳过、生成的键与 5 分钟 TTL、去混淆字符集、
                     大小写不敏感与成功后立即删除（一次性防重放））。门槛 0.69 → 0.71。
+          第六十八批：72.30% → 74.59%（RfidDataApplicationService 0/87 → **87/87 行，该类 100% 覆盖**：
+                    上报入参校验与空列表短路、RFID 去重、设备校验，以及"是否告警"的三道判定
+                    （未解决告警抑制优先于查有效出库单 → 出库单豁免 → 才触发 3 级违规移动告警），
+                    并钉住告警与消息两条旁路的失败隔离 STD-ERR-02）。门槛 0.71 → 0.73。
         -->
-        <jacoco.min.line>0.71</jacoco.min.line>
+        <jacoco.min.line>0.73</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
