@@ -82,8 +82,12 @@
                     查询/创建（wdak_ 前缀 + 24 位 hex、32 字节 URL-safe Base64 秘密、一次性明文返回）/
                     启停/删除/审计日志/最后使用时间；并钉住两处现状 —— updateBy 被写成 keyId、
                     updateLastUsed 并不存在"最后使用时间"字段可改）。门槛 0.73 → 0.75。
+          第七十批：76.85% → 78.90%（DashboardApplicationService 0/80 → 78/80 行：KPI 缓存命中与
+                    未命中两条路径、缓存回写（管道分隔 + 1 分钟 TTL）、今日告警窗口、进度缓存非法值按 0、
+                    以及一处现状缺陷 —— 畸形缓存不会"回退到实时统计"，会让 KPI 全为 null 且完全不查库）。
+                    门槛 0.75 → 0.77。
         -->
-        <jacoco.min.line>0.75</jacoco.min.line>
+        <jacoco.min.line>0.77</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
