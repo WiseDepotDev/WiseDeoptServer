@@ -94,8 +94,10 @@
                     门槛 0.77 → 0.82。
           第七十五批：83.61% → 85.35%（SyncApplicationService 0/71 → 66/71 行）。
                     门槛 0.82 → 0.84。
+          第七十六批：85.35% → 86.87%（I18nService 0/58 → **58/58 行，该类 100% 覆盖**）。
+                    门槛 0.84 → 0.85。
         -->
-        <jacoco.min.line>0.84</jacoco.min.line>
+        <jacoco.min.line>0.85</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
