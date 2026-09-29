@@ -42,8 +42,11 @@
                     标签 CRUD 与三项唯一性校验、分页与状态筛选、绑定/解绑与批量计数、
                     以及验证码前置校验 —— 用 verifyNoInteractions 钉住"验证码不通过时不得触达任何仓储"）。
                     门槛 0.45 → 0.50。
+          第六十批：52.74% → 56.69%（UserApplicationService 0/150 → 148/150 行：
+                    创建/更新/查询/删除/级联清理、角色码映射、改密码转交、验证码前置校验）。
+                    门槛 0.50 → 0.55。
         -->
-        <jacoco.min.line>0.50</jacoco.min.line>
+        <jacoco.min.line>0.55</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
