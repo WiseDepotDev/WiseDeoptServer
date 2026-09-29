@@ -78,8 +78,12 @@
                     上报入参校验与空列表短路、RFID 去重、设备校验，以及"是否告警"的三道判定
                     （未解决告警抑制优先于查有效出库单 → 出库单豁免 → 才触发 3 级违规移动告警），
                     并钉住告警与消息两条旁路的失败隔离 STD-ERR-02）。门槛 0.71 → 0.73。
+          第六十九批：74.59% → 76.85%（AccessKeyApplicationService 0/86 → **86/86 行，该类 100% 覆盖**：
+                    查询/创建（wdak_ 前缀 + 24 位 hex、32 字节 URL-safe Base64 秘密、一次性明文返回）/
+                    启停/删除/审计日志/最后使用时间；并钉住两处现状 —— updateBy 被写成 keyId、
+                    updateLastUsed 并不存在"最后使用时间"字段可改）。门槛 0.73 → 0.75。
         -->
-        <jacoco.min.line>0.73</jacoco.min.line>
+        <jacoco.min.line>0.75</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
