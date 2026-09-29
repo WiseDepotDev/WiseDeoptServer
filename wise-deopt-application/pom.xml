@@ -96,8 +96,10 @@
                     门槛 0.82 → 0.84。
           第七十六批：85.35% → 86.87%（I18nService 0/58 → **58/58 行，该类 100% 覆盖**）。
                     门槛 0.84 → 0.85。
+          第七十七批：86.87% → 88.29%（PermissionApplicationService 0/54 → **54/54 行，该类 100% 覆盖**）。
+                    门槛 0.85 → 0.87。
         -->
-        <jacoco.min.line>0.85</jacoco.min.line>
+        <jacoco.min.line>0.87</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
