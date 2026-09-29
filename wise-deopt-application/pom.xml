@@ -89,8 +89,11 @@
           第七十一批：78.90% → 80.77%（PasswordApplicationService 0/73 → 72/73 行：改密码/管理员重置/
                     忘记密码三条路径与 salt 兜底；并钉住一处功能缺陷 —— forgotPassword 生成的临时密码
                     既未返回也未发送，调用它等于把账号锁死）。门槛 0.77 → 0.79。
+          第七十至七十四批：78.90% → 83.61%（Dashboard 78/80、Password 72/73、
+                    InOutApplicationService 118/269 → 226/269 写入路径）。
+                    门槛 0.77 → 0.82。
         -->
-        <jacoco.min.line>0.79</jacoco.min.line>
+        <jacoco.min.line>0.82</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
