@@ -86,8 +86,11 @@
                     未命中两条路径、缓存回写（管道分隔 + 1 分钟 TTL）、今日告警窗口、进度缓存非法值按 0、
                     以及一处现状缺陷 —— 畸形缓存不会"回退到实时统计"，会让 KPI 全为 null 且完全不查库）。
                     门槛 0.75 → 0.77。
+          第七十一批：78.90% → 80.77%（PasswordApplicationService 0/73 → 72/73 行：改密码/管理员重置/
+                    忘记密码三条路径与 salt 兜底；并钉住一处功能缺陷 —— forgotPassword 生成的临时密码
+                    既未返回也未发送，调用它等于把账号锁死）。门槛 0.77 → 0.79。
         -->
-        <jacoco.min.line>0.77</jacoco.min.line>
+        <jacoco.min.line>0.79</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
