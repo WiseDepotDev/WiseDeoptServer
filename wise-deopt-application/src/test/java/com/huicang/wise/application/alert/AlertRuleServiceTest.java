@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,7 +14,6 @@ import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
 import java.time.LocalDateTime;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,13 +39,6 @@ class AlertRuleServiceTest {
     @BeforeEach
     void setUp() {
         service = new AlertRuleService(alertEventRepository);
-    }
-
-    private AlertEvent existingAlert(String message) {
-        AlertEvent entity = new AlertEvent();
-        entity.setMessage(message);
-        entity.setStatus((short) 0);
-        return entity;
     }
 
     private AlertEvent capturedEntity() {
@@ -274,97 +265,5 @@ class AlertRuleServiceTest {
         assertTrue(saved.getMessage().contains("二号仓"), "实际: " + saved.getMessage());
         assertTrue(saved.getMessage().contains("100"), "实际: " + saved.getMessage());
         assertTrue(saved.getMessage().contains("88"), "实际: " + saved.getMessage());
-    }
-
-    // ---------------- 定时巡检（现状缺陷） ----------------
-
-    @Test
-    @DisplayName("巡检设备离线：没有待处理告警时不产生任何告警")
-    void deviceOfflineCheckWithoutAlerts() {
-        when(alertEventRepository.findByStatus(0)).thenReturn(List.of());
-
-        service.checkDeviceOfflineStatus();
-
-        verify(alertEventRepository, never()).save(any(AlertEvent.class));
-    }
-
-    @Test
-    @DisplayName("巡检设备离线：不命中关键字的告警不触发新告警")
-    void deviceOfflineCheckIgnoresUnrelatedAlerts() {
-        when(alertEventRepository.findByStatus(0))
-                .thenReturn(List.of(existingAlert("库存异常：主仓库差异 5")));
-
-        service.checkDeviceOfflineStatus();
-
-        verify(alertEventRepository, never()).save(any(AlertEvent.class));
-    }
-
-    @Test
-    @DisplayName("现状缺陷：巡检设备离线生成的是写死的示例告警（与输入告警无关，不读心跳）")
-    void deviceOfflineCheckCreatesHardcodedDemoAlert() {
-        stubSave();
-        when(alertEventRepository.findByStatus(0)).thenReturn(List.of(existingAlert("某设备离线了")));
-
-        service.checkDeviceOfflineStatus();
-
-        AlertEvent saved = capturedEntity();
-        assertEquals("DEVICE", saved.getSourceModule());
-        assertTrue(
-                saved.getMessage().contains("示例设备"),
-                "现状：设备名是写死的示例值，而不是从中断的心跳/告警里取的，实际: " + saved.getMessage());
-        assertTrue(saved.getMessage().contains("DEVICE"), "实际: " + saved.getMessage());
-    }
-
-    @Test
-    @DisplayName("现状缺陷：N 条命中关键字的告警会产生 N 条重复告警（告警风暴）")
-    void deviceOfflineCheckCreatesOneAlertPerMatch() {
-        stubSave();
-        when(alertEventRepository.findByStatus(0))
-                .thenReturn(
-                        List.of(
-                                existingAlert("设备A 离线"),
-                                existingAlert("设备B 离线"),
-                                existingAlert("设备C 离线")));
-
-        service.checkDeviceOfflineStatus();
-
-        verify(alertEventRepository, times(3)).save(any(AlertEvent.class));
-    }
-
-    @Test
-    @DisplayName("巡检库存异常：没有待处理告警时不产生任何告警")
-    void inventoryAbnormalCheckWithoutAlerts() {
-        when(alertEventRepository.findByStatus(0)).thenReturn(List.of());
-
-        service.checkInventoryAbnormalStatus();
-
-        verify(alertEventRepository, never()).save(any(AlertEvent.class));
-    }
-
-    @Test
-    @DisplayName("现状缺陷：巡检库存异常生成的是写死的示例告警（示例产品 100/90/主仓库）")
-    void inventoryAbnormalCheckCreatesHardcodedDemoAlert() {
-        stubSave();
-        when(alertEventRepository.findByStatus(0))
-                .thenReturn(List.of(existingAlert("库存异常：某仓库差异 1")));
-
-        service.checkInventoryAbnormalStatus();
-
-        AlertEvent saved = capturedEntity();
-        assertEquals("INVENTORY", saved.getSourceModule());
-        assertTrue(saved.getMessage().contains("示例产品"), "现状：产品名是写死的示例值，实际: " + saved.getMessage());
-        assertTrue(saved.getMessage().contains("100"), "实际: " + saved.getMessage());
-        assertTrue(saved.getMessage().contains("90"), "实际: " + saved.getMessage());
-        assertTrue(saved.getMessage().contains("主仓库"), "实际: " + saved.getMessage());
-    }
-
-    @Test
-    @DisplayName("巡检库存异常：不命中关键字的告警不触发新告警")
-    void inventoryAbnormalCheckIgnoresUnrelatedAlerts() {
-        when(alertEventRepository.findByStatus(0)).thenReturn(List.of(existingAlert("设备离线：网关A")));
-
-        service.checkInventoryAbnormalStatus();
-
-        verify(alertEventRepository, never()).save(any(AlertEvent.class));
     }
 }

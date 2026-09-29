@@ -5,8 +5,6 @@ import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
 import java.time.LocalDateTime;
-import java.util.List;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -175,36 +173,6 @@ public class AlertRuleService {
 
         AlertEvent savedEntity = alertEventRepository.save(entity);
         return convertToDTO(savedEntity);
-    }
-
-    /** 方法功能描述：定时检查设备离线状态 每分钟执行一次，检查设备心跳时间，超过5分钟未更新则生成告警 */
-    @Scheduled(fixedRate = 60000)
-    @Transactional
-    public void checkDeviceOfflineStatus() {
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(5);
-
-        List<AlertEvent> existingAlerts = alertEventRepository.findByStatus(0);
-
-        for (AlertEvent alert : existingAlerts) {
-            String message = alert.getMessage();
-            if (message != null && message.contains("离线")) {
-                createDeviceOfflineAlert(1L, "示例设备", "DEVICE", threshold);
-            }
-        }
-    }
-
-    /** 方法功能描述：定时检查库存异常 每小时执行一次，检查库存数量与预期数量的差异 */
-    @Scheduled(fixedRate = 3600000)
-    @Transactional
-    public void checkInventoryAbnormalStatus() {
-        List<AlertEvent> existingAlerts = alertEventRepository.findByStatus(0);
-
-        for (AlertEvent alert : existingAlerts) {
-            String message = alert.getMessage();
-            if (message != null && message.contains("库存异常")) {
-                createInventoryAbnormalAlert(1L, "示例产品", 100, 90, "主仓库");
-            }
-        }
     }
 
     /**
