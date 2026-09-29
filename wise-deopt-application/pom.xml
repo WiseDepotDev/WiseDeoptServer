@@ -62,8 +62,12 @@
                     权限 / 登出）：验证码校验与账号锁定、IP 封禁判定必须发生在查库之前；用户不存在与
                     口令错误返回同一错误码；令牌必须区分 access/refresh；管理员按角色名三种写法放行。
                     门槛 0.63 → 0.66。
+          第六十五批：67.82% → 70.20%（AlertRuleService 0/91 → **91/91 行，该类 100% 覆盖**：
+                    四类告警生成规则 + 两个 @Scheduled 巡检方法；并把巡检的现状缺陷钉住 ——
+                    它们不读心跳/库存，而是对每条命中关键字的告警用写死的示例值再生成一条，
+                    N 条命中即 N 条重复告警）。门槛 0.66 → 0.69。
         -->
-        <jacoco.min.line>0.66</jacoco.min.line>
+        <jacoco.min.line>0.69</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
