@@ -38,8 +38,12 @@
           第五十八批：41.67% → 47.31%（AlertApplicationService 0/220 → **220/220 行，该类已 100% 覆盖**：
                     创建校验与缓存副作用、分页筛选、确认与状态流转、处理日志、13 项统计口径）。
                     门槛 0.40 → 0.45。
+          第五十九批：47.31% → 52.74%（TagApplicationService 0/191 → 184/191 行：
+                    标签 CRUD 与三项唯一性校验、分页与状态筛选、绑定/解绑与批量计数、
+                    以及验证码前置校验 —— 用 verifyNoInteractions 钉住"验证码不通过时不得触达任何仓储"）。
+                    门槛 0.45 → 0.50。
         -->
-        <jacoco.min.line>0.45</jacoco.min.line>
+        <jacoco.min.line>0.50</jacoco.min.line>
         <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
