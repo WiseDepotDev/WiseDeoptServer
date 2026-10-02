@@ -185,16 +185,36 @@ class InspectionApplicationServiceTaskTest {
     }
 
     @Test
-    @DisplayName("listTasks（列表版）：taskType 非法/空与 status 空值 ⇒ 退化为 null，并原样传给仓储")
-    void listTasksShouldTolerateBadFilters() {
+    @DisplayName("listTasks（列表版）：taskType/status 为空白 ⇒ 退化为 null，并原样传给仓储")
+    void listTasksShouldTolerateEmptyFilters() {
         when(inspectionTaskRepository.findByConditions(any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
 
-        service.listTasks(1L, "abc", "", 2L, 3L);
+        service.listTasks(1L, "  ", "", 2L, 3L);
         verify(inspectionTaskRepository).findByConditions(1L, 2L, null, null, 3L);
 
         service.listTasks(null, "2", "1", null, null);
         verify(inspectionTaskRepository).findByConditions(null, null, (short) 2, (short) 1, null);
+    }
+
+    @Test
+    @DisplayName("listTasks：taskType 符号名 ⇒ 翻成类型码；认不出 ⇒ PARAM_ERROR（与 status 同一套策略）")
+    void listTasksParsesTaskTypeAndRejectsUnknown() {
+        when(inspectionTaskRepository.findByConditions(any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+
+        service.listTasks(null, "manual", "2", null, null);
+        verify(inspectionTaskRepository).findByConditions(null, null, (short) 1, (short) 2, null);
+
+        service.listTasks(null, "SCHEDULED", null, null, null);
+        verify(inspectionTaskRepository).findByConditions(null, null, (short) 0, null, null);
+
+        // 修复前这里会静默返回"全部类型"的任务；现在报错（同一个"不把条件放宽"的策略）。
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> service.listTasks(null, "定时", null, null, null));
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
     }
 
     @Test

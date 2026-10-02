@@ -12,6 +12,7 @@ import com.huicang.wise.domain.inspection.InspectionProgressPublisher;
 import com.huicang.wise.domain.inspection.InspectionResultSummary;
 import com.huicang.wise.domain.inspection.InspectionStatus;
 import com.huicang.wise.domain.inspection.InspectionTask;
+import com.huicang.wise.domain.inspection.InspectionType;
 import com.huicang.wise.domain.inspection.TaskMessage;
 import com.huicang.wise.domain.inventory.Inventory;
 import com.huicang.wise.domain.message.MessageType;
@@ -206,14 +207,7 @@ public class InspectionApplicationService {
 
     public List<InspectionTaskDTO> listTasks(
             Long planId, String taskType, String status, Long warehouseId, Long deviceId) {
-        Short type = null;
-        if (taskType != null && !taskType.isEmpty()) {
-            try {
-                type = Short.parseShort(taskType);
-            } catch (NumberFormatException e) {
-                type = null;
-            }
-        }
+        Short type = parseTaskType(taskType);
         Short taskStatus = parseTaskStatus(status);
         List<InspectionTask> tasks =
                 inspectionTaskRepository.findByConditions(
@@ -229,14 +223,7 @@ public class InspectionApplicationService {
             Long deviceId,
             Integer page,
             Integer pageSize) {
-        Short type = null;
-        if (taskType != null && !taskType.isEmpty()) {
-            try {
-                type = Short.parseShort(taskType);
-            } catch (NumberFormatException e) {
-                type = null;
-            }
-        }
+        Short type = parseTaskType(taskType);
         Short taskStatus = parseTaskStatus(status);
 
         int currentPage = page != null && page > 0 ? page : 1;
@@ -260,6 +247,38 @@ public class InspectionApplicationService {
                         .collect(Collectors.toList()));
 
         return pageDTO;
+    }
+
+    /**
+     * 把 {@code taskType} 入参解释成任务类型码 —— 与 {@link #parseTaskStatus(String)} **同一套策略**。
+     *
+     * <p>旧实现与 status 完全同形（解析失败即 {@code type = null} = 不过滤），是同一个"静默放宽查询条件"的陷阱： 调用方把类型写错（例如以后有人传
+     * {@code taskType=MANUAL} 这个符号名）时不会报错，而是拿到**全部类型**的任务。 2026-10-02 的"设备反复执行同一条任务"就是这条陷阱在 status
+     * 上的实际后果，所以这里一并按同一策略收口： 空值 = 不过滤，认不出的值 = PARAM_ERROR。
+     *
+     * @param taskType 类型入参，可为数字码（{@code "0"} / {@code "1"}）或类型名（{@code "manual"} / {@code
+     *     "SCHEDULED"}，大小写不敏感）；null 或空白表示不过滤
+     * @return 类型码；入参为空时返回 null
+     * @throws BusinessException 入参既不是合法数字码、也不是已登记的类型名
+     */
+    private static Short parseTaskType(String taskType) {
+        if (taskType == null) {
+            return null;
+        }
+        String trimmed = taskType.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        try {
+            return Short.parseShort(trimmed);
+        } catch (NumberFormatException notANumericCode) {
+            for (InspectionType candidate : InspectionType.values()) {
+                if (candidate.name().equalsIgnoreCase(trimmed)) {
+                    return candidate.getCode().shortValue();
+                }
+            }
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "巡检任务类型无法识别：" + trimmed);
+        }
     }
 
     /**
