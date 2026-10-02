@@ -22,6 +22,7 @@ import com.huicang.wise.infrastructure.persistence.repository.inspection.Inspect
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
 import com.huicang.wise.infrastructure.persistence.repository.tag.ProductTagRepository;
 import com.huicang.wise.infrastructure.persistence.repository.user.UserRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -143,6 +144,29 @@ class InspectionApplicationServiceResultTest {
         service.createResult(2L, 4, 4, 0, 0, 0);
 
         verify(userRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("createResult：同任务再次落结果 ⇒ 复用已有汇总行（不再撞 uk_task_id 抛重复键）")
+    void createResultShouldReuseExistingSummary() {
+        when(inspectionTaskRepository.findById(3L)).thenReturn(Optional.of(task(3L, (short) 1)));
+
+        InspectionResultSummary existing = new InspectionResultSummary();
+        existing.setResultId(7483L);
+        existing.setTaskId(3L);
+        existing.setCreateTime(LocalDateTime.of(2026, 10, 2, 21, 43));
+        when(inspectionResultSummaryRepository.findByTaskId(3L)).thenReturn(List.of(existing));
+
+        service.createResult(3L, 10, 8, 2, 1, 0);
+
+        ArgumentCaptor<InspectionResultSummary> captor =
+                ArgumentCaptor.forClass(InspectionResultSummary.class);
+        verify(inspectionResultSummaryRepository).save(captor.capture());
+        assertEquals(7483L, captor.getValue().getResultId(), "应更新既有汇总行（保留主键），而不是新建一行");
+        assertEquals(
+                LocalDateTime.of(2026, 10, 2, 21, 43),
+                captor.getValue().getCreateTime(),
+                "重复落结果不应改写创建时间");
     }
 
     // ---------------------------------------------------------------- manualRecord

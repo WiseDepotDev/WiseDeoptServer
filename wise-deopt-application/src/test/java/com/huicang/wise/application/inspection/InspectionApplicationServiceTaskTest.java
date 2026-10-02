@@ -185,7 +185,7 @@ class InspectionApplicationServiceTaskTest {
     }
 
     @Test
-    @DisplayName("listTasks（列表版）：taskType/status 非法或为空时退化为 null，并原样传给仓储")
+    @DisplayName("listTasks（列表版）：taskType 非法/空与 status 空值 ⇒ 退化为 null，并原样传给仓储")
     void listTasksShouldTolerateBadFilters() {
         when(inspectionTaskRepository.findByConditions(any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
@@ -195,6 +195,55 @@ class InspectionApplicationServiceTaskTest {
 
         service.listTasks(null, "2", "1", null, null);
         verify(inspectionTaskRepository).findByConditions(null, null, (short) 2, (short) 1, null);
+    }
+
+    @Test
+    @DisplayName("listTasks：status=pending（设备端实际发的符号名）⇒ 只查 PENDING(0)，不再退化成\"不过滤\"")
+    void listTasksWithDeviceSymbolicPendingFiltersByPending() {
+        when(inspectionTaskRepository.findByConditions(any(), any(), any(), any(), any()))
+                .thenReturn(List.of(task(9002L, (short) 0)));
+
+        List<InspectionTaskDTO> tasks = service.listTasks(null, null, "pending", null, null);
+
+        assertEquals(1, tasks.size());
+        // 设备端 patrol_http.c 拼的就是 status=pending；这里钉住它**必须**被翻成状态码 0。
+        // 修复前 Short.parseShort("pending") 抛异常后被吞掉、taskStatus 留 null ⇒ 查询条件消失，
+        // 设备每次轮询都拿到全部任务（含已完成/执行中），于是反复执行同一条任务。
+        verify(inspectionTaskRepository).findByConditions(null, null, null, (short) 0, null);
+    }
+
+    @Test
+    @DisplayName("listTasks：状态名大小写不敏感、前后空白可容忍、数字码照旧")
+    void listTasksAcceptsSymbolicAndNumericStatus() {
+        when(inspectionTaskRepository.findByConditions(any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+
+        service.listTasks(null, null, "IN_PROGRESS", null, null);
+        verify(inspectionTaskRepository).findByConditions(null, null, null, (short) 1, null);
+
+        service.listTasks(null, null, " 3 ", null, null);
+        verify(inspectionTaskRepository).findByConditions(null, null, null, (short) 3, null);
+
+        service.listTasks(null, null, "2", null, null);
+        verify(inspectionTaskRepository).findByConditions(null, null, null, (short) 2, null);
+    }
+
+    @Test
+    @DisplayName("listTasks：认不出的 status ⇒ PARAM_ERROR（两个重载共用同一入口），且不查库")
+    void listTasksWithUnknownStatusShouldRejectInsteadOfWidening() {
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> service.listTasks(null, null, "pending_task", null, null));
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+
+        assertThrows(
+                BusinessException.class,
+                () -> service.listTasks(null, null, "??", null, null, 1, 10));
+
+        // 关键词：契约对不上时**报错**，而不是把条件放宽成全表返回 —— 后者正是"设备反复领到已完成任务"的成因。
+        verify(inspectionTaskRepository, never())
+                .findByConditions(any(), any(), any(), any(), any());
     }
 
     @Test

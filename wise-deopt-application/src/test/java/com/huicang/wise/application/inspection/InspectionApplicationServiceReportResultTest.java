@@ -22,6 +22,7 @@ import com.huicang.wise.infrastructure.persistence.repository.inspection.Inspect
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionDifferenceRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionResultSummaryRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -142,6 +143,44 @@ class InspectionApplicationServiceReportResultTest {
         verify(inspectionResultSummaryRepository).save(captor.capture());
         assertEquals(7L, captor.getValue().getTaskId());
         assertEquals(9, captor.getValue().getTotalExpected());
+    }
+
+    // ---------------------------------------------------------------- 重复上报（幂等）
+
+    @Test
+    @DisplayName("重复上报（该任务已有汇总行）⇒ 幂等更新同一行，任务照常推进到 COMPLETED")
+    void reportResultShouldReuseExistingSummaryOnRepeatReport() {
+        InspectionTask task = task(9002L, (short) 1);
+        when(inspectionTaskRepository.findById(9002L)).thenReturn(Optional.of(task));
+        when(inspectionTaskRepository.save(any(InspectionTask.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(inspectionDifferenceRepository.save(any(InspectionDifference.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        InspectionResultSummary existing = new InspectionResultSummary();
+        existing.setResultId(7483L);
+        existing.setTaskId(9002L);
+        existing.setCreateTime(LocalDateTime.of(2026, 10, 2, 21, 43));
+        when(inspectionResultSummaryRepository.findByTaskId(9002L)).thenReturn(List.of(existing));
+
+        // 设备端重复上报同一条任务（2026-10-02 实测：任务 9002 每轮都被重新下发并重新上报）
+        service.reportResult(request("9002", 10, 10));
+
+        ArgumentCaptor<InspectionResultSummary> captor =
+                ArgumentCaptor.forClass(InspectionResultSummary.class);
+        verify(inspectionResultSummaryRepository).save(captor.capture());
+        assertEquals(
+                7483L,
+                captor.getValue().getResultId(),
+                "应更新既有汇总行（保留 resultId），而不是再 insert 一行去撞 uk_task_id");
+        assertEquals(
+                LocalDateTime.of(2026, 10, 2, 21, 43),
+                captor.getValue().getCreateTime(),
+                "重复上报不应改写创建时间");
+        // 修复前：这里会抛 DataIntegrityViolationException，@Transactional 把整笔上报回滚 ⇒
+        // 任务状态永远停在 IN_PROGRESS，下发查询又把它当成待执行任务发回设备 —— 死循环。
+        assertEquals((short) 2, task.getStatus(), "重复上报不再回滚，任务应正常推进到 COMPLETED");
+        assertEquals(100, task.getProgress());
     }
 
     // ---------------------------------------------------------------- 进度与状态

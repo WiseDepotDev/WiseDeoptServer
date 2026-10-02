@@ -10,6 +10,7 @@ import com.huicang.wise.domain.inspection.InspectionPlan;
 import com.huicang.wise.domain.inspection.InspectionProgressEvent;
 import com.huicang.wise.domain.inspection.InspectionProgressPublisher;
 import com.huicang.wise.domain.inspection.InspectionResultSummary;
+import com.huicang.wise.domain.inspection.InspectionStatus;
 import com.huicang.wise.domain.inspection.InspectionTask;
 import com.huicang.wise.domain.inspection.TaskMessage;
 import com.huicang.wise.domain.inventory.Inventory;
@@ -213,14 +214,7 @@ public class InspectionApplicationService {
                 type = null;
             }
         }
-        Short taskStatus = null;
-        if (status != null && !status.isEmpty()) {
-            try {
-                taskStatus = Short.parseShort(status);
-            } catch (NumberFormatException e) {
-                taskStatus = null;
-            }
-        }
+        Short taskStatus = parseTaskStatus(status);
         List<InspectionTask> tasks =
                 inspectionTaskRepository.findByConditions(
                         planId, warehouseId, type, taskStatus, deviceId);
@@ -243,14 +237,7 @@ public class InspectionApplicationService {
                 type = null;
             }
         }
-        Short taskStatus = null;
-        if (status != null && !status.isEmpty()) {
-            try {
-                taskStatus = Short.parseShort(status);
-            } catch (NumberFormatException e) {
-                taskStatus = null;
-            }
-        }
+        Short taskStatus = parseTaskStatus(status);
 
         int currentPage = page != null && page > 0 ? page : 1;
         int size = pageSize != null && pageSize > 0 ? pageSize : 10;
@@ -273,6 +260,42 @@ public class InspectionApplicationService {
                         .collect(Collectors.toList()));
 
         return pageDTO;
+    }
+
+    /**
+     * 把 {@code status} 入参解释成任务状态码 —— **两个 {@code listTasks} 重载共用的唯一解释入口**。
+     *
+     * <p>为什么要收口：设备端拉待执行任务时传的是**符号名**（{@code GET /api/inspection/task?status=pending}，见
+     * WiseDepotDevice 的 {@code patrol_http.c}），而 Web 端与既有调用方传的是**数字码**。
+     * 旧实现只认数字码，且把解析失败**静默降级成"不过滤"**（{@code catch (NumberFormatException) → taskStatus = null}），
+     * 于是设备所谓"拉待执行任务"实际拿到的是**全部任务**——包括已完成（status=2）与执行中（status=1）的任务。 设备据此反复执行同一个任务，服务端 {@code
+     * inspection_result_summary.uk_task_id} 重复键 30 分钟内报错 6956 次 （2026-10-02 实测，任务 9002）。
+     *
+     * <p>现在的语义：空值才是"不过滤"；认不出的值一律拒绝，而不是把查询条件悄悄放宽成全表返回 —— 契约对不上时应该报错，不该让调用方拿到一份看起来正常、实际范围错误的数据。
+     *
+     * @param status 状态入参，可为数字码（{@code "0"}..{@code "3"}）或状态名（{@code "pending"} / {@code
+     *     "COMPLETED"}， 大小写不敏感）；null 或空白表示不过滤
+     * @return 状态码；入参为空时返回 null
+     * @throws BusinessException 入参既不是合法数字码、也不是已登记的状态名
+     */
+    private static Short parseTaskStatus(String status) {
+        if (status == null) {
+            return null;
+        }
+        String trimmed = status.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        try {
+            return Short.parseShort(trimmed);
+        } catch (NumberFormatException notANumericCode) {
+            for (InspectionStatus candidate : InspectionStatus.values()) {
+                if (candidate.name().equalsIgnoreCase(trimmed)) {
+                    return candidate.getCode().shortValue();
+                }
+            }
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "巡检任务状态无法识别：" + trimmed);
+        }
     }
 
     public void updateTaskStatus(Long taskId, String status) {
@@ -502,8 +525,9 @@ public class InspectionApplicationService {
             task = inspectionTaskRepository.save(task);
         }
 
-        InspectionResultSummary summary = new InspectionResultSummary();
-        summary.setTaskId(taskId != null ? taskId : 0L);
+        Long summaryTaskId = taskId != null ? taskId : 0L;
+        InspectionResultSummary summary = reuseOrCreateSummary(summaryTaskId);
+        summary.setTaskId(summaryTaskId);
 
         // Use task values if available, otherwise request values
         if (task != null) {
@@ -526,7 +550,9 @@ public class InspectionApplicationService {
         }
 
         summary.setCompareTime(LocalDateTime.now());
-        summary.setCreateTime(LocalDateTime.now());
+        if (summary.getCreateTime() == null) {
+            summary.setCreateTime(LocalDateTime.now());
+        }
 
         summary = inspectionResultSummaryRepository.save(summary);
 
@@ -577,7 +603,7 @@ public class InspectionApplicationService {
 
         inspectionTaskRepository.save(task);
 
-        InspectionResultSummary result = new InspectionResultSummary();
+        InspectionResultSummary result = reuseOrCreateSummary(taskId);
         result.setTaskId(taskId);
         result.setTotalExpected(task.getTotalItems());
         result.setTotalScanned(task.getInspectedItems());
@@ -585,7 +611,9 @@ public class InspectionApplicationService {
         result.setMissingCount(task.getMissingItems());
         result.setExtraCount(task.getExtraItems());
         result.setCompareTime(LocalDateTime.now());
-        result.setCreateTime(LocalDateTime.now());
+        if (result.getCreateTime() == null) {
+            result.setCreateTime(LocalDateTime.now());
+        }
 
         result = inspectionResultSummaryRepository.save(result);
 
@@ -593,6 +621,29 @@ public class InspectionApplicationService {
         sendInspectionCompletionMessage(task, result);
 
         return convertToResultDTO(result);
+    }
+
+    /**
+     * 取该任务**已有的**汇总行，没有才新建 —— 任务结果汇总的写入入口（{@code reportResult} 与 {@code createResult} 共用）。
+     *
+     * <p>为什么要收口：{@code inspection_result_summary} 上有唯一键 {@code uk_task_id}，一个任务只会有一条汇总。 旧实现两处都无条件
+     * {@code new} + insert，于是**重复上报**（同一条任务被再次执行、MQTT 重投、或界面重复提交） 必然撞唯一键抛 {@code
+     * DataIntegrityViolationException}；{@code reportResult} 上的 {@code @Transactional}
+     * 会把整笔上报回滚，任务状态因此永远到不了 COMPLETED —— 下发查询又把这条"执行中"的任务发给设备， 构成"设备反复执行同一任务"的死循环（2026-10-02 实测：30
+     * 分钟 6956 次重复键报错）。
+     *
+     * <p>改成复用已有行之后，重复上报变成**幂等更新**：任务状态能正常推进，重复键错误与随之而来的重投风暴一起消失。
+     *
+     * <p>边界：本方法不提供跨事务互斥。两个**并发**的首次上报仍可能同时判定"没有行"而各自 insert，其中一个照样撞唯一键；
+     * 实测设备上报走的是单线程订阅回调（重复来自顺序重发），因此本修复覆盖了实际发生的重复来源。 要连并发首报一起兜住，需要在下发侧保证"一条任务同时只发给一台设备"。
+     *
+     * @param summaryTaskId 任务 ID（任务号解析不出时为 0，同样按"每个任务号一条"复用，不会再撞键）
+     * @return 已存在的汇总行（带 resultId，{@code save} 走 merge/UPDATE）；不存在时返回一个未落库的新实体
+     */
+    private InspectionResultSummary reuseOrCreateSummary(Long summaryTaskId) {
+        return inspectionResultSummaryRepository.findByTaskId(summaryTaskId).stream()
+                .findFirst()
+                .orElseGet(InspectionResultSummary::new);
     }
 
     private void sendInspectionCompletionMessage(
