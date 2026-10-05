@@ -1,5 +1,6 @@
 package com.huicang.wise.application.inspection;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.application.message.MessageApplicationService;
 import com.huicang.wise.application.message.MessageCreateRequest;
 import com.huicang.wise.common.api.ErrorCode;
@@ -27,6 +28,8 @@ import com.huicang.wise.infrastructure.persistence.repository.inventory.ProductR
 import com.huicang.wise.infrastructure.persistence.repository.tag.ProductTagRepository;
 import com.huicang.wise.infrastructure.persistence.repository.user.UserRepository;
 import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
+import com.huicang.wise.infrastructure.redis.RedisKeys;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 import java.time.Instant;
@@ -36,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,7 +75,7 @@ public class InspectionApplicationService {
 
     @Autowired private MessageApplicationService messageApplicationService;
 
-    @Autowired private StringRedisTemplate stringRedisTemplate;
+    @Autowired private DashboardKpiCache dashboardKpiCache;
 
     @Autowired private InspectionProgressPublisher progressPublisher;
 
@@ -195,7 +197,7 @@ public class InspectionApplicationService {
         return convertToTaskDTO(task);
     }
 
-    @Cacheable(prefix = "inspection:task", key = "#taskId", timeout = 1800)
+    @Cacheable(prefix = RedisKeys.INSPECTION_TASK, key = "#taskId", timeout = 1800)
     public InspectionTaskDTO getTask(Long taskId) {
         InspectionTask task =
                 inspectionTaskRepository
@@ -346,7 +348,7 @@ public class InspectionApplicationService {
         inspectionTaskRepository.save(task);
     }
 
-    @CacheEvict(prefix = "inspection:task", key = "#taskId", allEntries = false)
+    @CacheEvict(prefix = RedisKeys.INSPECTION_TASK, key = "#taskId", allEntries = false)
     public void updateTaskProgress(Long taskId, Integer progress, Integer scannedCount) {
         InspectionTask task =
                 inspectionTaskRepository
@@ -376,7 +378,7 @@ public class InspectionApplicationService {
         inspectionTaskRepository.save(task);
 
         // Clear dashboard KPI cache to ensure data overview updates
-        stringRedisTemplate.delete("dashboard:kpi");
+        dashboardKpiCache.invalidate();
     }
 
     @Transactional
@@ -446,7 +448,7 @@ public class InspectionApplicationService {
                 task = inspectionTaskRepository.save(task);
 
                 // Clear cache for this task
-                stringRedisTemplate.delete("inspection:task:" + taskId);
+                RedisCacheUtils.delete(RedisKeys.inspectionTask(taskId));
             }
         }
 

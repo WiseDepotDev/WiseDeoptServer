@@ -8,15 +8,14 @@ import com.huicang.wise.infrastructure.persistence.repository.alert.AlertEventRe
 import com.huicang.wise.infrastructure.persistence.repository.device.DeviceCoreRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inventory.InventoryRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,9 +29,8 @@ public class DashboardApplicationService {
     private final AlertEventRepository alertEventRepository;
     private final InspectionTaskRepository inspectionTaskRepository;
     private final DeviceCoreRepository deviceCoreRepository;
-    private final StringRedisTemplate stringRedisTemplate;
+    private final DashboardKpiCache kpiCache;
 
-    private static final String DASHBOARD_KPI_KEY = "dashboard:kpi";
     private static final String INSPECTION_PROGRESS_KEY = "inspection:progress";
 
     public DashboardApplicationService(
@@ -40,19 +38,19 @@ public class DashboardApplicationService {
             AlertEventRepository alertEventRepository,
             InspectionTaskRepository inspectionTaskRepository,
             DeviceCoreRepository deviceCoreRepository,
-            StringRedisTemplate stringRedisTemplate) {
+            DashboardKpiCache kpiCache) {
         this.inventoryRepository = inventoryRepository;
         this.alertEventRepository = alertEventRepository;
         this.inspectionTaskRepository = inspectionTaskRepository;
         this.deviceCoreRepository = deviceCoreRepository;
-        this.stringRedisTemplate = stringRedisTemplate;
+        this.kpiCache = kpiCache;
     }
 
     @Transactional(readOnly = true)
     public DashboardSummaryDTO getSummary() {
         DashboardSummaryDTO summary = new DashboardSummaryDTO();
 
-        String cachedKpi = stringRedisTemplate.opsForValue().get(DASHBOARD_KPI_KEY);
+        String cachedKpi = kpiCache.get().orElse(null);
         if (StringUtils.hasText(cachedKpi)) {
             DashboardSummaryDTO kpiDto = parseKpi(cachedKpi);
             summary.setInventoryTotal(kpiDto.getInventoryTotal());
@@ -69,7 +67,7 @@ public class DashboardApplicationService {
                     alertEventRepository.countByCreateTimeBetween(todayStart, todayEnd);
             summary.setTodayAlertCount(todayAlertCount);
 
-            String progressStr = stringRedisTemplate.opsForValue().get(INSPECTION_PROGRESS_KEY);
+            String progressStr = RedisCacheUtils.get(INSPECTION_PROGRESS_KEY, String.class);
             int progress = 0;
             if (StringUtils.hasText(progressStr)) {
                 try {
@@ -91,7 +89,7 @@ public class DashboardApplicationService {
                             summary.getTodayAlertCount(),
                             summary.getInspectionProgress(),
                             summary.getDeviceOnlineCount());
-            stringRedisTemplate.opsForValue().set(DASHBOARD_KPI_KEY, kpiValue, 1, TimeUnit.MINUTES);
+            kpiCache.put(kpiValue);
         }
 
         List<AlertEvent> pendingAlerts = alertEventRepository.findByStatusOrderByCreateTimeDesc(0);

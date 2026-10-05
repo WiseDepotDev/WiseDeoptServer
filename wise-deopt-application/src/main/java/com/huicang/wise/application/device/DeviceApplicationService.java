@@ -1,5 +1,6 @@
 package com.huicang.wise.application.device;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.device.DeviceConfigPublisher;
@@ -21,7 +22,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +53,7 @@ public class DeviceApplicationService {
 
     @Autowired private TaskPublisher taskPublisher;
 
-    @Autowired private StringRedisTemplate stringRedisTemplate;
+    @Autowired private DashboardKpiCache dashboardKpiCache;
 
     private static final short DEVICE_TYPE_RFID = 0;
     private static final short DEVICE_TYPE_CAMERA = 1;
@@ -123,7 +123,7 @@ public class DeviceApplicationService {
             existingDevice = deviceRepository.save(existingDevice);
 
             // Clear dashboard KPI cache to ensure data overview updates
-            stringRedisTemplate.delete("dashboard:kpi");
+            dashboardKpiCache.invalidate();
 
             logger.info(
                     "设备重新注册/上线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}",
@@ -190,7 +190,7 @@ public class DeviceApplicationService {
         DeviceCore savedDevice = deviceRepository.save(device);
 
         // Clear dashboard KPI cache to ensure data overview updates
-        stringRedisTemplate.delete("dashboard:kpi");
+        dashboardKpiCache.invalidate();
 
         logger.info(
                 "设备注册 - 设备编码: {}, 设备名称: {}, 设备类型: {}, IP地址: {}",
@@ -243,7 +243,7 @@ public class DeviceApplicationService {
         DeviceCore savedDevice = deviceRepository.save(device);
 
         // Clear dashboard KPI cache to ensure data overview updates
-        stringRedisTemplate.delete("dashboard:kpi");
+        dashboardKpiCache.invalidate();
 
         return toDeviceDTO(savedDevice);
     }
@@ -259,7 +259,7 @@ public class DeviceApplicationService {
         deviceRepository.delete(device);
 
         // Clear dashboard KPI cache to ensure data overview updates
-        stringRedisTemplate.delete("dashboard:kpi");
+        dashboardKpiCache.invalidate();
     }
 
     @Cacheable(prefix = "device", key = "#deviceId", timeout = 1800)
@@ -317,7 +317,7 @@ public class DeviceApplicationService {
             device.setStatus(DEVICE_STATUS_ONLINE);
 
             // Clear dashboard KPI cache to ensure data overview updates
-            stringRedisTemplate.delete("dashboard:kpi");
+            dashboardKpiCache.invalidate();
 
             logger.info(
                     "设备上线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}",
@@ -398,7 +398,7 @@ public class DeviceApplicationService {
                 deviceRepository.save(device);
 
                 // Clear dashboard KPI cache to ensure data overview updates
-                stringRedisTemplate.delete("dashboard:kpi");
+                dashboardKpiCache.invalidate();
 
                 logger.info(
                         "设备离线 - 设备编码: {}, 设备名称: {}, 原状态: {}, 新状态: {}, 最后心跳时间: {}",

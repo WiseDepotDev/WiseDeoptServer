@@ -1,5 +1,6 @@
 package com.huicang.wise.application.inventory;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.inventory.Inventory;
@@ -10,20 +11,21 @@ import com.huicang.wise.infrastructure.persistence.repository.inventory.Inventor
 import com.huicang.wise.infrastructure.persistence.repository.inventory.ProductRepository;
 import com.huicang.wise.infrastructure.persistence.repository.tag.TagRepository;
 import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
+import com.huicang.wise.infrastructure.redis.RedisKeys;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,19 +45,19 @@ public class InventoryApplicationService {
     private final InventoryRepository inventoryRepository;
     private final WarehouseRepository warehouseRepository;
     private final TagRepository tagRepository;
-    private final StringRedisTemplate stringRedisTemplate;
+    private final DashboardKpiCache dashboardKpiCache;
 
     public InventoryApplicationService(
             ProductRepository productRepository,
             InventoryRepository inventoryRepository,
             WarehouseRepository warehouseRepository,
             TagRepository tagRepository,
-            StringRedisTemplate stringRedisTemplate) {
+            DashboardKpiCache dashboardKpiCache) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.warehouseRepository = warehouseRepository;
         this.tagRepository = tagRepository;
-        this.stringRedisTemplate = stringRedisTemplate;
+        this.dashboardKpiCache = dashboardKpiCache;
     }
 
     /**
@@ -605,17 +607,17 @@ public class InventoryApplicationService {
     }
 
     private void cacheInventorySummary(Long productId) {
-        String key = "inventory:summary:" + productId;
+        String key = RedisKeys.inventorySummary(productId);
         Integer total = inventoryRepository.sumQuantityByProductId(productId);
         String value = total != null ? total.toString() : "0";
-        stringRedisTemplate.opsForValue().set(key, value, Duration.ofMinutes(30));
+        RedisCacheUtils.set(key, value, 30, TimeUnit.MINUTES);
     }
 
     private void clearTotalInventoryCache() {
-        String key = "inventory:total";
-        stringRedisTemplate.delete(key);
+        String key = RedisKeys.INVENTORY_TOTAL;
+        RedisCacheUtils.delete(key);
 
         // Also clear dashboard KPI cache to ensure data overview updates
-        stringRedisTemplate.delete("dashboard:kpi");
+        dashboardKpiCache.invalidate();
     }
 }

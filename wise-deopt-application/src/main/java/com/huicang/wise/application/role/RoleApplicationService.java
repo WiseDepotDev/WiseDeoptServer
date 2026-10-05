@@ -89,6 +89,13 @@ public class RoleApplicationService {
         return roleMapper.toDTO(saved);
     }
 
+    /**
+     * 改角色本身（名字/描述）。
+     *
+     * <p>为什么也要清 `auth:permission`：管理员判定是按**角色名**做的（`AuthApplicationService`
+     * 里认"超级管理员/管理员/ADMIN"），改名字等于改权限结论 —— 缓存里那个"通过"必须作废。
+     */
+    @CacheEvict(prefix = "auth:permission", allEntries = true)
     @Transactional
     public RoleDTO updateRole(Long id, UpdateRoleRequest request) {
         Role role =
@@ -105,6 +112,10 @@ public class RoleApplicationService {
         return roleMapper.toDTO(updated);
     }
 
+    // 删角色同时影响两类缓存：这个角色自己的条目、以及所有"靠它拿权限"的人。
+    // 两个 `@CacheEvict` 都是**声明式**的（注解可重复）—— 不在这里手写 RedisCacheUtils 调用：
+    // 那种静态服务定位器会让单元测试在没容器时直接 NPE（`RoleApplicationServiceTest` 就是纯单测）。
+    @CacheEvict(prefix = "auth:permission", allEntries = true)
     @CacheEvict(prefix = "role", key = "#id", allEntries = false)
     @Transactional
     public void deleteRole(Long id) {
@@ -117,6 +128,15 @@ public class RoleApplicationService {
         roleRepository.delete(role);
     }
 
+    /**
+     * 给角色重新分配权限 —— **权限缓存必须整体作废**。
+     *
+     * <p>缓存键是 `用户名:权限码`（按用户维度），而这里变的是"某个角色有哪些权限"： 一个角色可能挂在很多用户身上，所以只能整类清（`allEntries = true`，按前缀
+     * `auth:permission:*` 清， 不会碰到登录锁定/限流那些**不属于缓存**的状态 —— 那一点由 `RedisCacheAspect` 保证）。
+     *
+     * <p>为什么必须清：不清的话"刚被收回权限的人"最多还能用 15 分钟（缓存 TTL）。 权限收紧要立即生效，这是安全语义，不是性能取舍。
+     */
+    @CacheEvict(prefix = "auth:permission", allEntries = true)
     @Transactional
     public void assignPermissions(Long roleId, AssignPermissionsRequest request) {
         Role role =
