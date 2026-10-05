@@ -1,4 +1,4 @@
-package com.huicang.wise.infrastructure.security;
+package com.huicang.wise.common.annotation;
 
 import java.lang.annotation.*;
 
