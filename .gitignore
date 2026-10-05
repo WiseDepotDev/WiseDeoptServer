@@ -46,3 +46,8 @@ runlog/
 *.orig
 *.rej
 *.bak
+
+# ---- 文档规则：仅根 README 入库，其余 .md 与 docs/ 由本地保管 ----
+docs/
+*.md
+!/README.md
