@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,12 +16,13 @@ import com.huicang.wise.infrastructure.persistence.repository.alert.AlertEventRe
 import com.huicang.wise.infrastructure.persistence.repository.device.DeviceCoreRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inventory.InventoryRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheManager;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,8 +30,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 
 /**
  * 首页看板应用服务的单元测试：KPI 缓存命中/未命中两条路径、缓存回写、待处理告警与当前任务。
@@ -50,20 +48,28 @@ class DashboardApplicationServiceTest {
     @Mock private AlertEventRepository alertEventRepository;
     @Mock private InspectionTaskRepository inspectionTaskRepository;
     @Mock private DeviceCoreRepository deviceCoreRepository;
-    @Mock private StringRedisTemplate stringRedisTemplate;
-    @Mock private ValueOperations<String, String> valueOperations;
+    @Mock private DashboardKpiCache dashboardKpiCache;
+
+    /**
+     * 巡检进度那一路走的是 `RedisCacheUtils`（静态门面），所以这里**显式绑定**一个 mock manager。
+     *
+     * <p>为什么必须绑：静态门面的实例是 Spring 注入的静态字段，单测里没有容器 —— 不绑就是
+     * NPE；而"靠另一个测试类先跑起来把它绑上"是**测试顺序依赖**（单独跑这个类就崩）。
+     */
+    @Mock private RedisCacheManager cacheManager;
 
     private DashboardApplicationService service;
 
     @BeforeEach
     void setUp() {
+        new RedisCacheUtils(cacheManager);
         service =
                 new DashboardApplicationService(
                         inventoryRepository,
                         alertEventRepository,
                         inspectionTaskRepository,
                         deviceCoreRepository,
-                        stringRedisTemplate);
+                        dashboardKpiCache);
     }
 
     private AlertEvent alert(Short level) {
@@ -87,8 +93,7 @@ class DashboardApplicationServiceTest {
 
     /** 让缓存未命中路径可以走通：进度、告警列表与当前任务都给空值。 */
     private void stubCacheMissBase() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(PROGRESS_KEY)).thenReturn(null);
+        when(cacheManager.get(PROGRESS_KEY, String.class)).thenReturn(null);
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0)).thenReturn(List.of());
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
                 .thenReturn(Optional.empty());
@@ -99,8 +104,7 @@ class DashboardApplicationServiceTest {
     @Test
     @DisplayName("缓存命中：四个 KPI 全部取自缓存，不查任何实时数据")
     void cacheHitUsesCachedKpi() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(KPI_KEY)).thenReturn("10|2|30|5");
+        when(dashboardKpiCache.get()).thenReturn(Optional.of("10|2|30|5"));
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0)).thenReturn(List.of());
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
                 .thenReturn(Optional.empty());
@@ -114,14 +118,13 @@ class DashboardApplicationServiceTest {
         verify(inventoryRepository, never()).sumTotalQuantity();
         verify(alertEventRepository, never()).countByCreateTimeBetween(any(), any());
         verify(deviceCoreRepository, never()).countByStatus(any());
-        verify(valueOperations, never()).get(PROGRESS_KEY);
+        verify(cacheManager, never()).get(PROGRESS_KEY, String.class);
     }
 
     @Test
     @DisplayName("缓存命中：仍会加载待处理告警与当前任务（这两项不走缓存）")
     void cacheHitStillLoadsAlertsAndTask() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(KPI_KEY)).thenReturn("10|2|30|5");
+        when(dashboardKpiCache.get()).thenReturn(Optional.of("10|2|30|5"));
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0))
                 .thenReturn(List.of(alert((short) 3), alert(null)));
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
@@ -142,10 +145,10 @@ class DashboardApplicationServiceTest {
     @DisplayName("缓存未命中：实时统计四个 KPI，并把结果按 管道分隔 回写缓存 1 分钟")
     void cacheMissComputesAndCachesKpi() {
         stubCacheMissBase();
-        when(valueOperations.get(KPI_KEY)).thenReturn(null);
+        when(dashboardKpiCache.get()).thenReturn(Optional.empty());
         when(inventoryRepository.sumTotalQuantity()).thenReturn(10);
         when(alertEventRepository.countByCreateTimeBetween(any(), any())).thenReturn(2L);
-        when(valueOperations.get(PROGRESS_KEY)).thenReturn("3");
+        when(cacheManager.get(PROGRESS_KEY, String.class)).thenReturn("3");
         when(deviceCoreRepository.countByStatus((short) 1)).thenReturn(5L);
 
         DashboardSummaryDTO summary = service.getSummary();
@@ -156,8 +159,7 @@ class DashboardApplicationServiceTest {
         assertEquals(5L, summary.getDeviceOnlineCount().longValue());
 
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-        verify(valueOperations)
-                .set(eq(KPI_KEY), valueCaptor.capture(), eq(1L), eq(TimeUnit.MINUTES));
+        verify(dashboardKpiCache).put(valueCaptor.capture());
         assertEquals("10|2|3|5", valueCaptor.getValue());
     }
 
@@ -165,7 +167,7 @@ class DashboardApplicationServiceTest {
     @DisplayName("缓存未命中：库存求和为 null 时记 0")
     void cacheMissHandlesNullInventorySum() {
         stubCacheMissBase();
-        when(valueOperations.get(KPI_KEY)).thenReturn(null);
+        when(dashboardKpiCache.get()).thenReturn(Optional.empty());
         when(inventoryRepository.sumTotalQuantity()).thenReturn(null);
         when(alertEventRepository.countByCreateTimeBetween(any(), any())).thenReturn(0L);
         when(deviceCoreRepository.countByStatus((short) 1)).thenReturn(0L);
@@ -177,7 +179,7 @@ class DashboardApplicationServiceTest {
     @DisplayName("缓存未命中：今日告警窗口是当天 00:00:00 到 23:59:59.999999999")
     void cacheMissUsesTodayWindow() {
         stubCacheMissBase();
-        when(valueOperations.get(KPI_KEY)).thenReturn(null);
+        when(dashboardKpiCache.get()).thenReturn(Optional.empty());
         when(inventoryRepository.sumTotalQuantity()).thenReturn(1);
         when(alertEventRepository.countByCreateTimeBetween(any(), any())).thenReturn(0L);
         when(deviceCoreRepository.countByStatus((short) 1)).thenReturn(0L);
@@ -194,11 +196,10 @@ class DashboardApplicationServiceTest {
     @Test
     @DisplayName("缓存未命中：巡检进度缓存非法时按 0 处理（不抛异常）")
     void cacheMissHandlesInvalidProgress() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(KPI_KEY)).thenReturn(null);
+        when(dashboardKpiCache.get()).thenReturn(Optional.empty());
         when(inventoryRepository.sumTotalQuantity()).thenReturn(1);
         when(alertEventRepository.countByCreateTimeBetween(any(), any())).thenReturn(0L);
-        when(valueOperations.get(PROGRESS_KEY)).thenReturn("不是数字");
+        when(cacheManager.get(PROGRESS_KEY, String.class)).thenReturn("不是数字");
         when(deviceCoreRepository.countByStatus((short) 1)).thenReturn(0L);
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0)).thenReturn(List.of());
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
@@ -210,11 +211,10 @@ class DashboardApplicationServiceTest {
     @Test
     @DisplayName("缓存未命中：进度缓存为空白串时按 0 处理")
     void cacheMissHandlesBlankProgress() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(KPI_KEY)).thenReturn(null);
+        when(dashboardKpiCache.get()).thenReturn(Optional.empty());
         when(inventoryRepository.sumTotalQuantity()).thenReturn(1);
         when(alertEventRepository.countByCreateTimeBetween(any(), any())).thenReturn(0L);
-        when(valueOperations.get(PROGRESS_KEY)).thenReturn("   ");
+        when(cacheManager.get(PROGRESS_KEY, String.class)).thenReturn("   ");
         when(deviceCoreRepository.countByStatus((short) 1)).thenReturn(0L);
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0)).thenReturn(List.of());
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
@@ -228,8 +228,7 @@ class DashboardApplicationServiceTest {
     @Test
     @DisplayName("现状缺陷：畸形缓存值让 KPI 全为 null，且并不“回退到实时统计”")
     void malformedCacheDoesNotFallBackToRealtime() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(KPI_KEY)).thenReturn("abc");
+        when(dashboardKpiCache.get()).thenReturn(Optional.of("abc"));
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0)).thenReturn(List.of());
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
                 .thenReturn(Optional.empty());
@@ -247,8 +246,7 @@ class DashboardApplicationServiceTest {
     @Test
     @DisplayName("现状：缓存段数不足时静默返回空 KPI（不抛异常、不告警）")
     void shortCacheValueIsSilentlyEmpty() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(KPI_KEY)).thenReturn("10|2");
+        when(dashboardKpiCache.get()).thenReturn(Optional.of("10|2"));
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0)).thenReturn(List.of());
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
                 .thenReturn(Optional.empty());
@@ -262,8 +260,7 @@ class DashboardApplicationServiceTest {
     @Test
     @DisplayName("缓存命中：段数多于 4 时取前四段")
     void extraCacheSegmentsAreIgnored() {
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(KPI_KEY)).thenReturn("1|2|3|4|5");
+        when(dashboardKpiCache.get()).thenReturn(Optional.of("1|2|3|4|5"));
         when(alertEventRepository.findByStatusOrderByCreateTimeDesc(0)).thenReturn(List.of());
         when(inspectionTaskRepository.findFirstByStatusOrderByCreateTimeDesc((short) 1))
                 .thenReturn(Optional.empty());

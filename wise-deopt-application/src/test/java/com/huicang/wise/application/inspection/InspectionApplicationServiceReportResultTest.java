@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.domain.inspection.InspectionDetail;
 import com.huicang.wise.domain.inspection.InspectionDifference;
 import com.huicang.wise.domain.inspection.InspectionProgressEvent;
@@ -22,9 +23,13 @@ import com.huicang.wise.infrastructure.persistence.repository.inspection.Inspect
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionDifferenceRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionResultSummaryRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheManager;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
+import com.huicang.wise.infrastructure.redis.RedisKeys;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +37,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * {@link InspectionApplicationService#reportResult} 单元测试（P2-11 应用层补测，P0 单块最大路径，约 200 行）。
@@ -63,10 +67,16 @@ class InspectionApplicationServiceReportResultTest {
     @Mock private InspectionDetailRepository inspectionDetailRepository;
     @Mock private InspectionDifferenceRepository inspectionDifferenceRepository;
     @Mock private InspectionResultSummaryRepository inspectionResultSummaryRepository;
-    @Mock private StringRedisTemplate stringRedisTemplate;
+    @Mock private DashboardKpiCache dashboardKpiCache;
+    @Mock private RedisCacheManager cacheManager;
     @Mock private InspectionProgressPublisher progressPublisher;
 
     @InjectMocks private InspectionApplicationService service;
+
+    @BeforeEach
+    void bindRedisFacade() {
+        new RedisCacheUtils(cacheManager);
+    }
 
     /**
      * `reportResult` 末尾必然落一条 {@link InspectionResultSummary}，并把它的返回值交给 `convertToResultDTO`；不桩就会拿到
@@ -116,7 +126,7 @@ class InspectionApplicationServiceReportResultTest {
         // 这里固定的是"任务路径的副作用一个都没发生"。
         verify(inspectionDifferenceRepository, never()).deleteByTaskId(anyLong());
         verify(progressPublisher, never()).publishProgress(any(InspectionProgressEvent.class));
-        verify(stringRedisTemplate, never()).delete(anyString());
+        verify(cacheManager, never()).delete(anyString());
 
         ArgumentCaptor<InspectionResultSummary> captor =
                 ArgumentCaptor.forClass(InspectionResultSummary.class);
@@ -337,7 +347,7 @@ class InspectionApplicationServiceReportResultTest {
 
         service.reportResult(request("8", 10, 10));
 
-        verify(stringRedisTemplate).delete("inspection:task:8");
+        verify(cacheManager).delete(RedisKeys.inspectionTask(8L));
         ArgumentCaptor<InspectionProgressEvent> captor =
                 ArgumentCaptor.forClass(InspectionProgressEvent.class);
         verify(progressPublisher).publishProgress(captor.capture());

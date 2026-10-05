@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.huicang.wise.application.accesskey.AccessKeyApplicationService;
 import com.huicang.wise.application.alert.AlertApplicationService;
 import com.huicang.wise.application.alert.AlertRuleService;
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
 import com.huicang.wise.application.dashboard.DashboardApplicationService;
 import com.huicang.wise.application.device.DeviceApplicationService;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.application.i18n.I18nService;
 import com.huicang.wise.application.inout.InOutApplicationService;
 import com.huicang.wise.application.inspection.InspectionApplicationService;
@@ -58,7 +58,7 @@ public abstract class AbstractWebMvcSliceTest {
 
     @MockBean protected AlertRuleService alertRuleService;
 
-    @MockBean protected CaptchaApplicationService captchaApplicationService;
+    @MockBean protected HumanVerifyApplicationService humanVerifyApplicationService;
 
     @MockBean protected DashboardApplicationService dashboardApplicationService;
 

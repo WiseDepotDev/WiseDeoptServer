@@ -11,7 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
+import com.huicang.wise.application.human.HumanPurpose;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.inventory.Product;
@@ -38,7 +39,7 @@ import org.springframework.data.domain.Pageable;
  * <p>本批把一条**现状不一致**钉住：{@code listTagsByProduct} 的排序属性写成 {@code createdAt}， 而本类其余列表方法与实体字段都是 {@code
  * createTime}。单测里仓储被 mock，所以这不会"失败"， 但断言把传下去的属性名固定住了 —— 一旦有人按实体字段纠正它，该断言会失败，从而迫使改动被显式确认。
  *
- * <p>另一条重点：{@code batchBindTagsWithCaptcha} 的验证码校验必须发生在**任何仓储操作之前**， 否则"验证码"就只是走过场。本批用 {@code
+ * <p>另一条重点：{@code batchBindTags} 的人机验证票据校验必须发生在**任何仓储操作之前**， 否则"验证"就只是走过场。本批用 {@code
  * verifyNoInteractions(tagRepository)} 把这条安全约束钉住。
  */
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +50,7 @@ class TagApplicationServiceTest {
 
     @Mock private TagRepository tagRepository;
     @Mock private ProductRepository productRepository;
-    @Mock private CaptchaApplicationService captchaApplicationService;
+    @Mock private HumanVerifyApplicationService humanVerifyApplicationService;
 
     private TagApplicationService service;
 
@@ -57,7 +58,7 @@ class TagApplicationServiceTest {
     void setUp() {
         service =
                 new TagApplicationService(
-                        tagRepository, productRepository, captchaApplicationService);
+                        tagRepository, productRepository, humanVerifyApplicationService);
     }
 
     private ProductTag tag(String barcode, String nfcUid, String rfid) {
@@ -576,39 +577,36 @@ class TagApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("带验证码批量绑定：先校验验证码，再走批量绑定")
-    void batchBindWithCaptchaEnforcesCaptchaFirst() {
-        ProductTagBatchBindRequestWithCaptcha request = new ProductTagBatchBindRequestWithCaptcha();
-        request.setCaptchaId("cid");
-        request.setCaptchaCode("1234");
+    @DisplayName("批量绑定：先校验人机验证票据，再走批量绑定")
+    void batchBindEnforcesHumanVerifyFirst() {
+        ProductTagBatchBindRequest request = new ProductTagBatchBindRequest();
+        request.setHumanToken("ticket");
         request.setProductId(PRODUCT_ID);
         request.setTagIds(List.of(1L, 2L));
         when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(product("螺丝")));
         when(tagRepository.batchBindProducts(request.getTagIds(), PRODUCT_ID)).thenReturn(2);
 
-        BatchBindResult result = service.batchBindTagsWithCaptcha(request);
+        BatchBindResult result = service.batchBindTags(request);
 
-        verify(captchaApplicationService).enforceCaptcha("cid", "1234");
+        verify(humanVerifyApplicationService).enforce("ticket", HumanPurpose.TAG_BATCH_BIND);
         assertEquals(2, result.getSuccessCount());
     }
 
     @Test
-    @DisplayName("带验证码批量绑定：验证码不通过时不得触达任何仓储（安全约束）")
-    void batchBindWithCaptchaStopsBeforeRepository() {
-        ProductTagBatchBindRequestWithCaptcha request = new ProductTagBatchBindRequestWithCaptcha();
-        request.setCaptchaId("cid");
-        request.setCaptchaCode("bad");
+    @DisplayName("批量绑定：票据不通过时不得触达任何仓储（安全约束）")
+    void batchBindStopsBeforeRepository() {
+        ProductTagBatchBindRequest request = new ProductTagBatchBindRequest();
+        request.setHumanToken("bad");
         request.setProductId(PRODUCT_ID);
         request.setTagIds(List.of(1L));
-        doThrow(new BusinessException(ErrorCode.PARAM_ERROR, "验证码错误"))
-                .when(captchaApplicationService)
-                .enforceCaptcha("cid", "bad");
+        doThrow(new BusinessException(ErrorCode.HUMAN_TOKEN_INVALID, "人机验证票据无效或已使用"))
+                .when(humanVerifyApplicationService)
+                .enforce("bad", HumanPurpose.TAG_BATCH_BIND);
 
         BusinessException ex =
-                assertThrows(
-                        BusinessException.class, () -> service.batchBindTagsWithCaptcha(request));
+                assertThrows(BusinessException.class, () -> service.batchBindTags(request));
 
-        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        assertEquals(ErrorCode.HUMAN_TOKEN_INVALID, ex.getErrorCode());
         verifyNoInteractions(tagRepository);
         verifyNoInteractions(productRepository);
     }

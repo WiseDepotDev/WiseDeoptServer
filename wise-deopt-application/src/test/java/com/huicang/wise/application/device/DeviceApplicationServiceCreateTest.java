@@ -14,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.device.DeviceCore;
@@ -32,7 +33,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * {@link DeviceApplicationService#createDevice} 单元测试（P2-11 应用层补测）—— 设备域的**注册 / 重复注册**入口，含 IP
@@ -50,7 +50,7 @@ class DeviceApplicationServiceCreateTest {
 
     @Mock private DeviceRepository deviceRepository;
     @Mock private InspectionTaskRepository inspectionTaskRepository;
-    @Mock private StringRedisTemplate stringRedisTemplate;
+    @Mock private DashboardKpiCache dashboardKpiCache;
     @Mock private TaskPublisher taskPublisher;
     @Mock private JwtTokenProvider jwtTokenProvider;
 
@@ -178,7 +178,7 @@ class DeviceApplicationServiceCreateTest {
         assertNotNull(saved.getCreateTime());
         assertNotNull(saved.getLastHeartbeat());
 
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
         assertEquals("ACCESS", dto.getToken(), "应签发 access token");
         assertEquals("REFRESH", dto.getRefreshToken(), "应签发 refresh token");
     }
@@ -207,7 +207,7 @@ class DeviceApplicationServiceCreateTest {
         assertEquals("名称-RE-1", existing.getName());
         assertEquals(1L, existing.getUpdateBy());
         assertNotNull(existing.getLastHeartbeat());
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
         verify(taskPublisher, times(2)).publishTask(org.mockito.ArgumentMatchers.eq("RE-1"), any());
         assertEquals("ACCESS", dto.getToken());
         assertEquals("REFRESH", dto.getRefreshToken());

@@ -5,21 +5,39 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.domain.message.Message;
 import com.huicang.wise.domain.message.MessageType;
+import com.huicang.wise.infrastructure.persistence.repository.message.MessageRepository;
 import com.huicang.wise.infrastructure.push.PushService;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * {@link MessageApplicationService} 单元测试（P2-11）。
+ * {@link MessageApplicationService} 单元测试（P2-11；2026-10-05 改为数据库实现后同步重写）。
  *
  * <p>重点覆盖 P2-09 引入的「返回 DTO 而非领域实体」以及分页查询与已读标记的边界， 这些行为在重构中改动过，正是最需要回归保护的部分。
+ *
+ * <p>**为什么用"内存假仓库"而不是逐个 stub 方法**：这组用例要守的是**业务语义** （过滤、分页、已读、未读数），不是"有没有调用某个仓库方法"。用一个内存 Map 当成数据库，
+ * 断言可以保持与改造前逐字相同 —— 这样"行为没变"这句话才有证据。
  *
  * @author WiseDepot
  * @version 1.0
@@ -31,9 +49,104 @@ class MessageApplicationServiceTest {
 
     private PushService pushService;
 
+    private MessageRepository messageRepository;
+
+    /** 假数据库：按插入顺序保存，`createTime` 由实体构造器写入。 */
+    private final Map<String, Message> store = new LinkedHashMap<>();
+
     @BeforeEach
     void setUp() {
-        service = new MessageApplicationService();
+        store.clear();
+        messageRepository = mock(MessageRepository.class);
+
+        when(messageRepository.save(any(Message.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Message message = invocation.getArgument(0);
+                            store.put(message.getId(), message);
+                            return message;
+                        });
+        when(messageRepository.findById(anyString()))
+                .thenAnswer(
+                        invocation -> Optional.ofNullable(store.get(invocation.getArgument(0))));
+        when(messageRepository.countByReceiverIdAndIsReadFalse(anyLong()))
+                .thenAnswer(
+                        invocation -> {
+                            Long receiverId = invocation.getArgument(0);
+                            return store.values().stream()
+                                    .filter(m -> receiverId.equals(m.getReceiverId()))
+                                    .filter(m -> !Boolean.TRUE.equals(m.getIsRead()))
+                                    .count();
+                        });
+        when(messageRepository.findByConditions(any(), any(), any(), any()))
+                .thenAnswer(
+                        invocation -> {
+                            Long receiverId = invocation.getArgument(0);
+                            String type = invocation.getArgument(1);
+                            Boolean isRead = invocation.getArgument(2);
+                            Pageable pageable = invocation.getArgument(3);
+                            List<Message> matched =
+                                    store.values().stream()
+                                            .filter(
+                                                    m ->
+                                                            receiverId == null
+                                                                    || receiverId.equals(
+                                                                            m.getReceiverId()))
+                                            .filter(m -> type == null || type.equals(m.getType()))
+                                            .filter(
+                                                    m ->
+                                                            isRead == null
+                                                                    || isRead.equals(m.getIsRead()))
+                                            // 新消息在前（与仓库里的 ORDER BY create_time DESC 一致）
+                                            .sorted(
+                                                    (a, b) ->
+                                                            b.getCreateTime()
+                                                                    .compareTo(a.getCreateTime()))
+                                            .collect(Collectors.toList());
+                            int from = (int) pageable.getOffset();
+                            if (from >= matched.size()) {
+                                return new ArrayList<Message>();
+                            }
+                            int to = Math.min(from + pageable.getPageSize(), matched.size());
+                            return new ArrayList<>(matched.subList(from, to));
+                        });
+        when(messageRepository.markAllAsRead(anyLong(), any(LocalDateTime.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Long receiverId = invocation.getArgument(0);
+                            int changed = 0;
+                            for (Message message : store.values()) {
+                                if (receiverId.equals(message.getReceiverId())
+                                        && !Boolean.TRUE.equals(message.getIsRead())) {
+                                    message.setIsRead(true);
+                                    message.setReadTime(invocation.getArgument(1));
+                                    changed++;
+                                }
+                            }
+                            return changed;
+                        });
+        when(messageRepository.deleteByReceiverId(anyLong()))
+                .thenAnswer(
+                        invocation -> {
+                            Long receiverId = invocation.getArgument(0);
+                            int before = store.size();
+                            store.entrySet()
+                                    .removeIf(
+                                            entry ->
+                                                    receiverId.equals(
+                                                            entry.getValue().getReceiverId()));
+                            return before - store.size();
+                        });
+        // deleteById 返回 void —— 只能 doAnswer，不能 when(...)
+        doAnswer(
+                        invocation -> {
+                            store.remove(invocation.getArgument(0));
+                            return null;
+                        })
+                .when(messageRepository)
+                .deleteById(anyString());
+
+        service = new MessageApplicationService(messageRepository);
         pushService = mock(PushService.class);
         ReflectionTestUtils.setField(service, "pushService", pushService);
     }
@@ -160,5 +273,48 @@ class MessageApplicationServiceTest {
         when(pushService.isAvailable()).thenReturn(false);
 
         service.sendPushNotification(created);
+    }
+
+    /** 全部标记已读：走一条 UPDATE，且未读数归零。 */
+    @Test
+    @DisplayName("shouldMarkAllAsReadForReceiver")
+    void shouldMarkAllAsReadForReceiver() {
+        service.createMessage(newRequest(1L));
+        service.createMessage(newRequest(1L));
+        service.createMessage(newRequest(2L));
+
+        service.markAllAsRead(1L);
+
+        assertEquals(0, service.getUnreadCount(1L), "接收人 1 应全部已读");
+        assertEquals(1, service.getUnreadCount(2L), "接收人 2 不受影响");
+        verify(messageRepository).markAllAsRead(eq(1L), any(LocalDateTime.class));
+    }
+
+    /** 删除某人的全部消息：只删他的。 */
+    @Test
+    @DisplayName("shouldDeleteAllMessagesOfOneReceiver")
+    void shouldDeleteAllMessagesOfOneReceiver() {
+        service.createMessage(newRequest(1L));
+        service.createMessage(newRequest(1L));
+        service.createMessage(newRequest(2L));
+
+        service.deleteAllMessages(1L);
+
+        assertEquals(0, service.getUnreadCount(1L));
+        assertEquals(1, service.getUnreadCount(2L));
+    }
+
+    /** 越界页返回空（与改造前逐字一致的行为）。 */
+    @Test
+    @DisplayName("shouldReturnEmptyWhenPageBeyondRange")
+    void shouldReturnEmptyWhenPageBeyondRange() {
+        service.createMessage(newRequest(1L));
+
+        MessageQueryRequest request = new MessageQueryRequest();
+        request.setReceiverId(1L);
+        request.setPage(99);
+        request.setSize(10);
+
+        assertTrue(service.queryMessages(request).isEmpty());
     }
 }

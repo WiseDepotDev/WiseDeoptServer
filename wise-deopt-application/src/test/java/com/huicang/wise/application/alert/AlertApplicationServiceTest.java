@@ -4,12 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
@@ -18,10 +19,13 @@ import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertHandleLogRepository;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
 import com.huicang.wise.infrastructure.persistence.repository.user.UserCoreRepository;
-import java.time.Duration;
+import com.huicang.wise.infrastructure.redis.RedisCacheManager;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
+import com.huicang.wise.infrastructure.redis.RedisKeys;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,8 +33,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * 告警应用服务的单元测试：创建校验与缓存副作用、分页筛选、确认与状态流转、处理日志、统计口径。
@@ -45,11 +47,18 @@ class AlertApplicationServiceTest {
 
     private static final long EVENT_ID = 88L;
 
+    /**
+     * 当前登录用户（测试里固定为 9）。
+     *
+     * <p>处置记录里的操作人**只能**来自认证上下文 —— 请求体里没有这个字段（防冒名）， 所以每次调用都要显式传进来。
+     */
+    private static final long OPERATOR_ID = 9L;
+
     @Mock private AlertRepository alertRepository;
     @Mock private AlertHandleLogRepository alertHandleLogRepository;
     @Mock private UserCoreRepository userCoreRepository;
-    @Mock private StringRedisTemplate stringRedisTemplate;
-    @Mock private ListOperations<String, String> listOperations;
+    @Mock private DashboardKpiCache dashboardKpiCache;
+    @Mock private RedisCacheManager cacheManager;
 
     private AlertApplicationService service;
 
@@ -60,7 +69,7 @@ class AlertApplicationServiceTest {
                         alertRepository,
                         alertHandleLogRepository,
                         userCoreRepository,
-                        stringRedisTemplate);
+                        dashboardKpiCache);
     }
 
     private AlertEvent event(Short status, Short level, String sourceModule, Boolean active) {
@@ -74,7 +83,8 @@ class AlertApplicationServiceTest {
     }
 
     private void stubRedisList() {
-        lenient().when(stringRedisTemplate.opsForList()).thenReturn(listOperations);
+        // 缓存门面显式绑定：单测里没有容器，不绑就是 NPE（且会变成"靠别的测试类先跑"的顺序依赖）
+        new RedisCacheUtils(cacheManager);
     }
 
     private AlertCreateRequest createRequest(String level) {
@@ -134,11 +144,17 @@ class AlertApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("创建告警：级别非法时抛的是 NumberFormatException（未包装成 PARAM_ERROR，现状固定）")
-    void createAlertInvalidLevelLeaksNumberFormatException() {
+    @DisplayName("创建告警：级别非法 ⇒ PARAM_ERROR（原来是漏 NumberFormatException，被转成 500）")
+    void createAlertInvalidLevelIsParameterError() {
         AlertCreateRequest request = createRequest("高");
 
-        assertThrows(NumberFormatException.class, () -> service.createAlert(request));
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.createAlert(request));
+
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        assertTrue(
+                String.valueOf(ex.getMessage()).contains("级别"),
+                "要让调用方知道是哪个参数不对，实得：" + ex.getMessage());
         verify(alertRepository, never()).save(any(AlertEvent.class));
     }
 
@@ -151,9 +167,9 @@ class AlertApplicationServiceTest {
 
         service.createAlert(createRequest("3"));
 
-        verify(listOperations).leftPush("alert:unhandled:list", "null|MANUAL|3");
-        verify(stringRedisTemplate).expire("alert:unhandled:list", Duration.ofHours(6));
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(cacheManager).lPush(RedisKeys.ALERT_UNHANDLED_LIST, "null|MANUAL|3");
+        verify(cacheManager).expire(RedisKeys.ALERT_UNHANDLED_LIST, 6, TimeUnit.HOURS);
+        verify(dashboardKpiCache).invalidate();
     }
 
     // ---------------- 按级别查询 ----------------
@@ -312,7 +328,9 @@ class AlertApplicationServiceTest {
         when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.empty());
 
         BusinessException ex =
-                assertThrows(BusinessException.class, () -> service.acknowledgeAlert(EVENT_ID));
+                assertThrows(
+                        BusinessException.class,
+                        () -> service.acknowledgeAlert(EVENT_ID, OPERATOR_ID));
 
         assertEquals(ErrorCode.NOT_FOUND, ex.getErrorCode());
     }
@@ -323,11 +341,11 @@ class AlertApplicationServiceTest {
         when(alertRepository.findById(EVENT_ID))
                 .thenReturn(Optional.of(event((short) 1, (short) 1, "DEVICE", true)));
 
-        service.acknowledgeAlert(EVENT_ID);
+        service.acknowledgeAlert(EVENT_ID, OPERATOR_ID);
 
         verify(alertRepository, never()).save(any(AlertEvent.class));
         verify(alertHandleLogRepository, never()).save(any(AlertHandleLog.class));
-        verify(stringRedisTemplate, never()).delete(any(String.class));
+        verify(dashboardKpiCache, never()).invalidate();
     }
 
     @Test
@@ -336,7 +354,7 @@ class AlertApplicationServiceTest {
         AlertEvent entity = event((short) 0, (short) 2, "DEVICE", true);
         when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
 
-        service.acknowledgeAlert(EVENT_ID);
+        service.acknowledgeAlert(EVENT_ID, OPERATOR_ID);
 
         assertEquals((short) 1, entity.getStatus());
         verify(alertRepository).save(entity);
@@ -344,11 +362,11 @@ class AlertApplicationServiceTest {
         verify(alertHandleLogRepository).save(captor.capture());
         AlertHandleLog log = captor.getValue();
         assertEquals(EVENT_ID, log.getEventId());
-        assertEquals(1L, log.getHandlerId());
+        assertEquals(OPERATOR_ID, log.getHandlerId(), "处置记录必须记**真实操作人**，不是占位值 1L");
         assertEquals((short) 1, log.getGoalStatus());
         assertEquals("快速确认", log.getRemark());
         assertNotNull(log.getHandleTime());
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
     }
 
     @Test
@@ -357,7 +375,7 @@ class AlertApplicationServiceTest {
         AlertEvent entity = event(null, (short) 2, "DEVICE", true);
         when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
 
-        service.acknowledgeAlert(EVENT_ID);
+        service.acknowledgeAlert(EVENT_ID, OPERATOR_ID);
 
         assertEquals((short) 1, entity.getStatus());
     }
@@ -368,12 +386,15 @@ class AlertApplicationServiceTest {
         BusinessException ex1 =
                 assertThrows(
                         BusinessException.class,
-                        () -> service.updateAlertStatus(EVENT_ID, new UpdateAlertStatusRequest()));
+                        () ->
+                                service.updateAlertStatus(
+                                        EVENT_ID, new UpdateAlertStatusRequest(), OPERATOR_ID));
         assertEquals(ErrorCode.PARAM_ERROR, ex1.getErrorCode());
 
         BusinessException ex2 =
                 assertThrows(
-                        BusinessException.class, () -> service.updateAlertStatus(EVENT_ID, null));
+                        BusinessException.class,
+                        () -> service.updateAlertStatus(EVENT_ID, null, OPERATOR_ID));
         assertEquals(ErrorCode.PARAM_ERROR, ex2.getErrorCode());
     }
 
@@ -387,7 +408,7 @@ class AlertApplicationServiceTest {
         BusinessException ex =
                 assertThrows(
                         BusinessException.class,
-                        () -> service.updateAlertStatus(EVENT_ID, request));
+                        () -> service.updateAlertStatus(EVENT_ID, request, OPERATOR_ID));
 
         assertEquals(ErrorCode.NOT_FOUND, ex.getErrorCode());
     }
@@ -399,13 +420,13 @@ class AlertApplicationServiceTest {
         when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
         UpdateAlertStatusRequest request = new UpdateAlertStatusRequest();
         request.setStatus(2);
-        request.setHandlerId(9L);
+
         request.setRemark("已修复");
 
-        service.updateAlertStatus(EVENT_ID, request);
+        service.updateAlertStatus(EVENT_ID, request, OPERATOR_ID);
 
         assertEquals((short) 2, entity.getStatus());
-        assertEquals(request.getHandlerId(), entity.getResolvedBy());
+        assertEquals(OPERATOR_ID, entity.getResolvedBy(), "解决人来自认证上下文，不是请求体");
         assertNotNull(entity.getResolvedTime());
         assertEquals(Boolean.FALSE, entity.getIsActive());
         ArgumentCaptor<AlertHandleLog> captor = ArgumentCaptor.forClass(AlertHandleLog.class);
@@ -422,7 +443,7 @@ class AlertApplicationServiceTest {
         UpdateAlertStatusRequest request = new UpdateAlertStatusRequest();
         request.setStatus(1);
 
-        service.updateAlertStatus(EVENT_ID, request);
+        service.updateAlertStatus(EVENT_ID, request, OPERATOR_ID);
 
         assertEquals((short) 1, entity.getStatus());
         assertNull(entity.getResolvedTime());
@@ -493,5 +514,53 @@ class AlertApplicationServiceTest {
         assertEquals(1L, statistics.get("inventoryAlerts"));
         assertEquals(0L, statistics.get("securityAlerts"));
         assertEquals(0L, statistics.get("systemAlerts"));
+    }
+
+    @Test
+    @DisplayName("处理完成 / 忽略：操作人取不到时给一句能照做的话（不是字段校验错误）")
+    void updateAlertStatusWithoutOperatorSaysWhatToDo() {
+        UpdateAlertStatusRequest request = new UpdateAlertStatusRequest();
+        request.setStatus(2);
+
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class,
+                        () -> service.updateAlertStatus(EVENT_ID, request, null));
+
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        assertTrue(
+                String.valueOf(ex.getMessage()).contains("重新登录"),
+                "要让用户知道下一步做什么，实得：" + ex.getMessage());
+        verify(alertHandleLogRepository, never()).save(any(AlertHandleLog.class));
+    }
+
+    @Test
+    @DisplayName("快速确认：拿不到操作人同样明确拒绝（不许再写占位值）")
+    void acknowledgeWithoutOperatorIsRejected() {
+        BusinessException ex =
+                assertThrows(
+                        BusinessException.class, () -> service.acknowledgeAlert(EVENT_ID, null));
+
+        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        verify(alertRepository, never()).save(any(AlertEvent.class));
+        verify(alertHandleLogRepository, never()).save(any(AlertHandleLog.class));
+    }
+
+    @Test
+    @DisplayName("处理完成：解决人写的是认证上下文里的操作人（请求体已没有该字段，防冒名）")
+    void resolvedByComesFromAuthenticatedOperator() {
+        AlertEvent entity = event((short) 0, (short) 3, "DEVICE", true);
+        when(alertRepository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
+        UpdateAlertStatusRequest request = new UpdateAlertStatusRequest();
+        request.setStatus(2);
+        request.setRemark("已更换滤芯");
+
+        service.updateAlertStatus(EVENT_ID, request, OPERATOR_ID);
+
+        assertEquals(OPERATOR_ID, entity.getResolvedBy());
+        ArgumentCaptor<AlertHandleLog> captor = ArgumentCaptor.forClass(AlertHandleLog.class);
+        verify(alertHandleLogRepository).save(captor.capture());
+        assertEquals(OPERATOR_ID, captor.getValue().getHandlerId());
+        assertEquals("已更换滤芯", captor.getValue().getRemark());
     }
 }

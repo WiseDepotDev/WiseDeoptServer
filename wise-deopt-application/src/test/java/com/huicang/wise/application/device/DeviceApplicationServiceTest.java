@@ -13,6 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.device.DeviceCore;
@@ -31,7 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * {@link DeviceApplicationService} 的**状态机与统计**子切片测试（P2-11 应用层补测）。
@@ -50,7 +50,7 @@ class DeviceApplicationServiceTest {
 
     @Mock private DeviceRepository deviceRepository;
     @Mock private InspectionTaskRepository inspectionTaskRepository;
-    @Mock private StringRedisTemplate stringRedisTemplate;
+    @Mock private DashboardKpiCache dashboardKpiCache;
     @Mock private TaskPublisher taskPublisher;
 
     @InjectMocks private DeviceApplicationService service;
@@ -106,13 +106,13 @@ class DeviceApplicationServiceTest {
         when(deviceRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(BusinessException.class, () -> service.deleteDevice(99L));
         verify(deviceRepository, never()).delete(any(DeviceCore.class));
-        verify(stringRedisTemplate, never()).delete(anyString());
+        verify(dashboardKpiCache, never()).invalidate();
 
         DeviceCore d = device(5L, "DEV-5", (short) 1);
         when(deviceRepository.findById(5L)).thenReturn(Optional.of(d));
         service.deleteDevice(5L);
         verify(deviceRepository).delete(d);
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
     }
 
     @Test
@@ -160,7 +160,7 @@ class DeviceApplicationServiceTest {
         assertNotNull(d.getLastHeartbeat(), "应写入最后心跳时间");
         assertEquals(1L, d.getUpdateBy());
         assertNotNull(d.getUpdateTime());
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
         verify(taskPublisher, times(2))
                 .publishTask(org.mockito.ArgumentMatchers.eq("DEV-1"), any());
         verify(deviceRepository).save(d);
@@ -176,7 +176,7 @@ class DeviceApplicationServiceTest {
 
         assertEquals((short) 1, d.getStatus());
         assertNotNull(d.getLastHeartbeat());
-        verify(stringRedisTemplate, never()).delete(anyString());
+        verify(dashboardKpiCache, never()).invalidate();
         verify(taskPublisher, never()).publishTask(anyString(), any());
         verify(inspectionTaskRepository, never()).findByDeviceIdAndStatus(anyLong(), anyShort());
         verify(deviceRepository).save(d);
@@ -219,7 +219,7 @@ class DeviceApplicationServiceTest {
         assertEquals((short) 0, online.getStatus(), "超时的在线设备应被置离线");
         assertEquals(1L, online.getUpdateBy());
         assertNotNull(online.getUpdateTime());
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
 
         assertEquals((short) 0, running.getStatus(), "执行中任务应退回待执行");
         assertNull(running.getStartTime(), "退回待执行时应清空开始时间");
@@ -238,7 +238,7 @@ class DeviceApplicationServiceTest {
         service.checkOfflineDevices();
 
         verify(deviceRepository, never()).save(any(DeviceCore.class));
-        verify(stringRedisTemplate, never()).delete(anyString());
+        verify(dashboardKpiCache, never()).invalidate();
         verify(inspectionTaskRepository, never()).findByDeviceIdAndStatus(anyLong(), anyShort());
     }
 

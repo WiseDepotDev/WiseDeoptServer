@@ -5,7 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
+import com.huicang.wise.application.human.HumanPurpose;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.user.NfcBadge;
 import com.huicang.wise.domain.user.UserCore;
@@ -37,7 +38,7 @@ class AuthApplicationServiceTest {
 
     @Mock private jakarta.servlet.http.HttpServletRequest httpServletRequest;
 
-    @Mock private CaptchaApplicationService captchaApplicationService;
+    @Mock private HumanVerifyApplicationService humanVerifyApplicationService;
 
     @Mock private LoginAttemptGuard loginAttemptGuard;
 
@@ -214,101 +215,80 @@ class AuthApplicationServiceTest {
     }
 
     // ==================================================================
-    // 防回归：验证码不可绕过
+    // 防回归：人机验证票据不可绕过
     //
-    // 修复前的缺陷代码：
+    // 历史（图形验证码时代）的缺陷代码：
     //     if (request.getCaptchaId() != null && request.getCaptchaCode() != null) { 校验 }
     // 攻击者只要不传这两个字段，验证码校验就被整段跳过，可无限次爆破口令。
-    // 修复后统一走 captchaApplicationService.enforceCaptcha(...)，缺失即抛异常。
+    // 现在统一走 humanVerifyApplicationService.enforce(...)，**缺失即抛异常**。
+    // 这几条用例存在的唯一目的：让"缺字段就跳过"这种写法再也回不来。
     // ==================================================================
 
-    /** 不传验证码字段时，必须在进入任何用户查询之前就被拦截 */
+    /** 不传票据时，必须在进入任何用户查询之前就被拦截 */
     @Test
-    void testLoginWithoutCaptchaIdIsRejected() {
+    void testLoginWithoutHumanTokenIsRejected() {
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
         request.setPassword("Test-Admin-Passw0rd");
-        // captchaId / captchaCode 均为 null
+        // humanToken 为 null
 
         doThrow(
                         new BusinessException(
-                                com.huicang.wise.common.api.ErrorCode
-                                        .VAL_PARAM_AUTH_CAPTCHA_ID_EMPTY,
-                                "captchaId字段为空"))
-                .when(captchaApplicationService)
-                .enforceCaptcha(null, null);
+                                com.huicang.wise.common.api.ErrorCode.HUMAN_TOKEN_REQUIRED,
+                                "缺少人机验证票据"))
+                .when(humanVerifyApplicationService)
+                .enforce(null, HumanPurpose.LOGIN);
 
         assertThrows(
                 BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
-        // 关键断言：验证码未通过时绝不能触碰用户数据（即不可能被用来爆破口令）
+        // 关键断言：未通过人机验证时绝不能触碰用户数据（即不可能被用来爆破口令）
         verify(userCoreRepository, never()).findByUsername(anyString());
-        verify(captchaApplicationService, times(1)).enforceCaptcha(null, null);
+        verify(humanVerifyApplicationService, times(1)).enforce(null, HumanPurpose.LOGIN);
     }
 
-    /** 只传 captchaId 不传 captchaCode 也必须被拦截 */
+    /** 票据无效（过期/已用/伪造）同样不得触碰用户数据 */
     @Test
-    void testLoginWithCaptchaIdButNoCodeIsRejected() {
+    void testLoginWithInvalidTokenIsRejected() {
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
         request.setPassword("Test-Admin-Passw0rd");
-        request.setCaptchaId("some-captcha-id");
-        // captchaCode 仍为 null
+        request.setHumanToken("forged-ticket");
 
         doThrow(
                         new BusinessException(
-                                com.huicang.wise.common.api.ErrorCode
-                                        .VAL_PARAM_AUTH_CAPTCHA_CODE_EMPTY,
-                                "captchaCode字段为空"))
-                .when(captchaApplicationService)
-                .enforceCaptcha("some-captcha-id", null);
+                                com.huicang.wise.common.api.ErrorCode.HUMAN_TOKEN_INVALID,
+                                "人机验证票据无效或已使用"))
+                .when(humanVerifyApplicationService)
+                .enforce("forged-ticket", HumanPurpose.LOGIN);
 
         assertThrows(
                 BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
         verify(userCoreRepository, never()).findByUsername(anyString());
+        verify(humanVerifyApplicationService, times(1))
+                .enforce("forged-ticket", HumanPurpose.LOGIN);
     }
 
-    /** 验证码错误时同样不得触碰用户数据 */
+    /** 票据正确时校验必须真的被执行（防止有人把它改成空实现） */
     @Test
-    void testLoginWithWrongCaptchaIsRejected() {
+    void testLoginInvokesHumanVerification() {
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
         request.setPassword("Test-Admin-Passw0rd");
-        request.setCaptchaId("cid-1");
-        request.setCaptchaCode("ZZZZ");
-
-        doThrow(new BusinessException(com.huicang.wise.common.api.ErrorCode.PARAM_ERROR, "验证码错误"))
-                .when(captchaApplicationService)
-                .enforceCaptcha("cid-1", "ZZZZ");
-
-        assertThrows(
-                BusinessException.class,
-                () -> authApplicationService.login(request, httpServletRequest));
-
-        verify(userCoreRepository, never()).findByUsername(anyString());
-    }
-
-    /** 验证码正确时校验必须真的被执行（防止把校验改成空实现） */
-    @Test
-    void testLoginInvokesCaptchaVerification() {
-        LoginRequest request = new LoginRequest();
-        request.setUsername("admin");
-        request.setPassword("Test-Admin-Passw0rd");
-        request.setCaptchaId("cid-2");
-        request.setCaptchaCode("AB12");
+        request.setHumanToken("ticket-2");
 
         // 校验通过（不抛异常），后续因用户不存在而失败，足以证明校验被调用
-        doNothing().when(captchaApplicationService).enforceCaptcha("cid-2", "AB12");
+        doNothing().when(humanVerifyApplicationService).enforce("ticket-2", HumanPurpose.LOGIN);
         when(userCoreRepository.findByUsername("admin")).thenReturn(Optional.empty());
 
         assertThrows(
                 BusinessException.class,
                 () -> authApplicationService.login(request, httpServletRequest));
 
-        verify(captchaApplicationService, times(1)).enforceCaptcha("cid-2", "AB12");
+        verify(humanVerifyApplicationService, times(1)).enforce("ticket-2", HumanPurpose.LOGIN);
     }
 
     // ==================================================================
@@ -317,15 +297,14 @@ class AuthApplicationServiceTest {
     // 修复前：只有 user_login_log 落库，没有任何失败计数与锁定，
     // 且项目文档里的 auth:login:fail:{userId} 方案完全没实现。
     // 修复后：计数存 Redis（LoginAttemptGuard），跨实例一致；
-    // 验证码通过后仍能拦住"换口令重试"。
+    // 人机验证通过后仍能拦住"换口令重试"。
     // ==================================================================
 
     private LoginRequest buildLoginRequest(String username, String password) {
         LoginRequest r = new LoginRequest();
         r.setUsername(username);
         r.setPassword(password);
-        r.setCaptchaId("cid-lock");
-        r.setCaptchaCode("OK12");
+        r.setHumanToken("ticket-lock");
         return r;
     }
 
@@ -333,7 +312,7 @@ class AuthApplicationServiceTest {
     @Test
     void testLoginRejectedWhenAccountLocked() {
         LoginRequest request = buildLoginRequest("admin", "Test-Admin-Passw0rd");
-        doNothing().when(captchaApplicationService).enforceCaptcha("cid-lock", "OK12");
+        doNothing().when(humanVerifyApplicationService).enforce("ticket-lock", HumanPurpose.LOGIN);
         when(loginAttemptGuard.isLocked("admin")).thenReturn(true);
 
         BusinessException ex =
@@ -351,7 +330,7 @@ class AuthApplicationServiceTest {
     @Test
     void testLoginRejectedWhenIpBlocked() {
         LoginRequest request = buildLoginRequest("admin", "Test-Admin-Passw0rd");
-        doNothing().when(captchaApplicationService).enforceCaptcha("cid-lock", "OK12");
+        doNothing().when(humanVerifyApplicationService).enforce("ticket-lock", HumanPurpose.LOGIN);
         when(loginAttemptGuard.isLocked("admin")).thenReturn(false);
         when(loginAttemptGuard.isIpBlocked(any())).thenReturn(true);
 
@@ -368,7 +347,7 @@ class AuthApplicationServiceTest {
     @Test
     void testLoginUnknownUserCountsFailure() {
         LoginRequest request = buildLoginRequest("ghost", "whatever");
-        doNothing().when(captchaApplicationService).enforceCaptcha("cid-lock", "OK12");
+        doNothing().when(humanVerifyApplicationService).enforce("ticket-lock", HumanPurpose.LOGIN);
         when(loginAttemptGuard.isLocked("ghost")).thenReturn(false);
         when(loginAttemptGuard.isIpBlocked(any())).thenReturn(false);
         when(userCoreRepository.findByUsername("ghost")).thenReturn(Optional.empty());
@@ -380,13 +359,16 @@ class AuthApplicationServiceTest {
         verify(loginAttemptGuard, times(1)).onFailure(eq("ghost"), any());
     }
 
-    /** 验证码校验失败时不应累加失败计数（验证码本身是防重放的） */
+    /** 人机验证未通过时不应累加失败计数（票据本身是一次性的，撞不出口令） */
     @Test
-    void testCaptchaFailureDoesNotCountAttempt() {
+    void testHumanVerifyFailureDoesNotCountAttempt() {
         LoginRequest request = buildLoginRequest("admin", "Test-Admin-Passw0rd");
-        doThrow(new BusinessException(com.huicang.wise.common.api.ErrorCode.PARAM_ERROR, "验证码错误"))
-                .when(captchaApplicationService)
-                .enforceCaptcha("cid-lock", "OK12");
+        doThrow(
+                        new BusinessException(
+                                com.huicang.wise.common.api.ErrorCode.HUMAN_TOKEN_INVALID,
+                                "人机验证票据无效或已使用"))
+                .when(humanVerifyApplicationService)
+                .enforce("ticket-lock", HumanPurpose.LOGIN);
 
         assertThrows(
                 BusinessException.class,

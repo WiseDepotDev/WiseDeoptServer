@@ -10,13 +10,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.inspection.InspectionPlan;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionPlanRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheManager;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,8 +52,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class InspectionApplicationServicePlanTest {
 
     @Mock private InspectionPlanRepository inspectionPlanRepository;
+    @Mock private DashboardKpiCache dashboardKpiCache;
+    @Mock private RedisCacheManager cacheManager;
 
     @InjectMocks private InspectionApplicationService service;
+
+    @BeforeEach
+    void bindRedisFacade() {
+        // 缓存门面是静态的：单测里必须显式绑定，否则 NPE（且会变成测试顺序依赖）
+        new RedisCacheUtils(cacheManager);
+    }
 
     private static InspectionPlan plan(Long id, String name, Short status) {
         InspectionPlan p = new InspectionPlan();

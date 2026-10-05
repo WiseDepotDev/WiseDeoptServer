@@ -12,8 +12,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
-import com.huicang.wise.application.common.DeleteWithCaptchaRequest;
+import com.huicang.wise.application.common.DeleteWithVerifyRequest;
+import com.huicang.wise.application.human.HumanPurpose;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.application.password.ChangePasswordRequest;
 import com.huicang.wise.application.password.PasswordApplicationService;
 import com.huicang.wise.application.role.RoleDTO;
@@ -67,7 +68,7 @@ class UserApplicationServiceTest {
     @Mock private NfcBadgeRepository nfcBadgeRepository;
     @Mock private KeyAccessAuditLogRepository keyAccessAuditLogRepository;
     @Mock private UserLoginLogRepository userLoginLogRepository;
-    @Mock private CaptchaApplicationService captchaApplicationService;
+    @Mock private HumanVerifyApplicationService humanVerifyApplicationService;
 
     private UserApplicationService service;
 
@@ -85,7 +86,7 @@ class UserApplicationServiceTest {
                         nfcBadgeRepository,
                         keyAccessAuditLogRepository,
                         userLoginLogRepository,
-                        captchaApplicationService);
+                        humanVerifyApplicationService);
     }
 
     private UserCore user(Short status) {
@@ -494,36 +495,34 @@ class UserApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("带验证码删除：先校验验证码再走删除")
-    void deleteUserWithCaptchaDelegates() {
-        DeleteWithCaptchaRequest request = new DeleteWithCaptchaRequest();
+    @DisplayName("删除用户：先校验人机验证票据，再走删除")
+    void deleteUserWithVerifyDelegates() {
+        DeleteWithVerifyRequest request = new DeleteWithVerifyRequest();
         request.setId(USER_ID);
-        request.setCaptchaId("cid");
-        request.setCaptchaCode("1234");
+        request.setHumanToken("ticket-1");
         when(userCoreRepository.existsById(USER_ID)).thenReturn(true);
         when(userSecurityRepository.existsByUserId(USER_ID)).thenReturn(false);
 
-        service.deleteUserWithCaptcha(request);
+        service.deleteUserWithVerify(request);
 
-        verify(captchaApplicationService).enforceCaptcha("cid", "1234");
+        verify(humanVerifyApplicationService).enforce("ticket-1", HumanPurpose.USER_DELETE);
         verify(userCoreRepository).deleteById(USER_ID);
     }
 
     @Test
-    @DisplayName("带验证码删除：验证码不通过时不得触达任何仓储（安全约束）")
-    void deleteUserWithCaptchaStopsBeforeRepository() {
-        DeleteWithCaptchaRequest request = new DeleteWithCaptchaRequest();
+    @DisplayName("删除用户：票据不通过时不得触达任何仓储（安全约束）")
+    void deleteUserWithVerifyStopsBeforeRepository() {
+        DeleteWithVerifyRequest request = new DeleteWithVerifyRequest();
         request.setId(USER_ID);
-        request.setCaptchaId("cid");
-        request.setCaptchaCode("bad");
-        doThrow(new BusinessException(ErrorCode.PARAM_ERROR, "验证码错误"))
-                .when(captchaApplicationService)
-                .enforceCaptcha("cid", "bad");
+        request.setHumanToken("bad");
+        doThrow(new BusinessException(ErrorCode.HUMAN_TOKEN_INVALID, "票据无效"))
+                .when(humanVerifyApplicationService)
+                .enforce("bad", HumanPurpose.USER_DELETE);
 
         BusinessException ex =
-                assertThrows(BusinessException.class, () -> service.deleteUserWithCaptcha(request));
+                assertThrows(BusinessException.class, () -> service.deleteUserWithVerify(request));
 
-        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        assertEquals(ErrorCode.HUMAN_TOKEN_INVALID, ex.getErrorCode());
         verifyNoInteractions(userCoreRepository);
         verifyNoInteractions(userProfileRepository);
         verifyNoInteractions(nfcBadgeRepository);

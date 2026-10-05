@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.inspection.InspectionDetail;
@@ -22,6 +23,8 @@ import com.huicang.wise.infrastructure.persistence.repository.inspection.Inspect
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
 import com.huicang.wise.infrastructure.persistence.repository.tag.ProductTagRepository;
 import com.huicang.wise.infrastructure.persistence.repository.user.UserRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheManager;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -60,11 +63,15 @@ class InspectionApplicationServiceResultTest {
     @Mock private InspectionDetailRepository inspectionDetailRepository;
     @Mock private ProductTagRepository productTagRepository;
     @Mock private UserRepository userRepository;
+    @Mock private DashboardKpiCache dashboardKpiCache;
+    @Mock private RedisCacheManager cacheManager;
 
     @InjectMocks private InspectionApplicationService service;
 
     @BeforeEach
     void stubCommonSaves() {
+        // 缓存门面是静态的：单测里必须显式绑定，否则 NPE（且会变成"靠别的测试类先跑"的顺序依赖）
+        new RedisCacheUtils(cacheManager);
         lenient()
                 .when(inspectionTaskRepository.save(any(InspectionTask.class)))
                 .thenAnswer(inv -> inv.getArgument(0));

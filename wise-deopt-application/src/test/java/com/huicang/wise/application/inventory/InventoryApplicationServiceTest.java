@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.inventory.Inventory;
@@ -20,10 +20,12 @@ import com.huicang.wise.infrastructure.persistence.repository.inventory.Inventor
 import com.huicang.wise.infrastructure.persistence.repository.inventory.ProductRepository;
 import com.huicang.wise.infrastructure.persistence.repository.tag.TagRepository;
 import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
-import java.time.Duration;
+import com.huicang.wise.infrastructure.redis.RedisCacheManager;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,8 +37,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 
 /**
  * 库存应用服务的单元测试：产品 CRUD、库存 CRUD、锁定/解锁、预警与统计，以及缓存副作用。
@@ -57,8 +57,8 @@ class InventoryApplicationServiceTest {
     @Mock private InventoryRepository inventoryRepository;
     @Mock private WarehouseRepository warehouseRepository;
     @Mock private TagRepository tagRepository;
-    @Mock private StringRedisTemplate stringRedisTemplate;
-    @Mock private ValueOperations<String, String> valueOperations;
+    @Mock private DashboardKpiCache dashboardKpiCache;
+    @Mock private RedisCacheManager cacheManager;
 
     private InventoryApplicationService service;
 
@@ -70,7 +70,7 @@ class InventoryApplicationServiceTest {
                         inventoryRepository,
                         warehouseRepository,
                         tagRepository,
-                        stringRedisTemplate);
+                        dashboardKpiCache);
     }
 
     private Product product(String name, String code) {
@@ -89,7 +89,7 @@ class InventoryApplicationServiceTest {
 
     /** 只在真正会写缓存的用例里桩 Redis：避免 StrictStubs 报"多余桩"。 */
     private void stubRedis() {
-        lenient().when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        new RedisCacheUtils(cacheManager);
     }
 
     private ProductCreateRequest createRequest(String name, String code) {
@@ -415,9 +415,9 @@ class InventoryApplicationServiceTest {
         assertNotNull(service.createInventory(request));
 
         assertEquals(0, capturedInventory().getLockedQuantity());
-        verify(valueOperations).set("inventory:summary:7", "10", Duration.ofMinutes(30));
-        verify(stringRedisTemplate).delete("inventory:total");
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(cacheManager).set("inventory:summary:7", "10", 30L, TimeUnit.MINUTES);
+        verify(cacheManager).delete("inventory:total");
+        verify(dashboardKpiCache).invalidate();
     }
 
     @Test
@@ -492,7 +492,7 @@ class InventoryApplicationServiceTest {
         service.deleteInventory(INVENTORY_ID);
 
         verify(inventoryRepository).delete(existing);
-        verify(valueOperations).set("inventory:summary:null", "0", Duration.ofMinutes(30));
+        verify(cacheManager).set("inventory:summary:null", "0", 30L, TimeUnit.MINUTES);
     }
 
     @Test

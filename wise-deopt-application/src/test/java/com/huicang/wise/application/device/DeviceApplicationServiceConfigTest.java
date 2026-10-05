@@ -11,6 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.device.DeviceConfigPublisher;
@@ -29,7 +30,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -55,7 +55,7 @@ class DeviceApplicationServiceConfigTest {
 
     @Mock private DeviceRepository deviceRepository;
     @Mock private RobotConfigRepository robotRepository;
-    @Mock private StringRedisTemplate stringRedisTemplate;
+    @Mock private DashboardKpiCache dashboardKpiCache;
     @Mock private DeviceConfigPublisher deviceConfigPublisher;
     @Mock private DeviceLogStorage deviceLogStorage;
 
@@ -103,7 +103,7 @@ class DeviceApplicationServiceConfigTest {
         assertEquals("原备注", d.getRemark(), "remark 为 null ⇒ 备注不变");
         assertEquals(1L, d.getUpdateBy());
         assertNotNull(d.getUpdateTime());
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
     }
 
     @Test

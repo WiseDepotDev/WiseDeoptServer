@@ -12,6 +12,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.device.DeviceCore;
@@ -23,6 +24,8 @@ import com.huicang.wise.infrastructure.persistence.repository.inspection.Inspect
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionPlanRepository;
 import com.huicang.wise.infrastructure.persistence.repository.inspection.InspectionTaskRepository;
 import com.huicang.wise.infrastructure.persistence.repository.warehouse.WarehouseRepository;
+import com.huicang.wise.infrastructure.redis.RedisCacheManager;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +40,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * {@link InspectionApplicationService} 的**任务生命周期**子切片测试（P2-11 应用层补测）： {@code createTask} / {@code
@@ -66,10 +68,16 @@ class InspectionApplicationServiceTaskTest {
     @Mock private DeviceRepository deviceRepository;
     @Mock private WarehouseRepository warehouseRepository;
     @Mock private TaskPublisher taskPublisher;
-    @Mock private StringRedisTemplate stringRedisTemplate;
+    @Mock private DashboardKpiCache dashboardKpiCache;
+    @Mock private RedisCacheManager cacheManager;
     @Mock private InspectionProgressPublisher progressPublisher;
 
     @InjectMocks private InspectionApplicationService service;
+
+    @BeforeEach
+    void bindRedisFacade() {
+        new RedisCacheUtils(cacheManager);
+    }
 
     /** `convertToTaskDTO` 会用到任务类型/状态的中文名映射，不需要额外桩；此处只统一 save 回显。 */
     @BeforeEach
@@ -374,7 +382,7 @@ class InspectionApplicationServiceTaskTest {
         assertEquals((short) 2, task.getStatus());
         assertEquals(100, task.getProgress());
         assertNotNull(task.getEndTime());
-        verify(stringRedisTemplate).delete("dashboard:kpi");
+        verify(dashboardKpiCache).invalidate();
     }
 
     @Test

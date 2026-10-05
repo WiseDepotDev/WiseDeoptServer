@@ -3,6 +3,7 @@ package com.huicang.wise.api.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -90,15 +91,20 @@ public class AlertControllerTest extends AbstractWebMvcSliceTest {
 
         doNothing()
                 .when(alertApplicationService)
-                .updateAlertStatus(eq(eventId), any(UpdateAlertStatusRequest.class));
+                .updateAlertStatus(eq(eventId), any(UpdateAlertStatusRequest.class), any());
 
         mockMvc.perform(
                         put("/api/alerts/{eventId}/status", eventId)
                                 .header("Authorization", "Bearer token")
+                                .requestAttr("userId", 9L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"));
+
+        // 操作人取的是**认证阶段放进 request 的 userId**，而不是请求体（后者已无该字段）
+        verify(alertApplicationService)
+                .updateAlertStatus(eq(eventId), any(UpdateAlertStatusRequest.class), eq(9L));
     }
 
     @Test

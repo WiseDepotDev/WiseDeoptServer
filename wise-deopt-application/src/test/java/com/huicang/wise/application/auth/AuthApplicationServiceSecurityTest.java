@@ -4,15 +4,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
+import com.huicang.wise.application.human.HumanPurpose;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.application.oss.FileStorageApplicationService;
 import com.huicang.wise.application.password.PasswordApplicationService;
 import com.huicang.wise.common.api.ErrorCode;
@@ -80,7 +86,7 @@ class AuthApplicationServiceSecurityTest {
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private PasswordApplicationService passwordApplicationService;
     @Mock private FileStorageApplicationService fileStorageApplicationService;
-    @Mock private CaptchaApplicationService captchaApplicationService;
+    @Mock private HumanVerifyApplicationService humanVerifyApplicationService;
     @Mock private LoginAttemptGuard loginAttemptGuard;
     @Mock private ValueOperations<String, String> valueOperations;
 
@@ -104,8 +110,10 @@ class AuthApplicationServiceSecurityTest {
                         jwtTokenProvider,
                         passwordApplicationService,
                         fileStorageApplicationService,
-                        captchaApplicationService,
+                        humanVerifyApplicationService,
                         loginAttemptGuard);
+        // `opsForValue()` 是登出/写入路径都要用到的入口，统一在这里给（否则每个用例都要自己 stub）
+        lenient().when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     private HttpServletRequest http() {
@@ -149,12 +157,12 @@ class AuthApplicationServiceSecurityTest {
         LoginRequest request = new LoginRequest();
         request.setUsername(USERNAME);
         request.setPassword("secret");
-        request.setCaptchaId("cid");
-        request.setCaptchaCode("1234");
+        request.setHumanToken("ticket");
         return request;
     }
 
     private void stubTokenSuccess() {
+        lenient().when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         lenient().when(jwtTokenProvider.generateAccessToken(USERNAME, USER_ID)).thenReturn("A");
         lenient().when(jwtTokenProvider.generateRefreshToken(USERNAME, USER_ID)).thenReturn("R");
         lenient().when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -172,7 +180,7 @@ class AuthApplicationServiceSecurityTest {
                 assertThrows(BusinessException.class, () -> service.login(request, http()));
 
         assertEquals(ErrorCode.VAL_PARAM_AUTH_USERNAME_EMPTY, ex.getErrorCode());
-        verifyNoInteractions(captchaApplicationService);
+        verifyNoInteractions(humanVerifyApplicationService);
     }
 
     @Test
@@ -185,20 +193,20 @@ class AuthApplicationServiceSecurityTest {
                 assertThrows(BusinessException.class, () -> service.login(request, http()));
 
         assertEquals(ErrorCode.VAL_PARAM_AUTH_PASSWORD_EMPTY, ex.getErrorCode());
-        verifyNoInteractions(captchaApplicationService);
+        verifyNoInteractions(humanVerifyApplicationService);
     }
 
     @Test
-    @DisplayName("登录：验证码不通过时不得触达任何仓储（防无限爆破）")
-    void loginStopsAtCaptcha() {
-        doThrow(new BusinessException(ErrorCode.PARAM_ERROR, "验证码错误"))
-                .when(captchaApplicationService)
-                .enforceCaptcha("cid", "1234");
+    @DisplayName("登录：人机验证未通过时不得触达任何仓储（防无限爆破）")
+    void loginStopsAtHumanVerify() {
+        doThrow(new BusinessException(ErrorCode.HUMAN_TOKEN_INVALID, "人机验证票据无效或已使用"))
+                .when(humanVerifyApplicationService)
+                .enforce("ticket", HumanPurpose.LOGIN);
 
         BusinessException ex =
                 assertThrows(BusinessException.class, () -> service.login(loginRequest(), http()));
 
-        assertEquals(ErrorCode.PARAM_ERROR, ex.getErrorCode());
+        assertEquals(ErrorCode.HUMAN_TOKEN_INVALID, ex.getErrorCode());
         verifyNoInteractions(userCoreRepository);
         verifyNoInteractions(userSecurityRepository);
         verifyNoInteractions(loginAttemptGuard);
@@ -752,5 +760,41 @@ class AuthApplicationServiceSecurityTest {
 
         verify(stringRedisTemplate).delete("auth:token:access:" + USERNAME);
         verify(stringRedisTemplate).delete("auth:token:refresh:" + USERNAME);
+    }
+
+    @Test
+    @DisplayName("登出：把访问令牌（以及当时在册的刷新令牌）写进吊销集，而不是只删键")
+    void logoutRevokesTokensRatherThanOnlyForgettingThem() {
+        when(jwtTokenProvider.getUsernameFromToken("A")).thenReturn(USERNAME);
+        when(valueOperations.get("auth:token:refresh:" + USERNAME)).thenReturn("R");
+        // 两个令牌都要有剩余有效期，避免 TTL 走到兜底分支
+        when(jwtTokenProvider.getExpirationDateFromToken(anyString()))
+                .thenReturn(new java.util.Date(System.currentTimeMillis() + 3600_000L));
+
+        service.logout("A");
+
+        // 只删键的写法等于"服务端仍然认这张令牌"（validateToken 原本不读 Redis）
+        verify(valueOperations, times(2))
+                .set(
+                        argThat(key -> key.startsWith("auth:revoked:token:")),
+                        eq("1"),
+                        any(java.time.Duration.class));
+    }
+
+    @Test
+    @DisplayName("已登出的访问令牌不可再用（登出必须真的生效）")
+    void validateTokenRejectsRevokedToken() {
+        when(jwtTokenProvider.validateToken("A")).thenReturn(true);
+        when(jwtTokenProvider.isTokenType("A", "access")).thenReturn(true);
+        // 直接把"吊销集里有它"造出来：登出写进去的键就是 auth:revoked:token:<指纹>
+        when(stringRedisTemplate.hasKey(anyString())).thenReturn(true);
+
+        BusinessException error =
+                assertThrows(BusinessException.class, () -> service.validateToken("A"));
+
+        assertEquals(ErrorCode.AUTH_INVALID_TOKEN, error.getErrorCode());
+        assertTrue(
+                String.valueOf(error.getMessage()).contains("登出"),
+                "错误信息要能看出是已登出而不是令牌损坏：" + error.getMessage());
     }
 }

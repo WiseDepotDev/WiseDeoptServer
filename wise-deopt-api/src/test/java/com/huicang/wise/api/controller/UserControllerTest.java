@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huicang.wise.api.support.AbstractWebMvcSliceTest;
 import com.huicang.wise.application.auth.AuthApplicationService;
+import com.huicang.wise.application.common.DeleteWithVerifyRequest;
 import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
 import com.huicang.wise.application.user.UserDTO;
@@ -140,15 +141,32 @@ public class UserControllerTest extends AbstractWebMvcSliceTest {
     }
 
     @Test
-    void testDeleteUser() throws Exception {
+    void testDeleteUserWithVerify() throws Exception {
         Long userId = 1L;
-        doNothing().when(userApplicationService).deleteUser(userId);
+        DeleteWithVerifyRequest request = new DeleteWithVerifyRequest();
+        request.setHumanToken("ticket");
+        doNothing()
+                .when(userApplicationService)
+                .deleteUserWithVerify(any(DeleteWithVerifyRequest.class));
 
         mockMvc.perform(
-                        delete("/api/users/{userId}", userId)
-                                .header("Authorization", "Bearer token"))
+                        post("/api/users/{userId}/delete", userId)
+                                .header("Authorization", "Bearer token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(envelope(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.code").value("RES-0000"));
+    }
+
+    /**
+     * **回归护栏**：无验证的那条 `DELETE /api/users/{id}` 必须彻底消失。
+     *
+     * <p>它曾经只靠权限注解就能删用户 —— "删除需要验证"只是前端那条路上的装饰。 这条用例断言 405（方法不允许）而不是 200，就是为了让那条路再也回不来。
+     */
+    @Test
+    void testUnguardedDeletePathIsGone() throws Exception {
+        mockMvc.perform(delete("/api/users/{userId}", 1L).header("Authorization", "Bearer token"))
+                .andExpect(status().isMethodNotAllowed());
     }
 
     /**
