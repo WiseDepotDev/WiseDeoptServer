@@ -37,3 +37,12 @@ set-env.ps1
 /config/application-local.yml
 application-local.yml
 *.local.yml
+
+# ---- 临时目录与编辑器残留（P5-07 仓库治理）----
+.tmp*/
+.tmp-*/
+.dsh-tmp/
+runlog/
+*.orig
+*.rej
+*.bak
