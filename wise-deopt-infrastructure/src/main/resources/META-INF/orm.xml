@@ -1356,4 +1356,64 @@
         </attributes>
     </entity>
 
+    <!--
+      站内消息：对应 message（2026-10-05 新增）。
+
+      为什么要有它：在它之前 `MessageApplicationService` 把消息存在**进程内的 ConcurrentHashMap** 里 ——
+      服务端一重启消息全丢，多实例之间也各看各的。而"消息"是**业务事实**（用户要能查、要能标已读、
+      桥的通知去重还要按 id 比较），归属只能是数据库；Redis 不该做它的 owner。
+
+      为什么 id 用 String(UUID) 而不是 IDENTITY：消息 id 会**离开服务端**（桥按 id 去重、
+      通知点击要带 id 跳转），自增主键会把这套内部编号变成对外可见的业务标识，还能被拿来枚举。
+      所以主键由应用生成（UUID），这里只声明列、**不写 generated-value**。
+    -->
+    <entity class="com.huicang.wise.domain.message.Message" access="FIELD">
+        <table name="message">
+            <index name="idx_message_receiver_read" column-list="receiver_id,is_read"/>
+            <index name="idx_message_create_time" column-list="create_time"/>
+            <index name="idx_message_receiver_create" column-list="receiver_id,create_time"/>
+        </table>
+        <attributes>
+            <id name="id">
+                <column name="id" length="36"/>
+            </id>
+            <basic name="title">
+                <column name="title" nullable="false" length="200"/>
+            </basic>
+            <basic name="content">
+                <column name="content" column-definition="text"/>
+            </basic>
+            <basic name="type">
+                <column name="type" nullable="false" length="50"/>
+            </basic>
+            <basic name="receiverId">
+                <column name="receiver_id" nullable="false"/>
+            </basic>
+            <basic name="receiverName">
+                <column name="receiver_name" length="64"/>
+            </basic>
+            <basic name="relatedEntityType">
+                <column name="related_entity_type" length="50"/>
+            </basic>
+            <basic name="relatedEntityId">
+                <column name="related_entity_id" length="64"/>
+            </basic>
+            <basic name="isRead">
+                <column name="is_read" nullable="false" column-definition="bit"/>
+            </basic>
+            <basic name="readTime">
+                <column name="read_time"/>
+            </basic>
+            <basic name="createTime">
+                <column name="create_time" nullable="false"/>
+            </basic>
+            <basic name="status">
+                <column name="status" length="20"/>
+            </basic>
+            <basic name="priority">
+                <column name="priority"/>
+            </basic>
+        </attributes>
+    </entity>
+
 </entity-mappings>
