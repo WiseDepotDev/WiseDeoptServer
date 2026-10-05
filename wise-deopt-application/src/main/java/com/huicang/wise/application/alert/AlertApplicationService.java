@@ -1,5 +1,6 @@
 package com.huicang.wise.application.alert;
 
+import com.huicang.wise.application.dashboard.DashboardKpiCache;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.alert.AlertEvent;
@@ -8,14 +9,15 @@ import com.huicang.wise.domain.user.UserCore;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertHandleLogRepository;
 import com.huicang.wise.infrastructure.persistence.repository.alert.AlertRepository;
 import com.huicang.wise.infrastructure.persistence.repository.user.UserCoreRepository;
-import java.time.Duration;
+import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
+import com.huicang.wise.infrastructure.redis.RedisKeys;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +34,17 @@ public class AlertApplicationService {
     private final AlertRepository alertRepository;
     private final AlertHandleLogRepository alertHandleLogRepository;
     private final UserCoreRepository userCoreRepository;
-    private final StringRedisTemplate stringRedisTemplate;
+    private final DashboardKpiCache dashboardKpiCache;
 
     public AlertApplicationService(
             AlertRepository alertRepository,
             AlertHandleLogRepository alertHandleLogRepository,
             UserCoreRepository userCoreRepository,
-            StringRedisTemplate stringRedisTemplate) {
+            DashboardKpiCache dashboardKpiCache) {
         this.alertRepository = alertRepository;
         this.alertHandleLogRepository = alertHandleLogRepository;
         this.userCoreRepository = userCoreRepository;
-        this.stringRedisTemplate = stringRedisTemplate;
+        this.dashboardKpiCache = dashboardKpiCache;
     }
 
     /**
@@ -60,7 +62,7 @@ public class AlertApplicationService {
         AlertEvent entity = new AlertEvent();
         entity.setSourceModule(
                 request.getSourceModule() != null ? request.getSourceModule() : "MANUAL");
-        entity.setLevel(Short.parseShort(request.getAlertLevel()));
+        entity.setLevel(parseLevel(request.getAlertLevel()));
         entity.setTitle("手动告警");
         entity.setMessage(request.getDescription());
         entity.setStatus((short) 0);
@@ -70,9 +72,24 @@ public class AlertApplicationService {
         cacheUnhandledAlert(saved);
 
         // Clear dashboard KPI cache to ensure data overview updates
-        stringRedisTemplate.delete("dashboard:kpi");
+        dashboardKpiCache.invalidate();
 
         return toAlertDTO(saved);
+    }
+
+    /**
+     * 告警级别：必须能解析成数字。
+     *
+     * <p>原来直接 `Short.parseShort` —— 传 `"WARNING"` 这种人类可读写法时抛 `NumberFormatException`，被全局处理器转成
+     * `SYS-0001 系统异常`（500）。 而这是**输入不合法**，接口自己的说明写的是"参数错误返回400"： 500 会让调用方以为服务坏了、也会把参数问题埋进日志里。
+     */
+    private Short parseLevel(String alertLevel) {
+        try {
+            return Short.parseShort(alertLevel);
+        } catch (NumberFormatException | NullPointerException e) {
+            throw new BusinessException(
+                    ErrorCode.PARAM_ERROR, "告警级别必须是数字（0 提示 / 1 警告 / 2 严重 / 3 紧急）");
+        }
     }
 
     /**
@@ -148,8 +165,15 @@ public class AlertApplicationService {
         return toAlertDTO(entity);
     }
 
+    /**
+     * 快速确认（ACK）。
+     *
+     * @param operatorId 操作人 —— **由服务端从认证上下文取**，不由请求体提供。 这里原来是硬编码的
+     *     `setHandlerId(1L)`：每一次"快速确认"都把处置记录记到 1 号用户头上 （一个谁都不知道是谁的占位值），比"没记"更糟 —— 它看起来像有据可查。
+     */
     @Transactional
-    public void acknowledgeAlert(Long eventId) throws BusinessException {
+    public void acknowledgeAlert(Long eventId, Long operatorId) throws BusinessException {
+        Long operator = requireOperator(operatorId);
         AlertEvent entity =
                 alertRepository
                         .findById(eventId)
@@ -161,34 +185,34 @@ public class AlertApplicationService {
         }
 
         entity.setStatus((short) 1); // 1: Acknowledged
-        // ACK usually means someone is looking at it, but it's not necessarily resolved.
-        // However, based on existing logic, non-zero status sets isActive=false.
-        // We might want to keep it active or follow existing logic.
-        // Let's assume ACK means "handled" in the sense of "checked".
-        // If we want to keep it active, we should change the logic in updateAlertStatus or here.
-        // For now, let's follow updateAlertStatus logic style:
-        // ACK implies it is still an issue, just known.
-
+        // ACK 只表示"有人看到了、正在处理"，不代表已解决，所以不动 isActive。
         alertRepository.save(entity);
 
         AlertHandleLog log = new AlertHandleLog();
         log.setEventId(eventId);
-        log.setHandlerId(1L);
+        log.setHandlerId(operator);
         log.setGoalStatus((short) 1);
         log.setRemark("快速确认");
         log.setHandleTime(LocalDateTime.now());
         alertHandleLogRepository.save(log);
 
         // Clear dashboard KPI cache to ensure data overview updates
-        stringRedisTemplate.delete("dashboard:kpi");
+        dashboardKpiCache.invalidate();
     }
 
+    /**
+     * 更新告警状态（处理中 / 处理完成 / 忽略）。
+     *
+     * @param operatorId 操作人 —— 同上，来自认证上下文；**请求体里没有这个字段** （原来有，且客户端拿不到，于是"处理完成/忽略"必然在写库时被 `@NotNull`
+     *     拦下）。
+     */
     @Transactional
-    public void updateAlertStatus(Long eventId, UpdateAlertStatusRequest request)
+    public void updateAlertStatus(Long eventId, UpdateAlertStatusRequest request, Long operatorId)
             throws BusinessException {
         if (request == null || request.getStatus() == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "告警状态不能为空");
         }
+        Long operator = requireOperator(operatorId);
         AlertEvent entity =
                 alertRepository
                         .findById(eventId)
@@ -196,7 +220,7 @@ public class AlertApplicationService {
         Integer status = request.getStatus();
         entity.setStatus(status.shortValue());
         if (status == 2) {
-            entity.setResolvedBy(request.getHandlerId());
+            entity.setResolvedBy(operator);
             entity.setResolvedTime(LocalDateTime.now());
             entity.setIsActive(false);
         }
@@ -204,11 +228,24 @@ public class AlertApplicationService {
 
         AlertHandleLog log = new AlertHandleLog();
         log.setEventId(eventId);
-        log.setHandlerId(request.getHandlerId());
+        log.setHandlerId(operator);
         log.setGoalStatus(status.shortValue());
         log.setRemark(request.getRemark());
         log.setHandleTime(LocalDateTime.now());
         alertHandleLogRepository.save(log);
+    }
+
+    /**
+     * 操作人**必须**能确定：拿不到就明确说"重新登录"，而不是让它变成一句看不懂的字段校验错误。
+     *
+     * <p>正常路径上它来自 Bearer 令牌（`JwtAuthenticationFilter` 把 userId 放进 request attribute）； 为空只有一种可能 ——
+     * 这条请求没有经过认证（例如签名链路），那属于调用方用错了接口。
+     */
+    private Long requireOperator(Long operatorId) {
+        if (operatorId == null) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "无法确定操作人：请重新登录后再试一次");
+        }
+        return operatorId;
     }
 
     public AlertHandleLogPageDTO listAlertHandleLogs(Long eventId) {
@@ -319,11 +356,11 @@ public class AlertApplicationService {
     }
 
     private void cacheUnhandledAlert(AlertEvent entity) {
-        String key = "alert:unhandled:list";
+        String key = RedisKeys.ALERT_UNHANDLED_LIST;
         String value =
                 entity.getEventId() + "|" + entity.getSourceModule() + "|" + entity.getLevel();
-        stringRedisTemplate.opsForList().leftPush(key, value);
-        stringRedisTemplate.expire(key, Duration.ofHours(6));
+        RedisCacheUtils.lPush(key, value);
+        RedisCacheUtils.expire(key, 6, TimeUnit.HOURS);
     }
 
     /**

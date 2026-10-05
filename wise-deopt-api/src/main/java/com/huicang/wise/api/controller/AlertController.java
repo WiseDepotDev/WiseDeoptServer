@@ -12,6 +12,7 @@ import com.huicang.wise.common.protocol.PacketType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -118,8 +119,9 @@ public class AlertController {
     @PostMapping("/{eventId}/ack")
     public ApiResponse<Void> acknowledgeAlert(
             @Parameter(description = "告警事件ID", required = true) @PathVariable("eventId")
-                    Long eventId) {
-        alertApplicationService.acknowledgeAlert(eventId);
+                    Long eventId,
+            HttpServletRequest httpServletRequest) {
+        alertApplicationService.acknowledgeAlert(eventId, currentUserId(httpServletRequest));
         return ApiResponse.success();
     }
 
@@ -129,9 +131,28 @@ public class AlertController {
             @Parameter(description = "告警事件ID", required = true) @PathVariable("eventId")
                     Long eventId,
             @Parameter(description = "告警状态更新请求", required = true) @Valid @RequestBody
-                    UpdateAlertStatusRequest request) {
-        alertApplicationService.updateAlertStatus(eventId, request);
+                    UpdateAlertStatusRequest request,
+            HttpServletRequest httpServletRequest) {
+        alertApplicationService.updateAlertStatus(
+                eventId, request, currentUserId(httpServletRequest));
         return ApiResponse.success();
+    }
+
+    /**
+     * 当前操作人：取认证阶段放进 request 的 `userId`（与 `PasswordController` 同一口径）。
+     *
+     * <p><b>为什么不让客户端传</b>：处置记录（`alert_handle_log.handler_id`）是审计事实， 由请求体提供就等于让调用方自己申报"这事是我干的" ——
+     * 而这恰恰是之前那个 `操作人id不能为空` 的根因：客户端根本拿不到当前用户 id，于是每次处置都失败。
+     */
+    private Long currentUserId(HttpServletRequest request) {
+        Object userId = request.getAttribute("userId");
+        if (userId instanceof Long id) {
+            return id;
+        }
+        if (userId instanceof Integer id) {
+            return id.longValue();
+        }
+        return null;
     }
 
     @Operation(summary = "获取告警处理日志列表", description = "获取告警处理日志列表。成功返回200；服务器异常返回500。")
