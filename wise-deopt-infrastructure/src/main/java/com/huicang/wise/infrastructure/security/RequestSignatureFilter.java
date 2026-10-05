@@ -5,9 +5,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -65,12 +65,6 @@ public class RequestSignatureFilter extends OncePerRequestFilter {
                 return;
             }
 
-            String nonceKey = NONCE_PREFIX + nonce;
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(nonceKey))) {
-                sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "请求已重复");
-                return;
-            }
-
             Map<String, String> params = new HashMap<>();
             request.getParameterMap()
                     .forEach(
@@ -95,7 +89,25 @@ public class RequestSignatureFilter extends OncePerRequestFilter {
                 return;
             }
 
-            redisTemplate.opsForValue().set(nonceKey, "1", NONCE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+            /*
+             * nonce 的"检查 + 占用"必须是**一步**。
+             *
+             * 原来是 `hasKey(nonceKey)` 判重、签名验过之后再 `set(...)` 写入 —— 两步之间存在窗口：
+             * 同一个签名请求并发发两次（真重放就是这么打的），两次都可能读到"不存在"而双双通过。
+             * `SET key 1 NX EX` 让 Redis 自己保证"只有第一个能占位"，重放的那一个拿到 false 直接被拒。
+             *
+             * 顺序也很重要：**先验签名、后占位**。反过来的话，攻击者随便造一个假 nonce 就能把
+             * 别人的 nonce 空间占满（签名都没验，凭什么消耗服务端状态）。
+             */
+            String nonceKey = NONCE_PREFIX + nonce;
+            Boolean firstUse =
+                    redisTemplate
+                            .opsForValue()
+                            .setIfAbsent(nonceKey, "1", Duration.ofSeconds(NONCE_EXPIRE_SECONDS));
+            if (!Boolean.TRUE.equals(firstUse)) {
+                sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "请求已重复");
+                return;
+            }
 
             filterChain.doFilter(request, response);
         } catch (Exception e) {
@@ -109,7 +121,7 @@ public class RequestSignatureFilter extends OncePerRequestFilter {
                 || uri.startsWith("/api/auth/register")
                 || uri.startsWith("/api/auth/nfc-login")
                 || uri.startsWith("/api/auth/nfc-pin-login")
-                || uri.startsWith("/api/captcha")
+                || uri.startsWith("/api/human")
                 || uri.startsWith("/api-docs")
                 || uri.startsWith("/v3/api-docs")
                 || uri.startsWith("/swagger")
