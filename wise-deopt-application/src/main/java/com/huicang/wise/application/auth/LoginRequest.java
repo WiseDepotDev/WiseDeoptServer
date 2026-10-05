@@ -9,25 +9,19 @@ package com.huicang.wise.application.auth;
  */
 public class LoginRequest {
 
-    /**
-     * 方法功能描述：登录名
-     */
+    /** 方法功能描述：登录名 */
     private String username;
 
-    /**
-     * 方法功能描述：登录密码
-     */
+    /** 方法功能描述：登录密码 */
     private String password;
 
     /**
-     * 方法功能描述：验证码ID
+     * 方法功能描述：人机验证票据（一次性）。
+     *
+     * <p><b>图形验证码已删除</b>：登录不再要求人机输入，改为"点一下按钮"由客户端完成验证， 服务端只认这张票据。缺失即失败 —— 绝不允许写成"没传就跳过"
+     * （图形验证码时代在这里漏过一次，见 {@code deploy/captcha_fix_verify.py}）。
      */
-    private String captchaId;
-
-    /**
-     * 方法功能描述：验证码
-     */
-    private String captchaCode;
+    private String humanToken;
 
     public String getUsername() {
         return username;
@@ -45,19 +39,11 @@ public class LoginRequest {
         this.password = password;
     }
 
-    public String getCaptchaId() {
-        return captchaId;
+    public String getHumanToken() {
+        return humanToken;
     }
 
-    public void setCaptchaId(String captchaId) {
-        this.captchaId = captchaId;
-    }
-
-    public String getCaptchaCode() {
-        return captchaCode;
-    }
-
-    public void setCaptchaCode(String captchaCode) {
-        this.captchaCode = captchaCode;
+    public void setHumanToken(String humanToken) {
+        this.humanToken = humanToken;
     }
 }

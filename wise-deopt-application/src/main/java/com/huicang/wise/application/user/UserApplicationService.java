@@ -1,7 +1,8 @@
 package com.huicang.wise.application.user;
 
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
-import com.huicang.wise.application.common.DeleteWithCaptchaRequest;
+import com.huicang.wise.application.common.DeleteWithVerifyRequest;
+import com.huicang.wise.application.human.HumanPurpose;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.application.password.ChangePasswordRequest;
 import com.huicang.wise.application.password.PasswordApplicationService;
 import com.huicang.wise.application.role.RoleDTO;
@@ -47,7 +48,7 @@ public class UserApplicationService {
     private final NfcBadgeRepository nfcBadgeRepository;
     private final KeyAccessAuditLogRepository keyAccessAuditLogRepository;
     private final UserLoginLogRepository userLoginLogRepository;
-    private final CaptchaApplicationService captchaApplicationService;
+    private final HumanVerifyApplicationService humanVerifyApplicationService;
 
     public UserApplicationService(
             UserCoreRepository userCoreRepository,
@@ -60,7 +61,7 @@ public class UserApplicationService {
             NfcBadgeRepository nfcBadgeRepository,
             KeyAccessAuditLogRepository keyAccessAuditLogRepository,
             UserLoginLogRepository userLoginLogRepository,
-            CaptchaApplicationService captchaApplicationService) {
+            HumanVerifyApplicationService humanVerifyApplicationService) {
         this.userCoreRepository = userCoreRepository;
         this.userProfileRepository = userProfileRepository;
         this.userSecurityRepository = userSecurityRepository;
@@ -71,7 +72,7 @@ public class UserApplicationService {
         this.nfcBadgeRepository = nfcBadgeRepository;
         this.keyAccessAuditLogRepository = keyAccessAuditLogRepository;
         this.userLoginLogRepository = userLoginLogRepository;
-        this.captchaApplicationService = captchaApplicationService;
+        this.humanVerifyApplicationService = humanVerifyApplicationService;
     }
 
     @Transactional
@@ -226,9 +227,9 @@ public class UserApplicationService {
 
     @CacheEvict(prefix = "user", key = "#request.id", allEntries = false)
     @Transactional
-    public void deleteUserWithCaptcha(DeleteWithCaptchaRequest request) {
-        // 验证码为必填项：防止绕过验证码直接删除用户
-        captchaApplicationService.enforceCaptcha(request.getCaptchaId(), request.getCaptchaCode());
+    public void deleteUserWithVerify(DeleteWithVerifyRequest request) {
+        // 人机验证票据为必填项：防止绕过验证直接删除用户（缺失即失败，不是"没传就跳过"）
+        humanVerifyApplicationService.enforce(request.getHumanToken(), HumanPurpose.USER_DELETE);
 
         deleteUser(request.getId());
     }

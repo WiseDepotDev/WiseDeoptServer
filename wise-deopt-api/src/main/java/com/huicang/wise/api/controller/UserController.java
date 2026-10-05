@@ -1,7 +1,7 @@
 package com.huicang.wise.api.controller;
 
 import com.huicang.wise.application.auth.AuthApplicationService;
-import com.huicang.wise.application.common.DeleteWithCaptchaRequest;
+import com.huicang.wise.application.common.DeleteWithVerifyRequest;
 import com.huicang.wise.application.user.UserApplicationService;
 import com.huicang.wise.application.user.UserCreateRequest;
 import com.huicang.wise.application.user.UserDTO;
@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -103,28 +102,23 @@ public class UserController {
         return ApiResponse.success(userApplicationService.listUsers(page, size));
     }
 
-    @Operation(summary = "删除用户", description = "根据ID删除用户。成功返回200；用户不存在返回404；服务器异常返回500。")
+    /**
+     * 删除用户 —— **唯一入口**，且必须带人机验证票据（校验在 Service 层）。
+     *
+     * <p>原先这里还有一条 `DELETE /{userId}`：**不带任何验证**，只有权限注解。于是 "删除需要验证码"只是前端那条路上的装饰 —— 任何持有
+     * `user:delete` 的会话直接调它就删掉了。 孪生端点已删除，票据校验下沉到 {@code
+     * UserApplicationService.deleteUserWithVerify}。
+     */
+    @Operation(summary = "删除用户", description = "根据ID删除用户（需要人机验证票据）。成功返回200；用户不存在返回404；服务器异常返回500。")
     @ApiPacketType(PacketType.USER_DELETE)
     @RequiresPermission("user:delete")
-    @DeleteMapping("/{userId}")
-    public ApiResponse<Void> deleteUser(
-            @Parameter(description = "用户ID", required = true) @PathVariable("userId") Long userId) {
-        userApplicationService.deleteUser(userId);
-        return ApiResponse.success(null);
-    }
-
-    @Operation(
-            summary = "删除用户（带验证码）",
-            description = "根据ID删除用户，需要验证码验证。成功返回200；用户不存在返回404；验证码错误返回400；服务器异常返回500。")
-    @ApiPacketType(PacketType.USER_DELETE)
-    @RequiresPermission("user:delete")
-    @PostMapping("/{userId}/delete-with-captcha")
-    public ApiResponse<Void> deleteUserWithCaptcha(
+    @PostMapping("/{userId}/delete")
+    public ApiResponse<Void> deleteUserWithVerify(
             @Parameter(description = "用户ID", required = true) @PathVariable("userId") Long userId,
             @Parameter(description = "删除请求参数", required = true) @Valid @RequestBody
-                    DeleteWithCaptchaRequest request) {
+                    DeleteWithVerifyRequest request) {
         request.setId(userId);
-        userApplicationService.deleteUserWithCaptcha(request);
+        userApplicationService.deleteUserWithVerify(request);
         return ApiResponse.success(null);
     }
 

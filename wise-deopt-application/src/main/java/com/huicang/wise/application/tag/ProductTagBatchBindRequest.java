@@ -14,6 +14,9 @@ public class ProductTagBatchBindRequest {
 
     private List<Long> tagIds;
 
+    /** 人机验证票据（一次性，由桥按用途注入）。缺失即失败。 */
+    private String humanToken;
+
     public Long getProductId() {
         return productId;
     }
@@ -28,5 +31,13 @@ public class ProductTagBatchBindRequest {
 
     public void setTagIds(List<Long> tagIds) {
         this.tagIds = tagIds;
+    }
+
+    public String getHumanToken() {
+        return humanToken;
+    }
+
+    public void setHumanToken(String humanToken) {
+        this.humanToken = humanToken;
     }
 }

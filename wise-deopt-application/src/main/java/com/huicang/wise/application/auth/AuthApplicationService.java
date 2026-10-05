@@ -1,6 +1,7 @@
 package com.huicang.wise.application.auth;
 
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
+import com.huicang.wise.application.human.HumanPurpose;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.application.oss.FileStorageApplicationService;
 import com.huicang.wise.application.password.PasswordApplicationService;
 import com.huicang.wise.common.api.ErrorCode;
@@ -24,8 +25,13 @@ import com.huicang.wise.infrastructure.security.JwtTokenProvider;
 import com.huicang.wise.infrastructure.security.LoginAttemptGuard;
 import com.huicang.wise.infrastructure.security.PasswordEncoder;
 import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -51,10 +57,28 @@ public class AuthApplicationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordApplicationService passwordApplicationService;
     private final FileStorageApplicationService fileStorageApplicationService;
-    private final CaptchaApplicationService captchaApplicationService;
+    private final HumanVerifyApplicationService humanVerifyApplicationService;
     private final LoginAttemptGuard loginAttemptGuard;
 
     private static final Pattern PIN_PATTERN = Pattern.compile("^\\d{4,6}$");
+
+    /**
+     * 已吊销令牌的键前缀（吊销集）。
+     *
+     * <p><b>为什么需要它</b>：登录时会把令牌写进 `auth:token:access:<用户名>`，登出时把那条键删掉 —— 但 `validateToken`
+     * **从来不读**它，只验 JWT 签名与用户状态。于是"登出"只是客户端把令牌丢掉了： 任何一个之前被复制走的令牌（同机日志、抓包、另一台设备）仍然能用到它自己过期为止（access 2
+     * 小时）。 写进去没人读的键不是"接入了 Redis"，只是一个看起来很像缓存的摆设。
+     *
+     * <p><b>为什么不用那个 per-user 键做校验</b>：`auth:token:access:<用户名>` 每个用户**只存最后一张**，
+     * 拿它当白名单会让"手机登录把桌面踢下线"成为默认行为 —— 那是产品决定，不是安全修复。 吊销集只回答一个问题："这一张令牌被明确作废过吗"，多端登录互不影响。
+     *
+     * <p><b>为什么存指纹而不是令牌原文</b>：Redis 的备份/快照会落到磁盘上，存原文等于把可用凭据 复制到另一个地方；指纹（SHA-256 前 32
+     * hex）足够判定"是不是同一张"，且不可反推。
+     */
+    private static final String REVOKED_PREFIX = "auth:revoked:token:";
+
+    /** 吊销记录的兜底存活期（秒）：解析不到 JWT 过期时间时用，宁长勿短。 */
+    private static final long REVOKED_FALLBACK_SECONDS = 7 * 24 * 3600L;
 
     public AuthApplicationService(
             UserCoreRepository userCoreRepository,
@@ -71,7 +95,7 @@ public class AuthApplicationService {
             JwtTokenProvider jwtTokenProvider,
             PasswordApplicationService passwordApplicationService,
             FileStorageApplicationService fileStorageApplicationService,
-            CaptchaApplicationService captchaApplicationService,
+            HumanVerifyApplicationService humanVerifyApplicationService,
             LoginAttemptGuard loginAttemptGuard) {
         this.userCoreRepository = userCoreRepository;
         this.roleRepository = roleRepository;
@@ -87,7 +111,7 @@ public class AuthApplicationService {
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordApplicationService = passwordApplicationService;
         this.fileStorageApplicationService = fileStorageApplicationService;
-        this.captchaApplicationService = captchaApplicationService;
+        this.humanVerifyApplicationService = humanVerifyApplicationService;
         this.loginAttemptGuard = loginAttemptGuard;
     }
 
@@ -104,9 +128,15 @@ public class AuthApplicationService {
                     ErrorCode.VAL_PARAM_AUTH_PASSWORD_EMPTY.getMessage());
         }
 
-        // 验证码为必填项：修复前用 if (captchaId != null && captchaCode != null) 判断，
-        // 攻击者不传这两个字段即可跳过校验，从而无限次爆破口令。
-        captchaApplicationService.enforceCaptcha(request.getCaptchaId(), request.getCaptchaCode());
+        /*
+         * 人机验证票据为必填项。
+         *
+         * **历史教训原样保留在这里**：修复前用的是
+         * `if (captchaId != null && captchaCode != null) { 校验 }` —— 攻击者不传那两个字段
+         * 就能跳过校验、无限次爆破口令。所以这里的写法只能有一种：**缺失即失败**，
+         * 由 `HumanVerifyApplicationService.enforce` 抛 HUMAN_TOKEN_REQUIRED。
+         */
+        humanVerifyApplicationService.enforce(request.getHumanToken(), HumanPurpose.LOGIN);
 
         // 登录失败节流：验证码通过后仍要防"换口令重试"。
         // 计数存 Redis，多实例一致；命中即直接拒绝，不再查询数据库。
@@ -264,6 +294,11 @@ public class AuthApplicationService {
             throw new BusinessException(ErrorCode.AUTH_INVALID_TOKEN, "令牌类型错误");
         }
 
+        // 登出时连刷新令牌一起吊销 —— 否则"退出了"但还能用 refreshToken 换一对新的回来
+        if (isRevoked(refreshToken)) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_TOKEN, "令牌已登出");
+        }
+
         String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
 
         UserCore user =
@@ -285,6 +320,11 @@ public class AuthApplicationService {
             throw new BusinessException(ErrorCode.AUTH_INVALID_TOKEN, "令牌类型错误");
         }
 
+        // 已登出的令牌必须当场失效（否则 logout 只是"客户端忘了它"，服务端仍然认）
+        if (isRevoked(token)) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_TOKEN, "令牌已登出");
+        }
+
         String username = jwtTokenProvider.getUsernameFromToken(token);
 
         UserCore user =
@@ -300,8 +340,18 @@ public class AuthApplicationService {
         return username;
     }
 
+    /**
+     * 权限检查（每个需要 `@RequiresPermission` 的请求都会走这里）。
+     *
+     * <p><b>为什么返回 `boolean` 而不是 `void`</b>：`@Cacheable` 的切面只缓存**非 null 的返回值** （见
+     * `RedisCacheAspect`：`if (result != null && …)`）。原来是 `void` ⇒ 每读一次缓存都是未命中，
+     * 每执行一次又什么都存不下，于是这个注解**看着像缓存、实际每请求查 4 张表** （用户 → 角色 → 角色权限 → 权限）。改成返回 `true` 之后"通过"才会真的被缓存 15
+     * 分钟。
+     *
+     * <p>拒绝（抛 `FORBIDDEN`）不进缓存：异常路径本来就不缓存，而拒绝是少数路径， 让它每次都真实查库也符合"权限收紧必须立即生效"的直觉。
+     */
     @Cacheable(prefix = "auth:permission", key = "#username + ':' + #permissionCode", timeout = 900)
-    public void checkPermission(String username, String permissionCode) {
+    public boolean checkPermission(String username, String permissionCode) {
         UserCore user =
                 userCoreRepository
                         .findByUsername(username)
@@ -325,7 +375,7 @@ public class AuthApplicationService {
                         || "管理员".equals(roleName)
                         || "ADMIN".equalsIgnoreCase(roleName)) {
                     log.debug("用户 {} 拥有管理员角色 {}，跳过权限检查", username, roleName);
-                    return;
+                    return true;
                 }
             }
         }
@@ -350,6 +400,7 @@ public class AuthApplicationService {
         if (!hasPermission) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "无权访问此资源");
         }
+        return true;
     }
 
     public void logout(String token) {
@@ -357,9 +408,70 @@ public class AuthApplicationService {
             String username = jwtTokenProvider.getUsernameFromToken(token);
             String accessKey = "auth:token:access:" + username;
             String refreshKey = "auth:token:refresh:" + username;
+            // 先把刷新令牌读出来一起吊销，再删键 —— 反过来的话就读不到了（键已删）
+            String refreshToken = stringRedisTemplate.opsForValue().get(refreshKey);
+            if (refreshToken != null) {
+                revoke(refreshToken);
+            }
             stringRedisTemplate.delete(accessKey);
             stringRedisTemplate.delete(refreshKey);
-            log.info("用户 {} 退出登录", username);
+            // 记进吊销集：**这一张**令牌立即失效，而不是等它自己过期（access 默认 2 小时）。
+            // TTL 取"它本来还能活多久"，过期即自动清理 —— 吊销集不会无限增长。
+            revoke(token);
+            log.info("用户 {} 退出登录（访问令牌与刷新令牌均已吊销）", username);
+        }
+    }
+
+    /** 这张令牌被明确作废过吗。 */
+    private boolean isRevoked(String token) {
+        try {
+            return Boolean.TRUE.equals(
+                    stringRedisTemplate.hasKey(REVOKED_PREFIX + tokenFingerprint(token)));
+        } catch (Exception e) {
+            // Redis 不可用：**不放行也不误杀**是矛盾的，这里选择"认为没吊销"（保持登录可用），
+            // 与 LoginAttemptGuard/限流一致的取舍 —— Redis 是硬依赖，启动时就要求可连，
+            // 运行期偶发失败不该把所有人踢下线。
+            log.error("查询令牌吊销状态失败，本次按未吊销处理: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /** 把令牌记进吊销集，TTL = 它的剩余有效期（解析不到就用兜底值）。 */
+    private void revoke(String token) {
+        try {
+            long ttlSeconds = REVOKED_FALLBACK_SECONDS;
+            Date expiry = jwtTokenProvider.getExpirationDateFromToken(token);
+            if (expiry != null) {
+                long remaining = (expiry.getTime() - System.currentTimeMillis()) / 1000;
+                if (remaining > 0) {
+                    ttlSeconds = remaining;
+                }
+            }
+            stringRedisTemplate
+                    .opsForValue()
+                    .set(
+                            REVOKED_PREFIX + tokenFingerprint(token),
+                            "1",
+                            Duration.ofSeconds(ttlSeconds));
+        } catch (Exception e) {
+            log.error("吊销令牌失败: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 令牌指纹：SHA-256 的前 32 个 hex 字符。
+     *
+     * <p>与设备指纹同一套写法（见 `DeviceKeyStore` / `HumanVerifyApplicationService`）： 够长、够短、不可反推，且**不把凭据原文写进
+     * Redis**。
+     */
+    private static String tokenFingerprint(String token) {
+        try {
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest).substring(0, 32);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 不可用", e);
         }
     }
 

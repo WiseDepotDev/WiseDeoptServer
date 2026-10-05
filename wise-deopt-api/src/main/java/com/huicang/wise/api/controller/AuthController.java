@@ -4,6 +4,7 @@ import com.huicang.wise.application.auth.AuthApplicationService;
 import com.huicang.wise.application.auth.LoginRequest;
 import com.huicang.wise.application.auth.LoginResponse;
 import com.huicang.wise.application.auth.RefreshTokenRequest;
+import com.huicang.wise.common.annotation.RateLimit;
 import com.huicang.wise.common.api.ApiResponse;
 import com.huicang.wise.common.protocol.ApiPacketType;
 import com.huicang.wise.common.protocol.PacketType;
@@ -39,11 +40,17 @@ public class AuthController {
     /**
      * 方法功能描述：用户登录接口
      *
+     * <p>限流是**第二道**，第一道是 `LoginAttemptGuard`（账号锁定 / IP 封禁，也是 Redis）。 两者分工：锁定管"某个账号/某台机器连续输错"，限流管"某个
+     * IP 在刷接口"—— 只有锁定的话，攻击者换账号名（撞库）就能一直打，而每个账号自己都没到失败阈值。
+     *
+     * <p>数字刻意给得宽（比正常人手速高两个数量级）：正常用户与桥的自动重试都不会碰到它， 只有脚本会。真正要挡的是"每秒几十次"的量级。
+     *
      * @param request 登录请求参数
      * @return 登录响应结果
      */
     @Operation(summary = "用户登录", description = "根据用户名和密码执行登录。成功返回200；认证失败返回401；服务器异常返回500。")
     @ApiPacketType(PacketType.AUTH_LOGIN)
+    @RateLimit(ipLimit = 300, ipWindowSeconds = 60, apiLimit = 600, apiWindowSeconds = 60)
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(
             @Parameter(description = "登录请求参数", required = true) @Valid @RequestBody
@@ -60,6 +67,7 @@ public class AuthController {
      */
     @Operation(summary = "NFC扫码登录", description = "根据NFC ID识别用户。成功返回用户信息和验证ID；失败返回404。")
     @ApiPacketType(PacketType.AUTH_NFC_LOGIN)
+    @RateLimit(ipLimit = 300, ipWindowSeconds = 60, apiLimit = 600, apiWindowSeconds = 60)
     @PostMapping("/nfc-login")
     public ApiResponse<com.huicang.wise.application.auth.NfcLoginResponse> loginNfc(
             @Parameter(description = "NFC登录请求参数", required = true) @Valid @RequestBody
@@ -86,6 +94,7 @@ public class AuthController {
     }
 
     @Operation(summary = "刷新令牌", description = "使用刷新令牌获取新的访问令牌。成功返回200；令牌无效返回401。")
+    @RateLimit(ipLimit = 300, ipWindowSeconds = 60, apiLimit = 600, apiWindowSeconds = 60)
     @PostMapping("/refresh-token")
     public ApiResponse<LoginResponse> refreshToken(
             @Parameter(description = "刷新令牌请求参数", required = true) @Valid @RequestBody
@@ -103,6 +112,7 @@ public class AuthController {
      */
     @Operation(summary = "NFC+PIN登录", description = "根据NFC ID和PIN码执行登录。成功返回Token；失败返回对应错误码。")
     @ApiPacketType(PacketType.AUTH_NFC_PIN_LOGIN)
+    @RateLimit(ipLimit = 120, ipWindowSeconds = 60, apiLimit = 300, apiWindowSeconds = 60)
     @PostMapping("/nfc-pin-login")
     public ApiResponse<LoginResponse> loginNfcPin(
             @Parameter(description = "NFC+PIN登录请求参数", required = true) @Valid @RequestBody

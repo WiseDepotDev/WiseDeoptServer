@@ -3,7 +3,6 @@ package com.huicang.wise.api.controller;
 import com.huicang.wise.application.tag.BatchBindResult;
 import com.huicang.wise.application.tag.BatchUnbindResult;
 import com.huicang.wise.application.tag.ProductTagBatchBindRequest;
-import com.huicang.wise.application.tag.ProductTagBatchBindRequestWithCaptcha;
 import com.huicang.wise.application.tag.ProductTagCreateRequest;
 import com.huicang.wise.application.tag.ProductTagDTO;
 import com.huicang.wise.application.tag.ProductTagPageDTO;
@@ -149,24 +148,23 @@ public class TagController {
         return ApiResponse.success(tagApplicationService.unbindTag(tagId));
     }
 
-    @Operation(summary = "批量绑定标签", description = "批量将标签绑定到指定产品。成功返回200；参数错误返回400；服务器异常返回500。")
+    /**
+     * 批量绑定标签 —— **唯一入口**。
+     *
+     * <p>人机验证票据在 Service 层校验（`TagApplicationService.batchBindTags` 的第一行）。
+     *
+     * <p>原先这里还有第二条 `/batch-bind-with-captcha`：守卫只加了它，于是任何持有 `tag:*` 权限的会话直接调上面那条就绕过了验证。**孪生端点已删除**
+     * —— "同一业务效果只有一条 HTTP 路径"是这一层能守住的前提。
+     */
+    @Operation(
+            summary = "批量绑定标签",
+            description = "批量将标签绑定到指定产品（需要人机验证票据）。成功返回200；参数错误返回400；服务器异常返回500。")
     @ApiPacketType(PacketType.TAG_BATCH_BIND)
     @PostMapping("/batch-bind")
     public ApiResponse<BatchBindResult> batchBindTags(
             @Parameter(description = "批量绑定请求", required = true) @Valid @RequestBody
                     ProductTagBatchBindRequest request) {
         return ApiResponse.success(tagApplicationService.batchBindTags(request));
-    }
-
-    @Operation(
-            summary = "批量绑定标签（带验证码）",
-            description = "批量将标签绑定到指定产品，需要验证码验证。成功返回200；参数错误返回400；验证码错误返回400；服务器异常返回500。")
-    @ApiPacketType(PacketType.TAG_BATCH_BIND)
-    @PostMapping("/batch-bind-with-captcha")
-    public ApiResponse<BatchBindResult> batchBindTagsWithCaptcha(
-            @Parameter(description = "批量绑定请求（带验证码）", required = true) @Valid @RequestBody
-                    ProductTagBatchBindRequestWithCaptcha request) {
-        return ApiResponse.success(tagApplicationService.batchBindTagsWithCaptcha(request));
     }
 
     @Operation(summary = "批量解绑标签", description = "批量解绑标签与产品的关联。成功返回200；参数错误返回400；服务器异常返回500。")

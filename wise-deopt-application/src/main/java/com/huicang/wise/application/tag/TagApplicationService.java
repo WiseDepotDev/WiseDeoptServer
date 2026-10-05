@@ -1,6 +1,7 @@
 package com.huicang.wise.application.tag;
 
-import com.huicang.wise.application.captcha.CaptchaApplicationService;
+import com.huicang.wise.application.human.HumanPurpose;
+import com.huicang.wise.application.human.HumanVerifyApplicationService;
 import com.huicang.wise.common.api.ErrorCode;
 import com.huicang.wise.common.exception.BusinessException;
 import com.huicang.wise.domain.inventory.Product;
@@ -30,15 +31,15 @@ public class TagApplicationService {
 
     private final TagRepository tagRepository;
     private final ProductRepository productRepository;
-    private final CaptchaApplicationService captchaApplicationService;
+    private final HumanVerifyApplicationService humanVerifyApplicationService;
 
     public TagApplicationService(
             TagRepository tagRepository,
             ProductRepository productRepository,
-            CaptchaApplicationService captchaApplicationService) {
+            HumanVerifyApplicationService humanVerifyApplicationService) {
         this.tagRepository = tagRepository;
         this.productRepository = productRepository;
-        this.captchaApplicationService = captchaApplicationService;
+        this.humanVerifyApplicationService = humanVerifyApplicationService;
     }
 
     /**
@@ -339,6 +340,15 @@ public class TagApplicationService {
     @Transactional
     public BatchBindResult batchBindTags(ProductTagBatchBindRequest request)
             throws BusinessException {
+        /*
+         * 人机验证票据为必填项，**校验写在 Service 层**（不是 Controller）。
+         *
+         * 为什么强调这一点：原先有**两条** HTTP 路径 —— 无票的 `/batch-bind` 与带验证码的
+         * `/batch-bind-with-captcha` —— 而守卫只加在后者，于是任何持有权限的会话直接调前者
+         * 就绕过了验证码。校验写在这一层，才谈得上"同一业务效果只有一个入口"。
+         */
+        humanVerifyApplicationService.enforce(request.getHumanToken(), HumanPurpose.TAG_BATCH_BIND);
+
         if (request.getProductId() == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "产品ID不能为空");
         }
@@ -360,19 +370,6 @@ public class TagApplicationService {
         result.setFailedCount(request.getTagIds().size() - updated);
 
         return result;
-    }
-
-    @Transactional
-    public BatchBindResult batchBindTagsWithCaptcha(ProductTagBatchBindRequestWithCaptcha request)
-            throws BusinessException {
-        // 验证码为必填项：防止绕过验证码直接批量绑定标签
-        captchaApplicationService.enforceCaptcha(request.getCaptchaId(), request.getCaptchaCode());
-
-        ProductTagBatchBindRequest bindRequest = new ProductTagBatchBindRequest();
-        bindRequest.setProductId(request.getProductId());
-        bindRequest.setTagIds(request.getTagIds());
-
-        return batchBindTags(bindRequest);
     }
 
     /**
