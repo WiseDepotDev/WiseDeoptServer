@@ -2,6 +2,7 @@ package com.huicang.wise.infrastructure.redis.aspect;
 
 import com.huicang.wise.infrastructure.redis.RedisCacheUtils;
 import com.huicang.wise.infrastructure.redis.annotation.CacheEvict;
+import com.huicang.wise.infrastructure.redis.annotation.CacheEvicts;
 import com.huicang.wise.infrastructure.redis.annotation.Cacheable;
 import java.lang.reflect.Method;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -91,6 +92,34 @@ public class RedisCacheAspect {
     }
 
     /**
+     * 处理**重复**的 `@CacheEvict`（一个方法要作废多类缓存时）。
+     *
+     * <p>为什么不支持它就罢了：典型场景是"删除角色"——既失效 `role:<id>`，也失效 `auth:permission:*`。若只能写一个注解，第二个就只能退化成方法体里手动调
+     * `RedisCacheUtils`，而那种静态服务定位器**在没有容器的单元测试里是 NPE**。 声明式地把两件事都写在注解上，测试就不必为了跑一个方法而搭半个 Spring。
+     */
+    @Around("@annotation(cacheEvicts)")
+    public Object handleCacheEvicts(ProceedingJoinPoint joinPoint, CacheEvicts cacheEvicts)
+            throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        Object[] args = joinPoint.getArgs();
+
+        // 与方法体一致的顺序：先执行标了 beforeInvocation 的，方法体之后再执行其余的
+        for (CacheEvict cacheEvict : cacheEvicts.value()) {
+            if (cacheEvict.beforeInvocation()) {
+                evictCache(cacheEvict, method, args);
+            }
+        }
+        Object result = joinPoint.proceed();
+        for (CacheEvict cacheEvict : cacheEvicts.value()) {
+            if (!cacheEvict.beforeInvocation()) {
+                evictCache(cacheEvict, method, args);
+            }
+        }
+        return result;
+    }
+
+    /**
      * 处理@CacheEvict注解
      *
      * @param joinPoint 连接点
@@ -131,8 +160,27 @@ public class RedisCacheAspect {
         }
 
         if (cacheEvict.allEntries()) {
-            RedisCacheUtils.flushAll();
-            logger.info("清除所有缓存");
+            /*
+             * `allEntries` 只能清**这个前缀**，绝不能清整个库。
+             *
+             * 2026-10-05 实测：这里原来是 `RedisCacheUtils.flushAll()`（`KEYS *` + `DEL`），
+             * 而 Redis 里同时住着**安全状态** —— 登录失败计数 `auth:login:fail:*`、
+             * 限流计数 `api:rate-limit:*`、人机验证的挑战/票据 `human:*`、请求 nonce `api:nonce:*`。
+             * 于是"新建/修改一个仓库"（`WarehouseApplicationService` 上唯一的 `allEntries=true`）
+             * 会把**暴力破解保护、限流、正在进行的验证**一起清掉 —— 一次正常的业务写，
+             * 静默地把安全边界重置了。这属于"缓存清理把别人的状态当垃圾扫了"。
+             *
+             * 没有前缀就更不许清：那等于"我不知道该清什么，所以全清"。
+             */
+            if (cacheEvict.prefix() == null || cacheEvict.prefix().isEmpty()) {
+                throw new IllegalStateException(
+                        "@CacheEvict(allEntries = true) 必须带 prefix："
+                                + "没有前缀就只能清空整个 Redis，那会把登录锁定/限流/人机验证的状态一起扫掉。"
+                                + "请写明要清哪一类缓存（例如 prefix = \"warehouse\"）。");
+            }
+            String pattern = cacheEvict.prefix() + ":*";
+            RedisCacheUtils.deleteByPattern(pattern);
+            logger.info("按前缀清除缓存，pattern: {}", pattern);
         } else {
             String cacheKey = generateCacheKey(cacheEvict.prefix(), cacheEvict.key(), method, args);
             if (cacheEvict.hash()) {

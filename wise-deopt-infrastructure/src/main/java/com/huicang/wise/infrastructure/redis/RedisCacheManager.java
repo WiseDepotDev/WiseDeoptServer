@@ -1,22 +1,20 @@
 package com.huicang.wise.infrastructure.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
-
+import com.huicang.wise.common.api.ErrorCode;
+import com.huicang.wise.common.exception.BusinessException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import com.huicang.wise.common.exception.BusinessException;
-import com.huicang.wise.common.api.ErrorCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
 
 /**
- * Redis缓存管理器
- * 提供统一的缓存操作接口，支持对象、字符串、列表、集合、哈希等数据结构的缓存操作
+ * Redis缓存管理器 提供统一的缓存操作接口，支持对象、字符串、列表、集合、哈希等数据结构的缓存操作
  *
  * @author WiseDepot
  * @version 0.0.27
@@ -30,7 +28,8 @@ public class RedisCacheManager {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    public RedisCacheManager(RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
+    public RedisCacheManager(
+            RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
     }
@@ -38,7 +37,7 @@ public class RedisCacheManager {
     /**
      * 设置缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param value 缓存值
      */
     public void set(String key, Object value) {
@@ -54,10 +53,10 @@ public class RedisCacheManager {
     /**
      * 设置缓存并指定过期时间
      *
-     * @param key     缓存键
-     * @param value   缓存值
+     * @param key 缓存键
+     * @param value 缓存值
      * @param timeout 过期时间
-     * @param unit    时间单位
+     * @param unit 时间单位
      */
     public void set(String key, Object value, long timeout, TimeUnit unit) {
         try {
@@ -89,9 +88,9 @@ public class RedisCacheManager {
     /**
      * 获取缓存并转换为指定类型
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param clazz 目标类型
-     * @param <T>   泛型类型
+     * @param <T> 泛型类型
      * @return 缓存值
      */
     public <T> T get(String key, Class<T> clazz) {
@@ -157,9 +156,9 @@ public class RedisCacheManager {
     /**
      * 设置过期时间
      *
-     * @param key     缓存键
+     * @param key 缓存键
      * @param timeout 过期时间
-     * @param unit    时间单位
+     * @param unit 时间单位
      */
     public void expire(String key, long timeout, TimeUnit unit) {
         try {
@@ -190,7 +189,7 @@ public class RedisCacheManager {
     /**
      * 设置哈希缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @param value 哈希值
      */
@@ -206,7 +205,7 @@ public class RedisCacheManager {
     /**
      * 获取哈希缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @return 哈希值
      */
@@ -224,10 +223,10 @@ public class RedisCacheManager {
     /**
      * 获取哈希缓存并转换为指定类型
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @param clazz 目标类型
-     * @param <T>   泛型类型
+     * @param <T> 泛型类型
      * @return 哈希值
      */
     public <T> T hGet(String key, String field, Class<T> clazz) {
@@ -249,7 +248,7 @@ public class RedisCacheManager {
     /**
      * 删除哈希字段
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      */
     public void hDelete(String key, String field) {
@@ -264,7 +263,7 @@ public class RedisCacheManager {
     /**
      * 判断哈希字段是否存在
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param field 哈希字段
      * @return 是否存在
      */
@@ -298,7 +297,7 @@ public class RedisCacheManager {
     /**
      * 设置列表缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param value 列表值
      */
     public void lPush(String key, Object value) {
@@ -313,9 +312,9 @@ public class RedisCacheManager {
     /**
      * 获取列表缓存
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param start 开始位置
-     * @param end   结束位置
+     * @param end 结束位置
      * @return 列表值
      */
     public List<Object> lRange(String key, long start, long end) {
@@ -348,7 +347,7 @@ public class RedisCacheManager {
     /**
      * 删除列表元素
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param count 删除数量
      * @param value 列表值
      */
@@ -364,7 +363,7 @@ public class RedisCacheManager {
     /**
      * 设置集合缓存
      *
-     * @param key    缓存键
+     * @param key 缓存键
      * @param values 集合值
      */
     public void sAdd(String key, Object... values) {
@@ -396,7 +395,7 @@ public class RedisCacheManager {
     /**
      * 判断集合成员是否存在
      *
-     * @param key   缓存键
+     * @param key 缓存键
      * @param value 集合值
      * @return 是否存在
      */
@@ -413,7 +412,7 @@ public class RedisCacheManager {
     /**
      * 删除集合成员
      *
-     * @param key    缓存键
+     * @param key 缓存键
      * @param values 集合值
      */
     public void sRemove(String key, Object... values) {
@@ -442,31 +441,25 @@ public class RedisCacheManager {
     }
 
     /**
-     * 清空所有缓存
-     */
-    public void flushAll() {
-        try {
-            Set<String> keys = redisTemplate.keys("*");
-            if (keys != null && !keys.isEmpty()) {
-                redisTemplate.delete(keys);
-                logger.info("清空所有缓存成功");
-            }
-        } catch (Exception e) {
-            logger.error("清空所有缓存失败", e);
-        }
-    }
-
-    /**
      * 根据模式删除缓存
+     *
+     * <p><b>故意没有 `flushAll()`</b>（等价于 `KEYS *` + `DEL`）：这个 Redis 库不只放缓存， 还放登录失败计数、限流计数、人机验证挑战/票据、请求
+     * nonce —— 一个"清空所有"的入口 迟早会被当成省事的批量失效来用，而它删掉的是安全状态。要批量清就用模式， 让破坏范围写在调用点上（见 `RedisCacheAspect` 对
+     * `allEntries` 的处理）。
      *
      * @param pattern 缓存键模式
      */
     public void deleteByPattern(String pattern) {
+        if (pattern == null || pattern.isBlank() || "*".equals(pattern.trim())) {
+            // 空模式/通配模式 = 清库。不抛异常也不执行：宁可"没清掉"，也不要"清太多"。
+            throw new IllegalArgumentException(
+                    "deleteByPattern 不接受空模式或 \"*\"（那等于清空整个 Redis，会删掉安全状态）");
+        }
         try {
             Set<String> keys = redisTemplate.keys(pattern);
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
-                logger.info("根据模式删除缓存成功，pattern: {}", pattern);
+                logger.info("根据模式删除缓存成功，pattern: {}，键数: {}", pattern, keys.size());
             }
         } catch (Exception e) {
             logger.error("根据模式删除缓存失败，pattern: {}", pattern, e);

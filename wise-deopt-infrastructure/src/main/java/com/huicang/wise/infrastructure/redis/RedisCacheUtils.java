@@ -321,13 +321,12 @@ public class RedisCacheUtils {
         return redisCacheManager.sSize(key);
     }
 
-    /** 清空所有缓存 */
-    public static void flushAll() {
-        redisCacheManager.flushAll();
-    }
-
     /**
      * 根据模式删除缓存
+     *
+     * <p>这是"批量清理"的**唯一**入口：`KEYS pattern` + `DEL` 的破坏范围由调用方给出的 模式决定，看得见、收得住。曾经还有一个 `flushAll()`（等价于
+     * `KEYS *`）， 它被 `@CacheEvict(allEntries = true)` 调用，把登录锁定、限流、人机验证等 **不属于缓存的安全状态**也一起删了 ——
+     * 那个方法已删除，不要加回来。
      *
      * @param pattern 缓存键模式
      */
