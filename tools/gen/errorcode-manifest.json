@@ -271,24 +271,6 @@
                     },
                     {
                         "group":  10,
-                        "name":  "VAL_PARAM_AUTH_CAPTCHA_ID_EMPTY",
-                        "code":  "VAL-PARAM-AUTH-1009",
-                        "origin":  "csv",
-                        "message":  "captchaId字段为空",
-                        "httpStatus":  422,
-                        "note":  "原仅在代码中存在，2026-02-27 补齐登记到对照表"
-                    },
-                    {
-                        "group":  10,
-                        "name":  "VAL_PARAM_AUTH_CAPTCHA_CODE_EMPTY",
-                        "code":  "VAL-PARAM-AUTH-1010",
-                        "origin":  "csv",
-                        "message":  "captchaCode字段为空",
-                        "httpStatus":  422,
-                        "note":  "原仅在代码中存在，2026-02-27 补齐登记到对照表"
-                    },
-                    {
-                        "group":  10,
                         "name":  "VAL_FORMAT_AUTH_CARD_UUID_ERROR",
                         "code":  "VAL-FORMAT-AUTH-1002",
                         "origin":  "csv"
@@ -346,6 +328,64 @@
                         "name":  "VAL_CONFLICT_PERMISSION_CODE_EXISTS",
                         "code":  "VAL-CONFLICT-PERMISSION-1001",
                         "origin":  "csv"
+                    },
+                    {
+                        "group":  15,
+                        "name":  "HUMAN_TOKEN_REQUIRED",
+                        "code":  "AUTH-HUMAN-1001",
+                        "origin":  "supplement",
+                        "message":  "缺少人机验证票据",
+                        "httpStatus":  422,
+                        "note":  "缺失即失败：绝不允许写成「没传就跳过」（图形验证码时代踩过一次，见 deploy/captcha_fix_verify.py）"
+                    },
+                    {
+                        "group":  15,
+                        "name":  "HUMAN_TOKEN_INVALID",
+                        "code":  "AUTH-HUMAN-1002",
+                        "origin":  "supplement",
+                        "message":  "人机验证票据无效或已使用",
+                        "httpStatus":  400,
+                        "note":  "过期/已用/跨用途都归这里；刻意不用 401，避免被客户端当成「登录已过期」"
+                    },
+                    {
+                        "group":  15,
+                        "name":  "HUMAN_CHALLENGE_REQUIRED",
+                        "code":  "AUTH-HUMAN-1003",
+                        "origin":  "supplement",
+                        "message":  "缺少人机验证挑战",
+                        "httpStatus":  422
+                    },
+                    {
+                        "group":  15,
+                        "name":  "HUMAN_CHALLENGE_EXPIRED",
+                        "code":  "AUTH-HUMAN-1004",
+                        "origin":  "supplement",
+                        "message":  "人机验证挑战已过期，请重新验证",
+                        "httpStatus":  400
+                    },
+                    {
+                        "group":  15,
+                        "name":  "HUMAN_PURPOSE_INVALID",
+                        "code":  "AUTH-HUMAN-1005",
+                        "origin":  "supplement",
+                        "message":  "人机验证用途不合法",
+                        "httpStatus":  422
+                    },
+                    {
+                        "group":  15,
+                        "name":  "HUMAN_SIGNATURE_INVALID",
+                        "code":  "AUTH-HUMAN-1006",
+                        "origin":  "supplement",
+                        "message":  "设备签名校验失败",
+                        "httpStatus":  400
+                    },
+                    {
+                        "group":  15,
+                        "name":  "HUMAN_POW_INSUFFICIENT",
+                        "code":  "AUTH-HUMAN-1007",
+                        "origin":  "supplement",
+                        "message":  "计算量证明不达标",
+                        "httpStatus":  400
                     }
                 ]
 }
